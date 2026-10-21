@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Popover } from "@base-ui/react/popover";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import type { Course, Department, Id, Room, Section, Teacher } from "@/domain/ty
 import { useAppStore } from "@/store/useAppStore";
 import { useCollegeData } from "./collegeData";
 import type { DataReport } from "./dataChecks";
-import { DATA_TABS, defaultDataTab, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount, type DataTab } from "./dataEdit";
+import { DATA_TABS, batchTeacherSummary, defaultDataTab, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount, type DataTab } from "./dataEdit";
 
 const selectClass =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
@@ -397,7 +398,7 @@ function CoursesTable() {
           const labs = labRoomsFor(data.rooms, section);
           return (
             <tr key={c.id}>
-              <td className="min-w-28">
+              <td className="w-24 min-w-24">
                 <Select label="Section" value={c.sectionId} invalid={!section} onChange={(v) => update(c.id, { sectionId: v, labRoomId: null, batchTeacherIds: null })}>
                   {!section && <option value={c.sectionId} disabled>Pick a section</option>}
                   {data.sections.map((s) => (
@@ -407,10 +408,10 @@ function CoursesTable() {
                   ))}
                 </Select>
               </td>
-              <td className="min-w-40">
+              <td className="min-w-44">
                 <Input aria-label="Subject" value={c.subject} aria-invalid={!c.subject.trim() || undefined} autoFocus={!c.subject} onChange={(e) => update(c.id, { subject: e.target.value })} />
               </td>
-              <td className="min-w-40">
+              <td className="min-w-44">
                 <Select label="Teacher" value={data.teachers.some((t) => t.id === c.teacherId) ? c.teacherId : ""} invalid={!data.teachers.some((t) => t.id === c.teacherId)} onChange={(v) => update(c.id, { teacherId: v })}>
                   {teacherOptions}
                 </Select>
@@ -441,29 +442,9 @@ function CoursesTable() {
                   <span className="text-muted-foreground">–</span>
                 )}
               </td>
-              <td className="min-w-40">
+              <td className="w-52 max-w-52">
                 {hasLabs && section && section.batches > 1 ? (
-                  <div className="grid gap-1">
-                    {Array.from({ length: section.batches }, (_, i) => i + 1).map((b) => (
-                      <div key={b} className="flex items-center gap-1.5">
-                        <span className="w-5 text-xs text-muted-foreground">B{b}</span>
-                        <Select
-                          label={`Batch ${b} teacher`}
-                          value={c.batchTeacherIds?.[b - 1] && c.batchTeacherIds[b - 1] !== c.teacherId ? c.batchTeacherIds[b - 1] : ""}
-                          onChange={(v) => update(c.id, { batchTeacherIds: setBatchTeacher(c, section.batches, b, v) })}
-                        >
-                          <option value="">Same as teacher</option>
-                          {data.teachers
-                            .filter((t) => t.id !== c.teacherId)
-                            .map((t) => (
-                              <option key={t.id} value={t.id}>
-                                {t.name}
-                              </option>
-                            ))}
-                        </Select>
-                      </div>
-                    ))}
-                  </div>
+                  <BatchTeachersCell course={c} batches={section.batches} teachers={data.teachers} onChange={(batchTeacherIds) => update(c.id, { batchTeacherIds })} />
                 ) : (
                   <span className="text-muted-foreground">–</span>
                 )}
@@ -479,5 +460,60 @@ function CoursesTable() {
         <AddButton label="Add course" disabled={data.sections.length === 0} onClick={add} />
       </div>
     </div>
+  );
+}
+
+/**
+ * Per-batch lab teachers in a popover, so every course row stays one line high. The cell shows
+ * only the overrides; "Course teacher" (muted) when every batch has the course teacher.
+ */
+function BatchTeachersCell({ course, batches, teachers, onChange }: {
+  course: Course;
+  batches: number;
+  teachers: Teacher[];
+  onChange: (batchTeacherIds: Id[] | null) => void;
+}) {
+  const name = (id: Id) => teachers.find((t) => t.id === id)?.name ?? id;
+  const summary = batchTeacherSummary(course, batches, name);
+  return (
+    <Popover.Root>
+      <Popover.Trigger
+        aria-label="Batch teachers"
+        title={summary ?? undefined}
+        className={cn(selectClass, "flex items-center justify-between gap-1 text-left", !summary && "text-muted-foreground")}
+      >
+        <span className="truncate">{summary ?? "Course teacher"}</span>
+        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner sideOffset={4} align="end" className="isolate z-50">
+          <Popover.Popup className="grid w-80 gap-2 rounded-lg bg-popover p-3 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none">
+            <p className="text-xs text-muted-foreground">Who takes each batch's lab. Leave on the course teacher unless a batch has its own.</p>
+            {Array.from({ length: batches }, (_, i) => i + 1).map((b) => {
+              const id = course.batchTeacherIds?.[b - 1];
+              return (
+                <label key={b} className="grid grid-cols-[3.5rem_1fr] items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Batch {b}</span>
+                  <Select
+                    label={`Batch ${b} teacher`}
+                    value={id && id !== course.teacherId ? id : ""}
+                    onChange={(v) => onChange(setBatchTeacher(course, batches, b, v))}
+                  >
+                    <option value="">Course teacher ({name(course.teacherId)})</option>
+                    {teachers
+                      .filter((t) => t.id !== course.teacherId)
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                  </Select>
+                </label>
+              );
+            })}
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

@@ -35,6 +35,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Stepper on narrow screens shows step numbers only, plus the current step's name, so it fits on one line (browser window under 640px wide)
 - [T12] Step ① with no periods yet says "Create periods to continue." in grey instead of a red error (real problems are still red, logic in `setupFooterNote`); the generator button reads *Create periods* until there are periods to replace; the periods table drops its row-number column, which didn't match the P1–P8 labels (Start over → step ①)
 - [T12] Step ② tabs follow the order the data depends on (Departments → Rooms → Teachers → Sections → Courses); they open on Departments while empty and switch to Courses once courses exist, e.g. after Load sample (`DATA_TABS` / `defaultDataTab` in `dataEdit.ts`) (Start over → step ② → Load sample)
+- [T12] Courses table rows are all one line high: the Batch teachers cell shows only the overrides ("B2: Prof. Rahul Verma", or a muted "Course teacher") and opens a small popover with one select per batch (`batchTeacherSummary` in `dataEdit.ts`); Section is narrower and Subject/Teacher wider so names aren't cut off (step ② → Courses → click a Batch teachers cell)
 
 ## Known issues / cuts
 
