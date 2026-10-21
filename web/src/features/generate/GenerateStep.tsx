@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, CircleX, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, CircleX, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ type ServerState = "checking" | "online" | "offline";
 export function GenerateStep() {
   const [server, setServer] = useState<ServerState>("checking");
   const [notice, setNotice] = useState<Notice>({});
+  const [finishedRuns, setFinishedRuns] = useState(0);
+  const outcome = useRef<HTMLDivElement>(null);
 
   const pollServer = () => checkServer().then((up) => setServer(up ? "online" : "offline"));
   const refreshServer = () => {
@@ -26,15 +28,22 @@ export function GenerateStep() {
   useEffect(() => {
     pollServer();
   }, []);
+  // A finished run's result (or error) is below the fold on most screens: bring it into view.
+  useEffect(() => {
+    if (finishedRuns > 0) outcome.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [finishedRuns]);
 
   return (
     <div className="grid gap-6">
       <EngineCard server={server} onRefresh={refreshServer} onDone={(next) => {
         setNotice(next);
+        setFinishedRuns((n) => n + 1);
         refreshServer();
       }} />
-      {notice.error && <ErrorCard message={notice.error} />}
-      <ResultCard fallbackReason={notice.error ? undefined : notice.fallbackReason} />
+      <div ref={outcome} className="grid gap-6">
+        {notice.error && <ErrorCard message={notice.error} />}
+        <ResultCard fallbackReason={notice.error ? undefined : notice.fallbackReason} />
+      </div>
     </div>
   );
 }
@@ -120,7 +129,8 @@ function EngineCard({ server, onRefresh, onDone }: {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button size="lg" disabled={running || blockers.length > 0} onClick={run}>
+          {/* Primary until there is a timetable; after that the footer's Next is the main way on. */}
+          <Button size="lg" variant={data.result ? "outline" : "default"} disabled={running || blockers.length > 0} onClick={run}>
             {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {running ? "Generating…" : data.result || locks.length > 0 ? regenerateLabel(locks.length) : "Generate timetable"}
           </Button>
@@ -194,7 +204,6 @@ function ErrorCard({ message }: { message: string }) {
 
 function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
   const result = useAppStore((s) => s.result);
-  const setStep = useAppStore((s) => s.setStep);
   const { settings, departments, teachers, rooms, sections, courses, locks } = useAppStore();
   // Re-check against the current data: the store may hold a result from before a data edit.
   const validation = useMemo(() => {
@@ -212,11 +221,6 @@ function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
         <CardDescription>
           {result.placements.length} sessions placed in {(result.timeMs / 1000).toFixed(1)} s.
         </CardDescription>
-        <CardAction>
-          <Button onClick={() => setStep(3)}>
-            View timetable <ArrowRight />
-          </Button>
-        </CardAction>
       </CardHeader>
       <CardContent className="grid gap-5">
         <div

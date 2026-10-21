@@ -38,6 +38,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Courses table rows are all one line high: the Batch teachers cell shows only the overrides ("B2: Prof. Rahul Verma", or a muted "Course teacher") and opens a small popover with one select per batch (`batchTeacherSummary` in `dataEdit.ts`); Section is narrower and Subject/Teacher wider so names aren't cut off (step ② → Courses → click a Batch teachers cell)
 - [T12] Step ② "All sections" filter uses the same searchable section picker as step ④ (grouped by department); the picker now opens above or below its button and shrinks to fit short windows instead of jumping to the side; *Export current data* is an outlined button with an icon like *Template* (step ② with data → Courses → filter)
 - [T12] Steps ③ and ④ name the score rules the same way (the plain-English `SCORE_ROWS` labels) and show what was counted next to the points, e.g. "Batches waiting during labs · 18 pts · 6 batch-periods" (`scoreCount` in `domain/stats.ts`) (generate → step ③ Result and step ④ Quality score)
+- [T12] Step ③ has one main button at a time: *Generate timetable* until there is a result, then the footer's *Next: View & export* (Regenerate turns outlined, the Result card's duplicate *View timetable* is gone); Next stays disabled with a grey "Generate a timetable to continue." until a timetable exists (`generateFooterNote`); a finished run scrolls the Result (or error) card into view (step ③ → Generate)
 
 ## Known issues / cuts
 

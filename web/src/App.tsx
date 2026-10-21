@@ -9,7 +9,9 @@ import { DataStep } from '@/features/data/DataStep'
 import { useCollegeData } from '@/features/data/collegeData'
 import { checkData } from '@/features/data/dataChecks'
 import { SetupStep } from '@/features/setup/SetupStep'
-import { settingsErrors, setupFooterNote, type FooterNote } from '@/features/setup/periods'
+import type { FooterNote } from '@/features/footer'
+import { generateFooterNote } from '@/features/generate/generate'
+import { settingsErrors, setupFooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
 import { useAppStore, type Step } from '@/store/useAppStore'
 
@@ -24,6 +26,7 @@ function App() {
   const step = useAppStore((s) => s.step)
   const setStep = useAppStore((s) => s.setStep)
   const settings = useAppStore((s) => s.settings)
+  const result = useAppStore((s) => s.result)
   const reset = useAppStore((s) => s.reset)
   const data = useCollegeData()
 
@@ -32,10 +35,18 @@ function App() {
     window.scrollTo({ top: 0 })
   }, [step])
 
-  // Steps ① and ② block moving on until their input is usable.
-  const blockers = step === 0 ? settingsErrors(settings) : step === 1 ? checkData(data, settings).errors : []
+  // Steps ① and ② block moving on until their input is usable; step ③ until there is a timetable.
+  const dataErrors = step === 1 ? checkData(data, settings).errors : []
+  const canContinue =
+    step === 0 ? settingsErrors(settings).length === 0 : step === 1 ? dataErrors.length === 0 : step === 2 ? result !== null : true
   const note: FooterNote | null =
-    step === 0 ? setupFooterNote(settings) : blockers[0] ? { text: blockers[0], tone: 'error' } : null
+    step === 0
+      ? setupFooterNote(settings)
+      : step === 1
+        ? dataErrors[0] ? { text: dataErrors[0], tone: 'error' } : null
+        : step === 2
+          ? generateFooterNote(result)
+          : null
   const current = STEPS[step]
 
   return (
@@ -89,7 +100,7 @@ function App() {
               {note?.text}
             </div>
             {step < 3 && (
-              <Button disabled={blockers.length > 0} onClick={() => setStep((step + 1) as Step)}>
+              <Button disabled={!canContinue} onClick={() => setStep((step + 1) as Step)}>
                 Next: {STEPS[step + 1].title} <ArrowRight />
               </Button>
             )}

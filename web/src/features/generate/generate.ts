@@ -1,6 +1,7 @@
 import type { SolveInput, SolveResult } from "@/domain/types";
 import type { ValidationResult } from "@/domain/validator";
 import type { EngineMode } from "@/engine/solveClient";
+import type { FooterNote } from "@/features/footer";
 import type { AppData } from "@/store/useAppStore";
 
 export const ENGINE_OPTIONS: { value: EngineMode; title: string; description: string }[] = [
@@ -63,4 +64,9 @@ export function regenerateSummary(result: Pick<SolveResult, "placements" | "unpl
 /** A fresh seed per run so "Generate" again can give a different timetable. Fits CP-SAT's int32 seed. */
 export function newSeed(): number {
   return Math.floor(Math.random() * 2 ** 31);
+}
+
+/** Step ③ footer: Next waits for a timetable. Not an error, the user just hasn't generated yet. */
+export function generateFooterNote(result: SolveResult | null): FooterNote | null {
+  return result ? null : { text: "Generate a timetable to continue.", tone: "hint" };
 }

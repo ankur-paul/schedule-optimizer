@@ -1,4 +1,5 @@
 import type { Period, Settings } from "@/domain/types";
+import type { FooterNote } from "@/features/footer";
 
 export const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -109,11 +110,6 @@ export function settingsErrors(settings: Settings): string[] {
   if (periodErrors(settings.periods).size > 0) errors.push("Fix the highlighted periods.");
   if (settings.lunchCandidates.length === 0) errors.push("Pick at least one lunch candidate period.");
   return errors;
-}
-
-export interface FooterNote {
-  text: string;
-  tone: "error" | "hint";
 }
 
 /**
