@@ -1,5 +1,5 @@
 # T11 — Print CSS / PDF export
-**Status:** TODO
+**Status:** DONE
 **Lane:** D · **Prereqs:** T08 · **Branch:** t11-print
 
 ## Goal
@@ -12,5 +12,5 @@ Notice-board ready output via browser "Print → Save as PDF".
 - Optional if time: "Download CSV" of all placements.
 
 ## Done when
-- [ ] Print preview looks clean for one and all sections
-- [ ] Committed: `T11: print export`
+- [x] Print preview looks clean for one and all sections
+- [x] Committed: `T11: print export`

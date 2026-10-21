@@ -16,6 +16,8 @@ export interface AppData {
   result: SolveResult | null;
   locks: Placement[];
   step: Step;
+  /** Second line on printed timetables, e.g. "GNDEC Ludhiana · Semester 5, 2026". */
+  printHeading: string;
 }
 
 export interface AppState extends AppData {
@@ -29,6 +31,7 @@ export interface AppState extends AppData {
   setResult: (result: SolveResult | null) => void;
   setLocks: (locks: Placement[]) => void;
   setStep: (step: Step) => void;
+  setPrintHeading: (printHeading: string) => void;
   /** Replace all data with the demo college (keeps the current step). */
   loadSample: () => void;
   /** Back to an empty college with the sample week settings, on step ①. */
@@ -45,6 +48,7 @@ const initialData = (): AppData => ({
   result: null,
   locks: [],
   step: 0,
+  printHeading: "",
 });
 
 /** localStorage that never throws (private mode, quota, or no window in tests). */
@@ -85,6 +89,7 @@ export const useAppStore = create<AppState>()(
       setResult: (result) => set({ result }),
       setLocks: (locks) => set({ locks }),
       setStep: (step) => set({ step }),
+      setPrintHeading: (printHeading) => set({ printHeading }),
       loadSample: () => {
         const s = structuredClone(sampleCollege);
         set({

@@ -184,3 +184,15 @@ export function unplacedFor(
     return owner === id ? [{ session, reason }] : [];
   });
 }
+
+/** One line about the entity: "Computer Science & Engineering · 2 batches", "Electronics & Communication", "Lab · Shared". */
+export function entitySubtitle(data: ViewData, kind: ViewKind, id: Id): string {
+  const dept = (deptId: Id | null) => data.departments.find((d) => d.id === deptId)?.name;
+  if (kind === "section") {
+    const s = data.sections.find((x) => x.id === id);
+    return [dept(s?.departmentId ?? null), s && s.batches > 1 ? `${s.batches} batches` : null].filter(Boolean).join(" · ");
+  }
+  if (kind === "teacher") return dept(data.teachers.find((x) => x.id === id)?.departmentId ?? null) ?? "";
+  const r = data.rooms.find((x) => x.id === id);
+  return `${r?.type === "lab" ? "Lab" : "Classroom"} · ${r?.departmentId ? (dept(r.departmentId) ?? r.departmentId) : "Shared"}`;
+}

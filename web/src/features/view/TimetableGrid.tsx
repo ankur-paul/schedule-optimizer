@@ -29,9 +29,9 @@ export function TimetableGrid({ data, kind, week, colors, onSelect }: Props) {
   const rows = ["auto", ...week.flatMap((d) => Array(d.lanes).fill(d.lanes === 1 ? "minmax(4.5rem, auto)" : "minmax(3.25rem, auto)"))];
 
   return (
-    <div className="overflow-x-auto rounded-xl border bg-background">
+    <div className="overflow-x-auto rounded-xl border bg-background print:overflow-visible">
       <div
-        className="grid text-xs"
+        className="grid text-xs print:min-w-0!"
         style={{ minWidth, gridTemplateColumns: columns.join(" "), gridTemplateRows: rows.join(" ") }}
       >
         <div className="sticky left-0 z-20 border-r border-b bg-muted/60" style={{ gridRow: 1, gridColumn: 1 }} />
@@ -156,7 +156,7 @@ function Cell({ data, kind, block, colors, onSelect, gridRow, gridColumn }: Cell
           {info.batch && <Chip strong>{info.batch}</Chip>}
         </span>
         {lines.map((line, i) => (
-          <span key={i} className="w-full truncate opacity-80">
+          <span key={i} className="w-full truncate leading-tight opacity-80 print:whitespace-normal">
             {line}
           </span>
         ))}

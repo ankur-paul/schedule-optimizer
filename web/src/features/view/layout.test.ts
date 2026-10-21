@@ -4,6 +4,7 @@ import { expandSessions } from "@/domain/sessions";
 import type { Placement, Session } from "@/domain/types";
 import {
   entityGroups,
+  entitySubtitle,
   filterGroups,
   layoutDay,
   layoutWeek,
@@ -222,5 +223,27 @@ describe("layoutWeek / timeRange / sessionDetails", () => {
     const s = session("x", { courseId: "c?", sectionId: "s?", teacherId: "t?" });
     const details = sessionDetails(data, { session: s, placement: { sessionId: "x", day: 7, period: 0, roomId: "r?" } });
     expect(details).toMatchObject({ subject: "c?", section: "s?", teacher: "t?", room: "r?", day: "Day 8", batch: null, periods: "P1" });
+  });
+});
+
+describe("entitySubtitle", () => {
+  it("section: department and batch count (only when split)", () => {
+    expect(entitySubtitle(data, "section", "cse-a")).toBe("Computer Science & Engineering · 2 batches");
+    expect(entitySubtitle(data, "section", "cse-c")).toBe("Computer Science & Engineering");
+  });
+
+  it("teacher: department", () => {
+    expect(entitySubtitle(data, "teacher", "t-c1")).toBe("Computer Science & Engineering");
+  });
+
+  it("room: type and owner, or Shared", () => {
+    expect(entitySubtitle(data, "room", "cr-cse-a")).toBe("Classroom · Computer Science & Engineering");
+    expect(entitySubtitle(data, "room", "lab-phy")).toBe("Lab · Shared");
+  });
+
+  it("unknown ids give an empty or generic line instead of throwing", () => {
+    expect(entitySubtitle(data, "section", "nope")).toBe("");
+    expect(entitySubtitle(data, "teacher", "nope")).toBe("");
+    expect(entitySubtitle(data, "room", "nope")).toBe("Classroom · Shared");
   });
 });
