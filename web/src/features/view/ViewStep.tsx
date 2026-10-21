@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Printer } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Printer, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { expandSessions } from "@/domain/sessions";
 import type { Id } from "@/domain/types";
+import { regenerateSummary } from "@/features/generate/generate";
+import { useGenerate } from "@/features/generate/useGenerate";
+import { isLocked, regenerateLabel, toggleLock } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSubjectColors } from "./colors";
 import { EntityPicker } from "./EntityPicker";
@@ -32,6 +36,10 @@ export function ViewStep() {
   const courses = useAppStore((s) => s.courses);
   const printHeading = useAppStore((s) => s.printHeading);
   const setPrintHeading = useAppStore((s) => s.setPrintHeading);
+  const locks = useAppStore((s) => s.locks);
+  const setLocks = useAppStore((s) => s.setLocks);
+  const lockedIds = useMemo(() => new Set(locks.map((l) => l.sessionId)), [locks]);
+  const { running, elapsed, run } = useGenerate();
   const data: ViewData = useMemo(
     () => ({ settings, departments, teachers, rooms, sections, courses }),
     [settings, departments, teachers, rooms, sections, courses],
@@ -72,6 +80,16 @@ export function ViewStep() {
   const entries = currentId ? placementsFor(kind, currentId, result.placements, sessions) : [];
   const missing = currentId ? unplacedFor(kind, currentId, result.unplaced, sessions) : [];
   const title = flat.find((e) => e.id === currentId)?.name ?? "";
+
+  const regenerate = async () => {
+    const notice = await run();
+    if (!notice) return;
+    if (notice.error) toast.error(`No timetable was produced: ${notice.error} The previous one is unchanged.`);
+    else {
+      const next = useAppStore.getState().result;
+      if (next) toast.success(regenerateSummary(next), { description: notice.fallbackReason });
+    }
+  };
 
   const downloadCsv = () => {
     // BOM so Excel reads the file as UTF-8 (en dashes in times, non-ASCII names).
@@ -114,6 +132,15 @@ export function ViewStep() {
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+          <Button onClick={regenerate} disabled={running} title="Re-solve everything except locked cells, with the engine chosen in step ③">
+            {running ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+            {running ? `Regenerating… ${elapsed} s` : regenerateLabel(locks.length)}
+          </Button>
+          {locks.length > 0 && (
+            <Button variant="ghost" disabled={running} onClick={() => setLocks([])}>
+              <LockOpen /> Clear all locks
+            </Button>
+          )}
           <Button variant="outline" disabled={!currentId} onClick={() => window.print()}>
             <Printer /> Print this timetable
           </Button>
@@ -151,6 +178,7 @@ export function ViewStep() {
             entries={entries}
             colors={colors}
             onSelect={setOpen}
+            locked={lockedIds}
             className={cn(printAll && "print:hidden")}
           />
           {missing.length > 0 && (
@@ -199,7 +227,28 @@ export function ViewStep() {
         </div>
       )}
 
-      <SessionDialog data={data} entry={open} colors={colors} onClose={() => setOpen(null)} />
+      <SessionDialog
+        data={data}
+        entry={open}
+        colors={colors}
+        locked={open !== null && isLocked(locks, open.session.id)}
+        onClose={() => setOpen(null)}
+        actions={
+          open && (
+            <Button variant={isLocked(locks, open.session.id) ? "outline" : "default"} onClick={() => setLocks(toggleLock(locks, open.placement))}>
+              {isLocked(locks, open.session.id) ? (
+                <>
+                  <LockOpen /> Unlock
+                </>
+              ) : (
+                <>
+                  <Lock /> Lock here
+                </>
+              )}
+            </Button>
+          )
+        }
+      />
     </div>
   );
 }
