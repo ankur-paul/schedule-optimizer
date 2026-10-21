@@ -44,15 +44,15 @@ Everything is saved in the browser (localStorage). There are no accounts and no 
 
 ## Run it
 
-You need Node 20.19+ (Vite 8) and Python 3. Tested with Node 24 and Python 3.12.
+You need Node 20.19+ (Vite 8) and [uv](https://docs.astral.sh/uv/), which installs Python 3.12+ if it's missing.
+Tested with Node 24 and Python 3.12.
 
 ```bash
 # 1. Web app → http://localhost:5173
 cd web && npm install && npm run dev
 
 # 2. Solver server → http://localhost:8000 (optional: without it the in-browser engine is used)
-cd server && python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn main:app --port 8000
+cd server && uv sync && uv run uvicorn main:app --port 8000
 ```
 
 Then open the app, go to step **2 Add data → Load sample**, step **3 Generate → Generate timetable**, and
@@ -119,7 +119,7 @@ unavoidable, and CP-SAT proves nothing better exists.
 
 ```bash
 cd web && npm test && npx tsc -b     # Vitest: domain, engines, import, stats, locks…
-cd server && .venv/bin/pytest        # Pytest: API, session parity with the web app, CP-SAT model
+cd server && uv run pytest           # Pytest: API, session parity with the web app, CP-SAT model
 ```
 
 The web and server sides both expand the sample college into sessions and compare against the same golden
