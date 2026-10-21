@@ -33,6 +33,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T04] Fixed the 3 CP-SAT bugs above: `/solve` now scores results from the placements (`score_placements`), a break lunch candidate switches H8 off like the validator does (`h8_lunch_periods`), and duplicate course ids return an error naming them. Report updated (`docs/cpsat-test-report.md`).
 - [T12] Changing step scrolls back to the top (it used to keep the old scroll position, so "View timetable" landed on the Teacher load table); the scrollbar space is reserved so pages no longer shift sideways between steps (step ③ scrolled down → View timetable)
 - [T12] Stepper on narrow screens shows step numbers only, plus the current step's name, so it fits on one line (browser window under 640px wide)
+- [T12] Step ① with no periods yet says "Create periods to continue." in grey instead of a red error (real problems are still red, logic in `setupFooterNote`); the generator button reads *Create periods* until there are periods to replace; the periods table drops its row-number column, which didn't match the P1–P8 labels (Start over → step ①)
 
 ## Known issues / cuts
 

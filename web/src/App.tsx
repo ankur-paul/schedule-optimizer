@@ -9,7 +9,7 @@ import { DataStep } from '@/features/data/DataStep'
 import { useCollegeData } from '@/features/data/collegeData'
 import { checkData } from '@/features/data/dataChecks'
 import { SetupStep } from '@/features/setup/SetupStep'
-import { settingsErrors } from '@/features/setup/periods'
+import { settingsErrors, setupFooterNote, type FooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
 import { useAppStore, type Step } from '@/store/useAppStore'
 
@@ -34,6 +34,8 @@ function App() {
 
   // Steps ① and ② block moving on until their input is usable.
   const blockers = step === 0 ? settingsErrors(settings) : step === 1 ? checkData(data, settings).errors : []
+  const note: FooterNote | null =
+    step === 0 ? setupFooterNote(settings) : blockers[0] ? { text: blockers[0], tone: 'error' } : null
   const current = STEPS[step]
 
   return (
@@ -78,7 +80,14 @@ function App() {
             <Button variant="outline" disabled={step === 0} onClick={() => setStep((step - 1) as Step)}>
               <ArrowLeft /> Back
             </Button>
-            <div className="flex-1 text-right text-sm text-destructive">{blockers[0]}</div>
+            <div
+              className={cn(
+                'flex-1 text-right text-sm',
+                note?.tone === 'hint' ? 'text-muted-foreground' : 'text-destructive',
+              )}
+            >
+              {note?.text}
+            </div>
             {step < 3 && (
               <Button disabled={blockers.length > 0} onClick={() => setStep((step + 1) as Step)}>
                 Next: {STEPS[step + 1].title} <ArrowRight />

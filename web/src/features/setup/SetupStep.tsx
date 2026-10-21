@@ -152,6 +152,7 @@ function PeriodsCard() {
       <CardContent className="grid gap-4">
         {showGenerator && (
           <PeriodGenerator
+            hasPeriods={periods.length > 0}
             onGenerate={(next) => {
               setSettings({
                 ...settings,
@@ -168,7 +169,6 @@ function PeriodsCard() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
-                <th className="w-8 pb-2 font-medium">#</th>
                 <th className="w-40 pb-2 font-medium">Label</th>
                 <th className="pb-2 font-medium">Start</th>
                 <th className="pb-2 font-medium">End</th>
@@ -187,9 +187,6 @@ function PeriodsCard() {
                       p.kind === "break" && "bg-muted/50",
                     )}
                   >
-                    <td className="py-1.5 pt-3 text-muted-foreground tabular-nums">
-                      {i + 1}
-                    </td>
                     <td className="py-1.5 pr-2">
                       <Input
                         aria-label={`Period ${i + 1} label`}
@@ -311,9 +308,11 @@ function KindToggle({
 }
 
 function PeriodGenerator({
+  hasPeriods,
   onGenerate,
   onCancel,
 }: {
+  hasPeriods: boolean;
   onGenerate: (periods: Period[]) => void;
   onCancel: () => void;
 }) {
@@ -337,7 +336,8 @@ function PeriodGenerator({
   return (
     <div className="grid gap-3 rounded-lg border bg-muted/40 p-4">
       <p className="text-sm text-muted-foreground">
-        Builds an evenly spaced schedule. This replaces the current periods.
+        Builds an evenly spaced schedule.
+        {hasPeriods && " This replaces the current periods."}
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Field label="First period starts">
@@ -397,7 +397,7 @@ function PeriodGenerator({
           disabled={!options}
           onClick={() => options && onGenerate(generatePeriods(options))}
         >
-          Replace periods
+          {hasPeriods ? "Replace periods" : "Create periods"}
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>
           Cancel
