@@ -40,6 +40,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Steps ③ and ④ name the score rules the same way (the plain-English `SCORE_ROWS` labels) and show what was counted next to the points, e.g. "Batches waiting during labs · 18 pts · 6 batch-periods" (`scoreCount` in `domain/stats.ts`) (generate → step ③ Result and step ④ Quality score)
 - [T12] Step ③ has one main button at a time: *Generate timetable* until there is a result, then the footer's *Next: View & export* (Regenerate turns outlined, the Result card's duplicate *View timetable* is gone); Next stays disabled with a grey "Generate a timetable to continue." until a timetable exists (`generateFooterNote`); a finished run scrolls the Result (or error) card into view (step ③ → Generate)
 - [T12] *Cancel* next to *Generating…* (step ③) and *Regenerating…* (step ④): aborts the solver request or terminates the in-browser worker, never falls back to the other engine, keeps the previous timetable and says so in a toast; Next is disabled while a run is going (cancel via an AbortSignal through `generate()` / `runHeuristic()`; run state shared by steps ③/④ in `useGenerate`) (step ③ → Generate → Cancel)
+- [T12] Step ④ toolbar has one main button, *Print*: it opens a popover with the "Heading on printouts" field (focused) and *This timetable* / *All sections*; the heading row above the grid is gone, and Regenerate is now an outlined button next to CSV (step ④ → Print)
 
 ## Known issues / cuts
 
