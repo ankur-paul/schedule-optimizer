@@ -128,3 +128,17 @@
     @apply font-sans;
     }
 }
+/* Printing (T11): A4 landscape, keep subject colours. Screen-only chrome uses Tailwind `print:hidden`. */
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  html,
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    background: white;
+  }
+}

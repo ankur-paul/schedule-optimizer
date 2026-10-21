@@ -20,6 +20,8 @@ export interface AppData {
   /** Step ③ choices, kept so Regenerate (T10) reuses them. */
   engineMode: EngineMode;
   timeLimitSec: number;
+  /** Second line on printed timetables, e.g. "GNDEC Ludhiana · Semester 5, 2026". */
+  printHeading: string;
 }
 
 export interface AppState extends AppData {
@@ -35,6 +37,7 @@ export interface AppState extends AppData {
   setStep: (step: Step) => void;
   setEngineMode: (engineMode: EngineMode) => void;
   setTimeLimitSec: (timeLimitSec: number) => void;
+  setPrintHeading: (printHeading: string) => void;
   /** Replace all data with the demo college (keeps the current step). */
   loadSample: () => void;
   /** Back to an empty college with the sample week settings, on step ①. */
@@ -53,6 +56,7 @@ const initialData = (): AppData => ({
   step: 0,
   engineMode: "auto",
   timeLimitSec: 20,
+  printHeading: "",
 });
 
 /** localStorage that never throws (private mode, quota, or no window in tests). */
@@ -95,6 +99,7 @@ export const useAppStore = create<AppState>()(
       setStep: (step) => set({ step }),
       setEngineMode: (engineMode) => set({ engineMode }),
       setTimeLimitSec: (timeLimitSec) => set({ timeLimitSec }),
+      setPrintHeading: (printHeading) => set({ printHeading }),
       loadSample: () => {
         const s = structuredClone(sampleCollege);
         set({

@@ -19,7 +19,7 @@ export function StatsPanel({ data, placements }: Props) {
   // Re-score here: the TS scorer is the source of truth, whichever engine ran.
   const result = useMemo(() => score(data, placements), [data, placements]);
   return (
-    <section aria-label="Timetable statistics" className="grid gap-4 lg:grid-cols-2">
+    <section aria-label="Timetable statistics" className="grid gap-4 lg:grid-cols-2 print:hidden">
       <ScoreCard score={result} />
       <RoomCard data={data} placements={placements} />
       <TeacherLoadCard data={data} placements={placements} />

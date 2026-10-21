@@ -12,6 +12,7 @@ const data: AppData = {
   step: 2,
   engineMode: "auto",
   timeLimitSec: 20,
+  printHeading: "",
 };
 
 describe("buildSolveInput", () => {

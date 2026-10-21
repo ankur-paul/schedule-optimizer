@@ -28,8 +28,8 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-muted/40 text-foreground">
-        <header className="border-b bg-background">
+      <div className="min-h-screen bg-muted/40 text-foreground print:min-h-0 print:bg-white">
+        <header className="border-b bg-background print:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-4">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
@@ -51,8 +51,8 @@ function App() {
           <Stepper step={step} onSelect={setStep} />
         </header>
 
-        <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8">
-          <div>
+        <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 print:max-w-none print:p-0">
+          <div className="print:hidden">
             <h2 className="text-2xl font-semibold tracking-tight">
               {step + 1}. {current.title}
             </h2>
@@ -64,7 +64,7 @@ function App() {
           {step === 2 && <GenerateStep />}
           {step === 3 && <ViewStep />}
 
-          <div className="flex items-center gap-3 border-t pt-6">
+          <div className="flex items-center gap-3 border-t pt-6 print:hidden">
             <Button variant="outline" disabled={step === 0} onClick={() => setStep((step - 1) as Step)}>
               <ArrowLeft /> Back
             </Button>
