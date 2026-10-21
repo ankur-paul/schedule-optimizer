@@ -1,5 +1,5 @@
 # T07 — Step ③ Generate: engine selection, fallback, verify badge
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** main (integration) · **Prereqs:** T02, T03, T05 (T04 optional) · **Branch:** t07-generate
 
 ## Goal
@@ -22,5 +22,5 @@ One big "Generate timetable" button that always produces a verified result.
 - Manual: run sample with server on and off.
 
 ## Done when
-- [ ] Works with server on (CP-SAT) and off (heuristic)
-- [ ] Committed: `T07: generate flow with fallback + verification`
+- [x] Works with server on (CP-SAT) and off (heuristic)
+- [x] Committed: `T07: generate flow with fallback + verification`

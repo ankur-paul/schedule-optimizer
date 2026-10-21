@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { GenerateStep } from '@/features/generate/GenerateStep'
 import { SetupStep } from '@/features/setup/SetupStep'
 import { settingsErrors } from '@/features/setup/periods'
 import { useAppStore, type Step } from '@/store/useAppStore'
@@ -59,7 +60,7 @@ function App() {
 
           {step === 0 && <SetupStep />}
           {step === 1 && <Placeholder ticket="T06" />}
-          {step === 2 && <Placeholder ticket="T07" />}
+          {step === 2 && <GenerateStep />}
           {step === 3 && <Placeholder ticket="T08" />}
 
           <div className="flex items-center gap-3 border-t pt-6">

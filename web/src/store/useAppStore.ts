@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { sampleCollege } from "@/domain/sampleCollege";
 import type { Course, Department, Placement, Room, Section, Settings, SolveResult, Teacher } from "@/domain/types";
+import type { EngineMode } from "@/engine/solveClient";
 
 /** 0 = Setup week, 1 = Add data, 2 = Generate, 3 = View & export. */
 export type Step = 0 | 1 | 2 | 3;
@@ -16,6 +17,9 @@ export interface AppData {
   result: SolveResult | null;
   locks: Placement[];
   step: Step;
+  /** Step ③ choices, kept so Regenerate (T10) reuses them. */
+  engineMode: EngineMode;
+  timeLimitSec: number;
 }
 
 export interface AppState extends AppData {
@@ -29,6 +33,8 @@ export interface AppState extends AppData {
   setResult: (result: SolveResult | null) => void;
   setLocks: (locks: Placement[]) => void;
   setStep: (step: Step) => void;
+  setEngineMode: (engineMode: EngineMode) => void;
+  setTimeLimitSec: (timeLimitSec: number) => void;
   /** Replace all data with the demo college (keeps the current step). */
   loadSample: () => void;
   /** Back to an empty college with the sample week settings, on step ①. */
@@ -45,6 +51,8 @@ const initialData = (): AppData => ({
   result: null,
   locks: [],
   step: 0,
+  engineMode: "auto",
+  timeLimitSec: 20,
 });
 
 /** localStorage that never throws (private mode, quota, or no window in tests). */
@@ -85,6 +93,8 @@ export const useAppStore = create<AppState>()(
       setResult: (result) => set({ result }),
       setLocks: (locks) => set({ locks }),
       setStep: (step) => set({ step }),
+      setEngineMode: (engineMode) => set({ engineMode }),
+      setTimeLimitSec: (timeLimitSec) => set({ timeLimitSec }),
       loadSample: () => {
         const s = structuredClone(sampleCollege);
         set({
