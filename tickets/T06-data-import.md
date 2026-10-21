@@ -1,5 +1,5 @@
 # T06 — Step ② Data: sample, Excel import/template, edit tables
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** A · **Prereqs:** T05 · **Branch:** t06-data
 
 ## Goal
