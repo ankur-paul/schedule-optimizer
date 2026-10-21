@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, FlaskConical, Printer } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { buildSubjectColors } from "./colors";
 import { EntityPicker } from "./EntityPicker";
 import { placementsCsv } from "./exportCsv";
 import { entityGroups, entitySubtitle, placementsFor, stepEntity, unplacedFor, type PlacedSession, type ViewData, type ViewKind } from "./layout";
-import { mockResult } from "./mockResult";
 import { SessionDialog } from "./SessionDialog";
 import { StatsPanel } from "./StatsPanel";
 import { TimetableSheet } from "./TimetableSheet";
@@ -207,8 +206,6 @@ export function ViewStep() {
 
 function EmptyState() {
   const setStep = useAppStore((s) => s.setStep);
-  const loadSample = useAppStore((s) => s.loadSample);
-  const setResult = useAppStore((s) => s.setResult);
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
@@ -217,20 +214,7 @@ function EmptyState() {
           <p className="font-medium">No timetable yet</p>
           <p className="text-sm text-muted-foreground">Generate a timetable first, then come back here to browse it.</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setStep(2)}>Go to Generate</Button>
-          {import.meta.env.DEV && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                loadSample();
-                setResult(mockResult());
-              }}
-            >
-              <FlaskConical /> Mock result (dev)
-            </Button>
-          )}
-        </div>
+        <Button onClick={() => setStep(2)}>Go to Generate</Button>
       </CardContent>
     </Card>
   );
