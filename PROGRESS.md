@@ -39,6 +39,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Step ② "All sections" filter uses the same searchable section picker as step ④ (grouped by department); the picker now opens above or below its button and shrinks to fit short windows instead of jumping to the side; *Export current data* is an outlined button with an icon like *Template* (step ② with data → Courses → filter)
 - [T12] Steps ③ and ④ name the score rules the same way (the plain-English `SCORE_ROWS` labels) and show what was counted next to the points, e.g. "Batches waiting during labs · 18 pts · 6 batch-periods" (`scoreCount` in `domain/stats.ts`) (generate → step ③ Result and step ④ Quality score)
 - [T12] Step ③ has one main button at a time: *Generate timetable* until there is a result, then the footer's *Next: View & export* (Regenerate turns outlined, the Result card's duplicate *View timetable* is gone); Next stays disabled with a grey "Generate a timetable to continue." until a timetable exists (`generateFooterNote`); a finished run scrolls the Result (or error) card into view (step ③ → Generate)
+- [T12] *Cancel* next to *Generating…* (step ③) and *Regenerating…* (step ④): aborts the solver request or terminates the in-browser worker, never falls back to the other engine, keeps the previous timetable and says so in a toast; Next is disabled while a run is going (cancel via an AbortSignal through `generate()` / `runHeuristic()`; run state shared by steps ③/④ in `useGenerate`) (step ③ → Generate → Cancel)
 
 ## Known issues / cuts
 
@@ -51,3 +52,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T13] Dragging works in the Section view only, with a mouse or pen (touch not tried; no keyboard dragging, so use *Lock here* in the dialog instead). Undo puts back the timetable from just before that move, so undoing an older move also reverts any made after it.
 - [T05] A browser that already saved the app state keeps its old (sample) week setup until *Start over*.
 - [T04] CP-SAT bugs found by the new tests (strict xfail, details in `docs/cpsat-test-report.md`): a `feasible` (non-optimal) result reports an inflated score (the UI re-scores, so only `/solve` callers see it); a break-period lunch candidate makes H8 stricter than the validator; duplicate course ids give a misleading "infeasible".
+- [T12] Cancelling a CP-SAT run only stops the browser waiting: the server keeps solving until its time limit, and its answer is ignored.

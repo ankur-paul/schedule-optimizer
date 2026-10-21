@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, CircleX, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, CircleX, Loader2, Lock, RefreshCw, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { checkServer } from "@/engine/solveClient";
 import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { badgeText, ENGINE_OPTIONS, generateBlockers, TIME_LIMIT, type Notice } from "./generate";
-import { useGenerate } from "./useGenerate";
+import { cancelledToast, useGenerate } from "./useGenerate";
 
 type ServerState = "checking" | "online" | "offline";
 
@@ -55,12 +55,13 @@ function EngineCard({ server, onRefresh, onDone }: {
 }) {
   const data = useAppStore();
   const { engineMode, setEngineMode, timeLimitSec, setTimeLimitSec, loadSample, locks, setLocks } = data;
-  const { running, elapsed, run: runEngine } = useGenerate();
+  const { running, elapsed, run: runEngine, cancel } = useGenerate();
   const blockers = generateBlockers(data);
 
   const run = async () => {
     const notice = await runEngine();
-    if (notice) onDone(notice);
+    if (notice?.cancelled) cancelledToast();
+    else if (notice) onDone(notice);
   };
 
   return (
@@ -137,6 +138,11 @@ function EngineCard({ server, onRefresh, onDone }: {
           {locks.length > 0 && !running && (
             <Button variant="ghost" size="sm" onClick={() => setLocks([])}>
               <Lock /> Clear all locks
+            </Button>
+          )}
+          {running && (
+            <Button variant="outline" size="lg" onClick={cancel}>
+              <X /> Cancel
             </Button>
           )}
           {running && (

@@ -26,8 +26,10 @@ export interface GenerateOutcome {
 
 export interface GenerateDeps {
   fetch?: typeof fetch;
-  runHeuristic?: (input: SolveInput, opts: HeuristicOptions) => Promise<SolveResult>;
+  runHeuristic?: (input: SolveInput, opts: HeuristicOptions, signal?: AbortSignal) => Promise<SolveResult>;
   solverUrl?: string;
+  /** Cancels the run: `generate` rejects with the signal's reason and never falls back to another engine. */
+  signal?: AbortSignal;
 }
 
 /** `GET /health` with a short timeout. Never throws. */
@@ -48,7 +50,7 @@ export async function solveOnServer(input: SolveInput, deps: GenerateDeps = {}):
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
-    signal: AbortSignal.timeout(input.options.timeLimitSec * 1000 + SOLVE_GRACE_MS),
+    signal: withCancel(AbortSignal.timeout(input.options.timeLimitSec * 1000 + SOLVE_GRACE_MS), deps.signal),
   });
   if (!res.ok) throw new Error(`Solver server answered HTTP ${res.status}`);
   return (await res.json()) as SolveResult;
@@ -62,22 +64,26 @@ export async function solveOnServer(input: SolveInput, deps: GenerateDeps = {}):
  * Whatever runs, the result is re-scored with `score()` and re-checked with `validate()`.
  */
 export async function generate(input: SolveInput, mode: EngineMode, deps: GenerateDeps = {}): Promise<GenerateOutcome> {
+  const { signal } = deps;
   const heuristic = () =>
-    (deps.runHeuristic ?? runHeuristic)(input, {
-      timeLimitMs: Math.min(input.options.timeLimitSec * 1000, HEURISTIC_MAX_MS),
-      seed: input.options.seed,
-    });
+    (deps.runHeuristic ?? runHeuristic)(
+      input,
+      { timeLimitMs: Math.min(input.options.timeLimitSec * 1000, HEURISTIC_MAX_MS), seed: input.options.seed },
+      signal,
+    );
+  signal?.throwIfAborted();
 
   if (mode === "heuristic") return verify(input, await heuristic());
 
-  if (mode === "auto" && !(await checkServer(deps))) {
-    return verify(input, await heuristic(), "Solver server is offline, so the in-browser engine was used.");
-  }
+  const up = mode === "auto" ? await checkServer(deps) : true;
+  signal?.throwIfAborted();
+  if (!up) return verify(input, await heuristic(), "Solver server is offline, so the in-browser engine was used.");
 
   let server: SolveResult;
   try {
     server = await solveOnServer(input, deps);
   } catch (e) {
+    signal?.throwIfAborted(); // cancelled, not failed: don't fall back
     const why = describeError(e, input.options.timeLimitSec);
     if (mode === "cpsat") return verify(input, failed(why));
     return verify(input, await heuristic(), `${why} The in-browser engine was used instead.`);
@@ -92,6 +98,11 @@ export async function generate(input: SolveInput, mode: EngineMode, deps: Genera
     return verify(input, await heuristic(), `CP-SAT failed (${server.message ?? "unknown error"}). The in-browser engine was used instead.`);
   }
   return verify(input, server);
+}
+
+/** Aborts when either signal does (the request timeout or the user's Cancel). */
+function withCancel(timeout: AbortSignal, cancel?: AbortSignal): AbortSignal {
+  return cancel ? AbortSignal.any([timeout, cancel]) : timeout;
 }
 
 /**

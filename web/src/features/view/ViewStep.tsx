@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
@@ -10,7 +10,7 @@ import { expandSessions } from "@/domain/sessions";
 import type { Id } from "@/domain/types";
 import { validate } from "@/domain/validator";
 import { badgeText, regenerateSummary } from "@/features/generate/generate";
-import { useGenerate } from "@/features/generate/useGenerate";
+import { cancelledToast, useGenerate } from "@/features/generate/useGenerate";
 import { isLocked, regenerateLabel, toggleLock } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSubjectColors } from "./colors";
@@ -41,7 +41,7 @@ export function ViewStep() {
   const locks = useAppStore((s) => s.locks);
   const setLocks = useAppStore((s) => s.setLocks);
   const lockedIds = useMemo(() => new Set(locks.map((l) => l.sessionId)), [locks]);
-  const { running, elapsed, run } = useGenerate();
+  const { running, elapsed, run, cancel } = useGenerate();
   const data: ViewData = useMemo(
     () => ({ settings, departments, teachers, rooms, sections, courses }),
     [settings, departments, teachers, rooms, sections, courses],
@@ -95,7 +95,8 @@ export function ViewStep() {
   const regenerate = async () => {
     const notice = await run();
     if (!notice) return;
-    if (notice.error) toast.error(`No timetable was produced: ${notice.error} The previous one is unchanged.`);
+    if (notice.cancelled) cancelledToast();
+    else if (notice.error) toast.error(`No timetable was produced: ${notice.error} The previous one is unchanged.`);
     else {
       const next = useAppStore.getState().result;
       if (next) toast.success(regenerateSummary(next), { description: notice.fallbackReason });
@@ -147,6 +148,11 @@ export function ViewStep() {
             {running ? <Loader2 className="animate-spin" /> : <RefreshCw />}
             {running ? `Regenerating… ${elapsed} s` : regenerateLabel(locks.length)}
           </Button>
+          {running && (
+            <Button variant="ghost" onClick={cancel}>
+              <X /> Cancel
+            </Button>
+          )}
           {locks.length > 0 && (
             <Button variant="ghost" disabled={running} onClick={() => setLocks([])}>
               <LockOpen /> Clear all locks

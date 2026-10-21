@@ -11,6 +11,7 @@ import { checkData } from '@/features/data/dataChecks'
 import { SetupStep } from '@/features/setup/SetupStep'
 import type { FooterNote } from '@/features/footer'
 import { generateFooterNote } from '@/features/generate/generate'
+import { useGenerating } from '@/features/generate/useGenerate'
 import { settingsErrors, setupFooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
 import { useAppStore, type Step } from '@/store/useAppStore'
@@ -27,6 +28,7 @@ function App() {
   const setStep = useAppStore((s) => s.setStep)
   const settings = useAppStore((s) => s.settings)
   const result = useAppStore((s) => s.result)
+  const generating = useGenerating()
   const reset = useAppStore((s) => s.reset)
   const data = useCollegeData()
 
@@ -38,7 +40,7 @@ function App() {
   // Steps ① and ② block moving on until their input is usable; step ③ until there is a timetable.
   const dataErrors = step === 1 ? checkData(data, settings).errors : []
   const canContinue =
-    step === 0 ? settingsErrors(settings).length === 0 : step === 1 ? dataErrors.length === 0 : step === 2 ? result !== null : true
+    step === 0 ? settingsErrors(settings).length === 0 : step === 1 ? dataErrors.length === 0 : step === 2 ? result !== null && !generating : true
   const note: FooterNote | null =
     step === 0
       ? setupFooterNote(settings)

@@ -48,7 +48,8 @@ export function hasTimetable(result: Pick<SolveResult, "status" | "placements">)
 }
 
 /** What the last run said, beyond the stored result: why it fell back, or why nothing was produced. */
-export interface Notice { fallbackReason?: string; error?: string }
+/** How a run ended, for the UI. `cancelled`: the user stopped it and the previous result is untouched. */
+export interface Notice { fallbackReason?: string; error?: string; cancelled?: boolean }
 
 export function outcomeNotice(result: Pick<SolveResult, "status" | "placements" | "message">, fallbackReason?: string): Notice {
   return hasTimetable(result) ? { fallbackReason } : { error: result.message ?? "The engine failed." };
