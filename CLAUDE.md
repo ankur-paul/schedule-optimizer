@@ -2,6 +2,8 @@
 
 College timetable generator (2-hour solo hackathon). Read `PLAN.md` for decisions, rules and the data contract; work is split into tickets in `tickets/`.
 
+To pick work, run `python3 tickets/board.py` and follow the rules in `tickets/README.md` (claim a ticket by creating its branch).
+
 ## Testing
 
 - **Test everything you build, always.** Every new function or module gets tests in the same commit (Vitest next to the file in `web/src`, Pytest in `server/tests`). This goes beyond the ticket's minimum list: cover the main path plus the edge cases you thought about while writing it.
