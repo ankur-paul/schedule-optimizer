@@ -11,6 +11,7 @@ import { EntityPicker } from "./EntityPicker";
 import { entityGroups, layoutWeek, placementsFor, stepEntity, unplacedFor, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 import { mockResult } from "./mockResult";
 import { SessionDialog } from "./SessionDialog";
+import { StatsPanel } from "./StatsPanel";
 import { TimetableGrid } from "./TimetableGrid";
 
 const KINDS: { kind: ViewKind; label: string }[] = [
@@ -122,6 +123,8 @@ export function ViewStep() {
           <CardContent className="py-10 text-center text-sm text-muted-foreground">No {kind}s in the data yet.</CardContent>
         </Card>
       )}
+
+      <StatsPanel data={data} placements={result.placements} />
 
       <SessionDialog data={data} entry={open} colors={colors} onClose={() => setOpen(null)} />
     </div>

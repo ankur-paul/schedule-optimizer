@@ -1,5 +1,5 @@
 # T09 — Stats: score breakdown, teacher load, room utilisation
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** any · **Prereqs:** T02, T08 · **Branch:** t09-stats
 
 ## Goal
@@ -16,5 +16,5 @@ Show *why* this timetable is good — answers "uneven teaching loads" and "rooms
 - `stats.test.ts`: load and utilisation numbers for the tiny T02 fixture.
 
 ## Done when
-- [ ] Panel visible in step ④ beside/below the grid
-- [ ] Committed: `T09: stats panel`
+- [x] Panel visible in step ④ beside/below the grid
+- [x] Committed: `T09: stats panel`

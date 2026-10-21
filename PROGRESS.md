@@ -13,6 +13,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T04] CP-SAT solver service: `POST /solve` places all 210 sample sessions, optimal (score 18) in ~10 s; models H1–H8 + all soft rules S1–S4, locks, infeasible/error messages (`cd server && .venv/bin/uvicorn main:app --port 8000`, then `curl -X POST localhost:8000/solve -H 'content-type: application/json' --data @../shared/fixtures/sample-college.json`; tests: `.venv/bin/pytest`)
 - [T05] App shell with 4-step stepper (Back/Next, hints), zustand store persisted to localStorage `timetable-v1` (`loadSample`, `reset`), Step ① Setup: day chips, editable periods table + "Generate periods" helper, lunch candidates, inline validation (`cd web && npm run dev`; edit settings and reload; tests in `src/features/setup/periods.test.ts`)
 - [T08] Step ④ timetable grid: Section/Teacher/Room switcher, searchable grouped picker + prev/next, labs span columns, parallel batch labs stacked, colour per subject, hover tooltip, click → details dialog, empty state (step ④ → "Mock result (dev)" until T07 lands)
+- [T09] Stats panel under the step ④ grid: quality score with S1–S4 rows + ⓘ tips, room utilisation bars with shared-room headline, sortable teacher load table with per-day bars and Highest/Lowest badges; pure logic in `domain/stats.ts` (step ④ → "Mock result (dev)" or a generated timetable; `cd web && npm test`)
 
 ## Known issues / cuts
 
