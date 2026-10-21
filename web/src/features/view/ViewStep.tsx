@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Printer, RefreshCw } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
@@ -8,12 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { expandSessions } from "@/domain/sessions";
 import type { Id } from "@/domain/types";
-import { regenerateSummary } from "@/features/generate/generate";
+import { validate } from "@/domain/validator";
+import { badgeText, regenerateSummary } from "@/features/generate/generate";
 import { useGenerate } from "@/features/generate/useGenerate";
 import { isLocked, regenerateLabel, toggleLock } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSubjectColors } from "./colors";
 import { EntityPicker } from "./EntityPicker";
+import { DraggableUnplaced, MoveDnd } from "./MoveDnd";
 import { placementsCsv } from "./exportCsv";
 import { entityGroups, entitySubtitle, placementsFor, stepEntity, unplacedFor, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 import { SessionDialog } from "./SessionDialog";
@@ -59,6 +61,15 @@ export function ViewStep() {
   }, [data]);
   const colors = useMemo(() => buildSubjectColors(courses), [courses]);
   const groups = useMemo(() => entityGroups(data, kind), [data, kind]);
+  // Re-checked here too, so a hand-made move shows straight away whether the timetable is still clash-free.
+  const validation = useMemo(() => {
+    if (!result) return null;
+    try {
+      return validate({ ...data, locks, options: { timeLimitSec: 0 } }, result.placements);
+    } catch {
+      return null; // broken data; step ② reports it
+    }
+  }, [data, locks, result]);
 
   // "Print all sections" renders every section grid first, then opens the print dialog.
   useEffect(() => {
@@ -167,40 +178,75 @@ export function ViewStep() {
         />
       </div>
 
+      {validation && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm print:hidden">
+          <span
+            role="status"
+            className={cn(
+              "rounded-md border px-2 py-0.5 font-medium",
+              validation.violations.length === 0
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-destructive/30 bg-destructive/10 text-destructive",
+            )}
+          >
+            {badgeText(result, validation)}
+          </span>
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            <Move className="size-3.5" />
+            {kind === "section"
+              ? "Drag a class to move it: green slots are free (with the score change), red ones say why not. Moved classes are locked."
+              : "Switch to the Section view to move classes by dragging."}
+          </span>
+        </div>
+      )}
+
       {currentId ? (
-        <>
-          <TimetableSheet
-            data={data}
-            kind={kind}
-            title={title}
-            subtitle={entitySubtitle(data, kind, currentId)}
-            heading={printHeading}
-            entries={entries}
-            colors={colors}
-            onSelect={setOpen}
-            locked={lockedIds}
-            className={cn(printAll && "print:hidden")}
-          />
-          {missing.length > 0 && (
-            <div className="flex gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 print:hidden">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-              <div>
-                <p className="font-medium">
-                  {missing.length} {missing.length === 1 ? "session" : "sessions"} could not be placed
-                </p>
-                <ul className="mt-1 list-disc pl-4">
-                  {missing.map(({ session, reason }) => (
-                    <li key={session.id}>
-                      {courses.find((c) => c.id === session.courseId)?.subject ?? session.courseId}{" "}
-                      {session.kind === "lab" ? "lab" : "lecture"}
-                      {session.batch ? ` (B${session.batch})` : ""}: {reason}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+        <MoveDnd data={data} sessions={sessions} colors={colors} locked={lockedIds}>
+          {(dnd) => (
+            <>
+              <TimetableSheet
+                data={data}
+                kind={kind}
+                title={title}
+                subtitle={entitySubtitle(data, kind, currentId)}
+                heading={printHeading}
+                entries={entries}
+                colors={colors}
+                onSelect={setOpen}
+                locked={lockedIds}
+                dnd={kind === "section" ? dnd : undefined}
+                className={cn(printAll && "print:hidden")}
+              />
+              {missing.length > 0 && (
+                <div className="flex gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 print:hidden">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">
+                      {missing.length} {missing.length === 1 ? "session" : "sessions"} could not be placed
+                      {kind === "section" && <span className="font-normal"> · drag one onto a green slot to place it yourself</span>}
+                    </p>
+                    <ul className="mt-1 grid gap-1 pl-1">
+                      {missing.map(({ session, reason }) => {
+                        const name = (
+                          <>
+                            {courses.find((c) => c.id === session.courseId)?.subject ?? session.courseId}{" "}
+                            {session.kind === "lab" ? "lab" : "lecture"}
+                            {session.batch ? ` (B${session.batch})` : ""}
+                          </>
+                        );
+                        return (
+                          <li key={session.id}>
+                            {kind === "section" ? <DraggableUnplaced sessionId={session.id}>{name}</DraggableUnplaced> : name}: {reason}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </>
           )}
-        </>
+        </MoveDnd>
       ) : (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">No {kind}s in the data yet.</CardContent>

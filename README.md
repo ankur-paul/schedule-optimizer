@@ -25,6 +25,8 @@ sees it.
 - **Section, teacher and room views** of the same timetable, colour-coded by subject.
 - **Quality stats.** Score breakdown, teacher load per day, room utilisation.
 - **Lock and regenerate.** Lock the cells you want to keep, re-solve everything else.
+- **Drag and drop.** Drag a class to another slot: free slots go green with the score change, the rest red with
+  the reason. Every drop is re-validated and locked, with Undo.
 - **Print / PDF.** One timetable, or every section on its own A4 page. CSV export of every placement.
 
 Everything is saved in the browser (localStorage). There are no accounts and no database.
@@ -137,7 +139,8 @@ drift apart.
    one shared hall used by all three departments.
 5. **Stats (10 s).** Scroll down: score explained rule by rule, shared room utilisation, teacher load bars.
 6. **Lock + regenerate (15 s).** Click a cell → *Lock here*; lock a second one. *Regenerate (keep 2 locked)*.
-   The two 🔒 cells stay put, everything else moves, still 0 clashes.
+   The two 🔒 cells stay put, everything else moves, still 0 clashes. Then drag a class: green slots show the
+   score change, hover a red one for the reason, drop on green → moved, locked, still `✓ Verified: 0 clashes`.
 7. **Print (10 s).** *Print all sections* → one A4 page per section, colours kept.
 
 Backup: stop the server and generate again. Auto falls back to the in-browser engine with a note saying why,

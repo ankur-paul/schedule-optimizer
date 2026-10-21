@@ -24,6 +24,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Toasts and hover tooltips no longer print on top of the timetable (step ④ → regenerate, then Print this timetable straight away)
 - [T12] README rewritten: problem, features, screenshots (`docs/screenshots/`), run steps, how the two engines + validator fit, H/S rules table, 90 s demo script; ARCHITECTURE.md time limit corrected (open README.md)
 - [chore] Server moved to uv: `server/pyproject.toml` + `uv.lock` pin exact versions (pytest/httpx in the dev group), `requirements.txt` removed; README and CLAUDE.md commands updated (`cd server && uv sync && uv run uvicorn main:app --port 8000`; tests: `uv run pytest`)
+- [T13] Drag and drop in step ④ Section view: dragging a class tints every slot green (with the score change) or red, and the floating card shows the reason or the change for the slot under the pointer; labs keep the period you grabbed them by; a drop is re-validated, moved, locked, re-scored, with an Undo toast; unplaced sessions can be dragged onto the grid; step ④ now shows the verified badge too. Logic in `features/view/moves.ts` is tested against `validate()` for every slot (`npm run dev` → generate → step ④ → drag a class)
 
 ## Known issues / cuts
 
@@ -33,3 +34,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T07] Exact – CP-SAT with the server off shows an error and keeps the previous result (no fallback, by design; Auto falls back). The infeasible → partial-heuristic path is unit-tested but not clicked through (needs T06 edit tables).
 - [T06] Importing or loading the sample replaces all data tables (after a confirm). Inline table edits do not clear an existing timetable; T07's validator re-checks it. A course with an error is left out of the load numbers until fixed.
 - [T10] Locks are kept when the result is replaced, so an engine run that can't honour them (e.g. a lock that blocks every other slot) shows up as unplaced sessions rather than a dropped lock. Print sheets don't show 🔒.
+- [T13] Dragging works in the Section view only, with a mouse or pen (touch not tried; no keyboard dragging, so use *Lock here* in the dialog instead). Undo puts back the timetable from just before that move, so undoing an older move also reverts any made after it.

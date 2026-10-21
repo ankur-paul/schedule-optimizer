@@ -39,6 +39,7 @@ Changing any setting clears the current timetable and its locks, because placeme
 - **Timetable grid.** One week grid with a Section / Teacher / Room switcher, a searchable picker grouped by department, and previous/next buttons. Labs span their periods, each subject has its own colour, and parallel batch labs stack in one cell.
 - **Session details.** Hover a cell for a tooltip; click it for subject, section, batch, teacher, room and time.
 - **Lock and regenerate.** In the details dialog, **Lock here** pins a session to its slot (shown with 🔒 and a thick border). **Regenerate (keep N locked)**, in steps ③ and ④, re-solves everything else with the engine chosen in step ③. Locks that no longer fit the data, such as a deleted room or two locks that clash, are dropped with a warning before solving. **Clear all locks** removes them all.
+- **Drag and drop.** In the Section view, drag a class to another slot. Free slots turn green and show how the score would change; the rest turn red, and the dragged card says why (e.g. "Dr. Meera Iyer teaches CSE B Database Systems at Tue P3"). A lab grabbed by its second period lands one period earlier, so it goes where it looks. A drop is re-checked by the validator, then the class is moved, locked there and the score updated, with an **Undo** in the toast. Unplaced sessions can be dragged onto the grid the same way. Step ④ shows the verified badge, so you can see the timetable is still clash-free.
 - **Stats panel.**
   - Quality score, broken down by soft rule, with a tooltip for each rule.
   - Room utilisation bars, with a headline figure for shared rooms.
@@ -78,7 +79,8 @@ Soft rules, which add to the score (lower is better):
 - A lock that blocks every other slot shows up as unplaced sessions rather than a dropped lock.
 - Printouts don't show the 🔒 marker.
 
+- Drag and drop works in the Section view only, with a mouse; there is no keyboard dragging (use *Lock here* instead).
+
 ## Not built yet
 
-- Drag-and-drop editing with valid slots highlighted (T13).
 - Vercel deploy with an in-browser glpk.js solver (T14).
