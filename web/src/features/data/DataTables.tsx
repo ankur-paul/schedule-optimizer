@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Course, Department, Id, Room, Section, Teacher } from "@/domain/types";
+import { EntityPicker } from "@/features/view/EntityPicker";
+import { entityGroups } from "@/features/view/layout";
 import { useAppStore } from "@/store/useAppStore";
 import { useCollegeData } from "./collegeData";
 import type { DataReport } from "./dataChecks";
@@ -336,6 +338,7 @@ function SectionsTable({ report }: { report: DataReport }) {
 
 function CoursesTable() {
   const data = useCollegeData();
+  const settings = useAppStore((s) => s.settings);
   const setCourses = useAppStore((s) => s.setCourses);
   const update = useUpdate<Course>(data.courses, setCourses);
   const [sectionFilter, setSectionFilter] = useState("");
@@ -366,14 +369,12 @@ function CoursesTable() {
   return (
     <div className="grid gap-3">
       <div className="flex items-center gap-2">
-        <Select label="Filter by section" value={sectionFilter} onChange={setSectionFilter} className="w-56">
-          <option value="">All sections</option>
-          {data.sections.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </Select>
+        <EntityPicker
+          groups={[{ label: "", items: [{ id: "", name: "All sections" }] }, ...entityGroups({ ...data, settings }, "section")]}
+          value={sectionFilter}
+          onChange={setSectionFilter}
+          placeholder="All sections"
+        />
         <span className="text-xs text-muted-foreground">{shown.length} shown</span>
       </div>
       <Table

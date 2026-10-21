@@ -12,7 +12,7 @@ interface Props {
   placeholder: string;
 }
 
-/** Searchable select of sections/teachers/rooms, grouped by department. */
+/** Searchable select of sections/teachers/rooms, grouped by department. A group with an empty label gets no heading. */
 export function EntityPicker({ groups, value, onChange, placeholder }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -31,7 +31,8 @@ export function EntityPicker({ groups, value, onChange, placeholder }: Props) {
         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Positioner sideOffset={4} align="start" className="isolate z-50">
+        {/* Stay above or below the trigger (never beside it), shrinking the list to fit the viewport. */}
+        <Popover.Positioner sideOffset={4} align="start" collisionAvoidance={{ fallbackAxisSide: "none" }} className="isolate z-50">
           <Popover.Popup className="w-72 overflow-hidden rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none">
             <div className="flex items-center gap-2 border-b px-3">
               <Search className="size-4 text-muted-foreground" />
@@ -47,11 +48,11 @@ export function EntityPicker({ groups, value, onChange, placeholder }: Props) {
                 className="h-9 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <div className="max-h-80 overflow-y-auto p-1">
+            <div className="max-h-[min(20rem,calc(var(--available-height)-3rem))] overflow-y-auto p-1">
               {shown.length === 0 && <p className="px-2 py-6 text-center text-muted-foreground">No matches</p>}
               {shown.map((g) => (
                 <div key={g.label} className="py-1">
-                  <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{g.label}</div>
+                  {g.label && <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{g.label}</div>}
                   {g.items.map((e) => (
                     <button
                       key={e.id}

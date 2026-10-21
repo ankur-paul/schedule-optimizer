@@ -74,6 +74,13 @@ describe("filterGroups / stepEntity", () => {
     expect(out.flatMap((g) => g.items.map((e) => e.name))).toEqual(["CSE A"]);
   });
 
+  it("matches an unlabelled group (the data step's \"All sections\" row) by its item names only", () => {
+    const withAll = [{ label: "", items: [{ id: "", name: "All sections" }] }, ...groups];
+    expect(filterGroups(withAll, "all").flatMap((g) => g.items.map((e) => e.name))).toEqual(["All sections"]);
+    expect(filterGroups(withAll, "cse a").flatMap((g) => g.items.map((e) => e.name))).toEqual(["CSE A"]);
+    expect(filterGroups(withAll, "")[0].items[0].name).toBe("All sections");
+  });
+
   it("keeps a whole group when its department name matches", () => {
     const out = filterGroups(groups, "mechanical");
     expect(out).toHaveLength(1);
