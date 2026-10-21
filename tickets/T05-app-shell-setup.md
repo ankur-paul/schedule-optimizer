@@ -1,5 +1,5 @@
 # T05 — App shell, stepper, store, Step ① Setup
-**Status:** TODO
+**Status:** DONE
 **Lane:** A · **Prereqs:** T01 · **Branch:** t05-shell
 
 ## Goal
@@ -24,6 +24,6 @@ The guided flow skeleton and the first step: configure the week.
 - None for UI. Optional: one store test for `loadSample()`.
 
 ## Done when
-- [ ] Can move between 4 steps (steps 2–4 can be placeholders)
-- [ ] Settings persist across reload
-- [ ] Committed: `T05: app shell + setup step`
+- [x] Can move between 4 steps (steps 2–4 can be placeholders)
+- [x] Settings persist across reload
+- [x] Committed: `T05: app shell + setup step`
