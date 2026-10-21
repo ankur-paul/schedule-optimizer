@@ -1,0 +1,645 @@
+"""Edge cases for the CP-SAT solver, beyond the basics in test_solver.py.
+
+Every feasible result is re-checked with the independent hard-rule checker (`hard_violations`) and re-scored with
+the independent scorer (`reference_score`). Tests marked xfail document known bugs (see docs/cpsat-test-report.md);
+they are strict, so fixing a bug makes its test fail until the marker is removed.
+"""
+
+import time
+
+import pytest
+from fastapi.testclient import TestClient
+from ortools.sat.python import cp_model
+
+import main
+import solver as solver_module
+from models import Options, SolveInput
+from solver import solve, teaching_runs, valid_starts
+from tests.helpers import course, hard_violations, tiny
+from tests.reference import reference_score
+from tests.test_sessions import load_sample
+
+LAB = {"id": "lab1", "name": "Lab 1", "type": "lab", "departmentId": None}
+LAB2 = {"id": "lab2", "name": "Lab 2", "type": "lab", "departmentId": None}
+LAB3 = {"id": "lab3", "name": "Lab 3", "type": "lab", "departmentId": None}
+ROOM = {"id": "r1", "name": "R1", "type": "classroom", "departmentId": None}
+
+
+def room(id: str, type: str = "classroom", dept: str | None = None) -> dict:
+    return {"id": id, "name": id.upper(), "type": type, "departmentId": dept}
+
+
+def section(id: str = "s1", batches: int = 1, dept: str = "d1") -> dict:
+    return {"id": id, "name": id.upper(), "departmentId": dept, "batches": batches}
+
+
+def lock(session: str, day: int, period: int, room_id: str = "r1") -> dict:
+    return {"sessionId": session, "day": day, "period": period, "roomId": room_id}
+
+
+def placed(res):
+    return {pl.session_id: pl for pl in res.placements}
+
+
+def solved(inp: SolveInput, status: tuple[str, ...] = ("optimal",)):
+    """Solve and check the result is valid: expected status, no hard violations, locks kept, honest score."""
+    res = solve(inp)
+    assert res.status in status, f"{res.status}: {res.message}"
+    assert hard_violations(inp, res) == []
+    for lk in inp.locks:
+        assert lk in res.placements, f"lock {lk} moved"
+    ref = reference_score(inp, res.placements)
+    assert res.score.total == ref["total"], f"reported {res.score} but placements score {ref}"
+    return res
+
+
+def infeasible(inp: SolveInput, message_has: str | None = None):
+    res = solve(inp)
+    assert res.status == "infeasible", f"expected infeasible, got {res.status}"
+    assert res.placements == []
+    assert res.message
+    if message_has:
+        assert message_has in res.message, res.message
+    return res
+
+
+# --- Input shape ------------------------------------------------------------------------------------------------
+
+
+class TestInputShape:
+    def test_no_courses_is_optimal_and_empty(self):
+        res = solved(tiny(days=3, periods="TTBTT", lunch=[1]))
+        assert res.placements == [] and res.score.total == 0
+
+    def test_courses_with_zero_sessions_are_ignored(self):
+        res = solved(tiny(courses=[course("c1", lectures=0, labs=0)]))
+        assert res.placements == []
+
+    def test_zero_days_with_sessions_is_infeasible(self):
+        infeasible(tiny(days=0, courses=[course("c1", lectures=1)]))
+
+    def test_zero_days_and_no_sessions_is_optimal(self):
+        assert solve(tiny(days=0)).status == "optimal"
+
+    def test_only_break_periods_says_why(self):
+        infeasible(tiny(periods="BB", courses=[course("c1", lectures=1)]), "no 1 consecutive teaching periods")
+
+    def test_no_periods_at_all(self):
+        infeasible(tiny(periods="", courses=[course("c1", lectures=1)]), "cannot be placed anywhere")
+
+    def test_no_rooms_at_all(self):
+        infeasible(tiny(rooms=[], courses=[course("c1", lectures=1)]), "no eligible room")
+
+    def test_no_slot_message_lists_at_most_five_sessions(self):
+        res = infeasible(tiny(rooms=[], courses=[course("c1", lectures=7)]))
+        assert res.message.startswith("7 session(s) cannot be placed anywhere")
+        assert res.message.count("c1:L") == 5 and res.message.endswith("…")
+
+    def test_unknown_section_is_an_error_not_a_crash(self):
+        res = solve(tiny(courses=[course("c1", lectures=1, section="ghost")]))
+        assert res.status == "error" and "ghost" in res.message
+
+    def test_teacher_missing_from_teacher_list_is_still_kept_clash_free(self):
+        # Two sections share a teacher id that isn't in `teachers`; H1 must still hold.
+        inp = tiny(periods="TT", rooms=[ROOM, room("r2")], sections=[section("s1"), section("s2")],
+                   courses=[course("a", lectures=1, teacher="ghost", section="s1"),
+                            course("b", lectures=1, teacher="ghost", section="s2")])
+        res = solved(inp)
+        assert {pl.period for pl in res.placements} == {0, 1}
+
+    def test_section_with_no_courses_gets_no_penalties(self):
+        res = solved(tiny(lunch=[1], sections=[section("s1"), section("empty")], courses=[course("c1", lectures=1)]))
+        assert res.score.total == 0
+
+    def test_placements_follow_session_order(self):
+        inp = tiny(days=2, periods="TTTT", courses=[course("b", lectures=2), course("a", lectures=2, teacher="t2")])
+        res = solved(inp)
+        assert [pl.session_id for pl in res.placements] == ["b:L1", "b:L2", "a:L1", "a:L2"]
+
+    def test_every_day_of_a_five_day_week_is_used(self):
+        res = solved(tiny(days=5, periods="TT", courses=[course("c1", lectures=5)]))
+        assert sorted(pl.day for pl in res.placements) == [0, 1, 2, 3, 4]
+
+    def test_negative_counts_produce_no_sessions(self):
+        # Pydantic accepts negative ints; expansion yields nothing rather than crashing. (The web app blocks these.)
+        assert solve(tiny(courses=[course("c1", lectures=-2, labs=-1)])).placements == []
+
+    def test_zero_batches_silently_drops_labs(self):
+        # Input-validation gap: a section with 0 batches gets no lab sessions at all, and the solve "succeeds".
+        # The web app refuses batches < 1 before solving, so this only matters for direct API callers.
+        res = solve(tiny(rooms=[LAB], sections=[section(batches=0)], courses=[course("c1", labs=1, lab_length=1)]))
+        assert res.status == "optimal" and res.placements == []
+
+    def test_zero_lab_length_is_reported_as_unplaceable(self):
+        infeasible(tiny(rooms=[LAB], courses=[course("c1", labs=1, lab_length=0)]), "no 0 consecutive teaching periods")
+
+    @pytest.mark.xfail(strict=True, reason="BUG: duplicate course ids give a misleading 'no clash-free timetable exists'")
+    def test_duplicate_course_ids_are_reported_as_such(self):
+        # Two courses share id c1, so both expand to session c1:L1. Expected: an error naming the duplicate id.
+        # Actual: the sessions' variables collide and the solver says the data is infeasible.
+        inp = tiny(periods="TT", courses=[course("c1", lectures=1), course("c1", lectures=1, teacher="t2")])
+        res = solve(inp)
+        assert res.status == "error" and "c1" in (res.message or "")
+
+
+# --- Periods, breaks and labs (H6, H7) ---------------------------------------------------------------------------
+
+
+class TestPeriodsAndLabs:
+    def test_valid_starts_edge_lengths(self):
+        inp = tiny(periods="TTBT")
+        assert valid_starts(inp, 0) == []
+        assert valid_starts(inp, 1) == [0, 1, 3]
+        assert valid_starts(inp, 2) == [0]
+        assert valid_starts(inp, 5) == []
+
+    def test_teaching_runs_with_leading_trailing_and_double_breaks(self):
+        assert teaching_runs(tiny(periods="BTTBBTB")) == [[1, 2], [5]]
+        assert teaching_runs(tiny(periods="BBB")) == []
+        assert teaching_runs(tiny(periods="")) == []
+
+    def test_lab_exactly_fills_the_day(self):
+        res = solved(tiny(periods="TTT", rooms=[LAB], courses=[course("c1", labs=1, lab_length=3)]))
+        assert placed(res)["c1:P1"].period == 0
+
+    def test_lab_fits_only_at_the_end_of_the_day(self):
+        res = solved(tiny(periods="TBTTT", rooms=[LAB], courses=[course("c1", labs=1, lab_length=3)]))
+        assert placed(res)["c1:P1"].period == 2
+
+    def test_lab_never_runs_off_the_end_of_the_day(self):
+        res = solved(tiny(periods="TTT", rooms=[LAB], courses=[course("c1", labs=2, lab_length=2)], days=2))
+        assert all(pl.period + 2 <= 3 for pl in res.placements)
+
+    def test_one_period_lab(self):
+        res = solved(tiny(periods="BT", rooms=[LAB], courses=[course("c1", labs=1, lab_length=1)]))
+        assert placed(res)["c1:P1"].period == 1
+
+    def test_lab_blocks_every_period_it_covers(self):
+        # A 2-period lab and 2 lectures for one section in 4 periods: the lectures must avoid both lab periods.
+        inp = tiny(periods="TTTT", rooms=[LAB, ROOM],
+                   courses=[course("lab", labs=1, lab_length=2), course("lec", lectures=2, teacher="t2")])
+        res = solved(inp)
+        p = placed(res)["lab:P1"].period
+        assert not {pl.period for pl in res.placements if pl.session_id.startswith("lec")} & {p, p + 1}
+
+    def test_whole_section_lab_uses_lab_rooms_only(self):
+        res = solved(tiny(rooms=[ROOM, LAB], courses=[course("c1", labs=1, lab_length=1)]))
+        assert placed(res)["c1:P1"].room_id == "lab1"
+
+    def test_lecture_with_only_labs_available_is_unplaceable(self):
+        infeasible(tiny(rooms=[LAB], courses=[course("c1", lectures=1)]), "c1:L1 (no eligible room)")
+
+
+# --- Rooms (H3, H4) -----------------------------------------------------------------------------------------------
+
+
+class TestRooms:
+    def test_fixed_lab_room_that_does_not_exist(self):
+        infeasible(tiny(rooms=[LAB], courses=[course("c1", labs=1, labRoomId="ghost")]), "no eligible room")
+
+    def test_fixed_lab_room_that_is_a_classroom(self):
+        infeasible(tiny(rooms=[ROOM, LAB], courses=[course("c1", labs=1, labRoomId="r1")]), "no eligible room")
+
+    def test_fixed_lab_owned_by_another_department(self):
+        foreign = room("flab", "lab", "d2")
+        infeasible(tiny(rooms=[foreign, LAB], courses=[course("c1", labs=1, labRoomId="flab")]), "no eligible room")
+
+    def test_fixed_lab_room_is_used_even_when_others_are_free(self):
+        res = solved(tiny(rooms=[LAB, LAB2, LAB3], courses=[course("c1", labs=2, lab_length=1, labRoomId="lab3")], days=2))
+        assert {pl.room_id for pl in res.placements} == {"lab3"}
+
+    def test_two_courses_competing_for_one_fixed_lab_are_serialised(self):
+        inp = tiny(periods="TT", rooms=[LAB, LAB2], sections=[section("s1"), section("s2")],
+                   courses=[course("a", labs=1, lab_length=1, labRoomId="lab1", section="s1"),
+                            course("b", labs=1, lab_length=1, labRoomId="lab1", section="s2", teacher="t2")])
+        res = solved(inp)
+        assert {pl.period for pl in res.placements} == {0, 1}
+
+    def test_shared_room_is_used_by_two_departments(self):
+        inp = tiny(periods="TT", rooms=[ROOM], sections=[section("s1", dept="d1"), section("s2", dept="d2")],
+                   courses=[course("a", lectures=1, section="s1"), course("b", lectures=1, section="s2", teacher="t2")])
+        res = solved(inp)
+        assert {pl.room_id for pl in res.placements} == {"r1"}
+
+    def test_owned_room_is_never_lent_out(self):
+        # d2's section has its own room free all day, but it may not use d1's room even when that's free too.
+        inp = tiny(periods="TT", rooms=[room("own1", dept="d1"), room("own2", dept="d2")],
+                   sections=[section("s1", dept="d1"), section("s2", dept="d2")],
+                   courses=[course("a", lectures=2, section="s1"), course("b", lectures=2, section="s2", teacher="t2")])
+        res = solved(inp)
+        for pl in res.placements:
+            assert pl.room_id == ("own1" if pl.session_id.startswith("a") else "own2")
+
+    def test_room_shortage_across_sections_is_infeasible(self):
+        # Three sections, one room, two periods: three lectures can't all fit.
+        inp = tiny(periods="TT", rooms=[ROOM], teachers=3, sections=[section(f"s{i}") for i in (1, 2, 3)],
+                   courses=[course(f"c{i}", lectures=1, section=f"s{i}", teacher=f"t{i}") for i in (1, 2, 3)])
+        infeasible(inp)
+
+    def test_room_clash_blocks_overlapping_labs_but_not_adjacent_ones(self):
+        # Two 2-period labs in one lab room on a 4-period day: they must be back to back, never overlapping.
+        inp = tiny(periods="TTTT", rooms=[LAB], sections=[section("s1"), section("s2")],
+                   courses=[course("a", labs=1, section="s1"), course("b", labs=1, section="s2", teacher="t2")])
+        res = solved(inp)
+        assert sorted(pl.period for pl in res.placements) == [0, 2]
+
+
+# --- Teachers and sections (H1, H2) ----------------------------------------------------------------------------
+
+
+class TestClashes:
+    def test_teacher_across_three_sections_needs_three_slots(self):
+        sections = [section(f"s{i}") for i in (1, 2, 3)]
+        rooms = [room(f"r{i}") for i in (1, 2, 3)]
+        courses = [course(f"c{i}", lectures=1, section=f"s{i}") for i in (1, 2, 3)]
+        assert solved(tiny(periods="TTT", sections=sections, rooms=rooms, courses=courses)).placements
+        infeasible(tiny(periods="TT", sections=sections, rooms=rooms, courses=courses))
+
+    def test_batch_teacher_ids_shorter_than_batches_fall_back_to_course_teacher(self):
+        # Batch 2 has no listed teacher, so t1 teaches both batch labs: they can't run in parallel.
+        inp = tiny(periods="TT", rooms=[LAB, LAB2], sections=[section(batches=2)],
+                   courses=[course("c1", labs=1, lab_length=1, batchTeacherIds=["t1"])])
+        res = solved(inp)
+        assert sorted(pl.period for pl in res.placements) == [0, 1]
+
+    def test_same_teacher_for_both_batches_serialises_their_labs(self):
+        inp = tiny(periods="TTTT", rooms=[LAB, LAB2], sections=[section(batches=2)],
+                   courses=[course("c1", labs=1, lab_length=2)])
+        res = solved(inp)
+        assert sorted(pl.period for pl in res.placements) == [0, 2]
+        assert res.score.breakdown.batch_idle == 4 * 3  # each batch idles 2 periods while the other is in the lab
+
+    def test_three_batches_in_parallel(self):
+        inp = tiny(periods="TT", rooms=[LAB, LAB2, LAB3], sections=[section(batches=3)], teachers=3,
+                   courses=[course("c1", labs=1, lab_length=2, batchTeacherIds=["t1", "t2", "t3"])])
+        res = solved(inp)
+        assert {pl.period for pl in res.placements} == {0} and res.score.total == 0
+
+    def test_different_labs_for_different_batches_run_side_by_side(self):
+        # B1 does lab X while B2 does lab Y, then they swap: 4 batch labs in 2 periods with 2 rooms.
+        inp = tiny(periods="TT", rooms=[LAB, LAB2], sections=[section(batches=2)], teachers=4,
+                   courses=[course("x", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"]),
+                            course("y", labs=1, lab_length=1, batchTeacherIds=["t3", "t4"])])
+        res = solved(inp)
+        assert res.score.total == 0
+
+    def test_whole_section_lecture_cannot_overlap_any_batch(self):
+        # Lecture locked at P0; both batch labs must avoid P0.
+        inp = tiny(periods="TTT", rooms=[ROOM, LAB, LAB2], sections=[section(batches=2)], teachers=3,
+                   courses=[course("lec", lectures=1, teacher="t3"),
+                            course("lab", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])],
+                   locks=[lock("lec:L1", 0, 0)])
+        res = solved(inp)
+        assert all(pl.period != 0 for pl in res.placements if pl.session_id.startswith("lab"))
+
+    def test_lecture_and_batch_labs_cannot_share_the_only_period(self):
+        inp = tiny(periods="T", rooms=[ROOM, LAB, LAB2], sections=[section(batches=2)], teachers=3,
+                   courses=[course("lec", lectures=1, teacher="t3"),
+                            course("lab", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])])
+        infeasible(inp)
+
+    def test_two_sections_sharing_a_teacher_and_a_room(self):
+        inp = tiny(days=2, periods="TTT", rooms=[ROOM], sections=[section("s1"), section("s2")],
+                   courses=[course("a", lectures=3, section="s1"), course("b", lectures=3, section="s2")])
+        solved(inp)
+
+
+# --- Lunch (H8) ----------------------------------------------------------------------------------------------------
+
+
+class TestLunch:
+    def test_single_lunch_candidate_is_always_free(self):
+        res = solved(tiny(days=2, periods="TTT", lunch=[1], courses=[course("c1", lectures=4)]))
+        assert all(pl.period != 1 for pl in res.placements)
+
+    def test_one_of_several_candidates_may_be_used(self):
+        # 3 periods, candidates P1 and P2; a section with 2 lectures uses exactly one candidate.
+        res = solved(tiny(periods="TTT", lunch=[1, 2], courses=[course("a", lectures=1), course("b", lectures=1, teacher="t2")]))
+        assert len({pl.period for pl in res.placements} & {1, 2}) == 1
+
+    def test_lunch_applies_every_day_separately(self):
+        # Locks fill P0 and P1 on Monday; Monday's only free period is then P2, a candidate, so it must stay free.
+        inp = tiny(days=2, periods="TTT", lunch=[1, 2], teachers=4,
+                   courses=[course(f"c{i}", lectures=1, teacher=f"t{i}") for i in (1, 2, 3, 4)],
+                   locks=[lock("c1:L1", 0, 0), lock("c2:L1", 0, 1)])
+        res = solved(inp)
+        assert all(not (pl.day == 0 and pl.period == 2) for pl in res.placements)
+
+    def test_lunch_candidate_out_of_range_is_ignored(self):
+        res = solved(tiny(periods="TT", lunch=[99], courses=[course("c1", lectures=2)]))
+        assert len(res.placements) == 2
+
+    def test_duplicate_lunch_candidates_behave_like_one(self):
+        res = solved(tiny(periods="TTT", lunch=[1, 1], courses=[course("a", lectures=1), course("b", lectures=1, teacher="t2")]))
+        assert 1 not in {pl.period for pl in res.placements}
+
+    def test_lab_over_every_candidate_is_rejected(self):
+        # A 2-period lab covering both lunch candidates would leave no lunch.
+        inp = tiny(periods="TTT", lunch=[1, 2], rooms=[LAB], courses=[course("c1", labs=1, lab_length=2)])
+        res = solved(inp)
+        assert placed(res)["c1:P1"].period == 0  # P0–P1 leaves P2 free
+
+    def test_teacher_lunch_across_sections(self):
+        # t1 teaches s1 at P0 and must teach s2 too; candidates P1/P2. t1 can't take both P1 and P2.
+        inp = tiny(periods="TTT", lunch=[1, 2], rooms=[ROOM, room("r2")], sections=[section("s1"), section("s2")],
+                   courses=[course("a", lectures=1, section="s1"), course("b", lectures=1, section="s2")],
+                   locks=[lock("a:L1", 0, 1)])
+        res = solved(inp)
+        assert placed(res)["b:L1"].period != 2
+
+    @pytest.mark.xfail(strict=True, reason="BUG: a break-period lunch candidate is dropped, making H8 stricter than the validator")
+    def test_break_period_lunch_candidate_counts_as_free(self):
+        # The web validator (validator.ts) treats a break candidate as always free, so H8 holds without
+        # touching P0. The solver drops the break candidate, keeps only P0, and forbids the only teaching slot.
+        res = solve(tiny(periods="TB", lunch=[0, 1], courses=[course("c1", lectures=1)]))
+        assert res.status == "optimal"
+
+
+# --- Locks -----------------------------------------------------------------------------------------------------------
+
+
+class TestLocks:
+    def test_lock_on_later_copy_at_earliest_slot(self):
+        # Symmetry breaking would order L1 < L2 < L3; with a lock on L3 at the very first slot it must be skipped.
+        inp = tiny(days=3, periods="TT", courses=[course("c1", lectures=3)], locks=[lock("c1:L3", 0, 0)])
+        res = solved(inp)
+        assert placed(res)["c1:L3"].day == 0
+
+    def test_locks_on_every_copy_in_reverse_order(self):
+        locks = [lock("c1:L1", 2, 0), lock("c1:L2", 1, 0), lock("c1:L3", 0, 0)]
+        solved(tiny(days=3, periods="TT", courses=[course("c1", lectures=3)], locks=locks))
+
+    def test_lock_with_unknown_day(self):
+        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 5, 0)]), "Locked")
+
+    def test_lock_with_negative_period(self):
+        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, -1)]), "Locked")
+
+    def test_lock_in_wrong_room_type(self):
+        infeasible(tiny(rooms=[ROOM, LAB], courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 0, "lab1")]), "Locked")
+
+    def test_lock_in_another_departments_room(self):
+        inp = tiny(rooms=[ROOM, room("foreign", dept="d2")], courses=[course("c1", lectures=1)],
+                   locks=[lock("c1:L1", 0, 0, "foreign")])
+        infeasible(inp, "Locked")
+
+    def test_lock_of_lab_that_would_cross_a_break(self):
+        # The lab can start at P0 (P0–P1), but a lock at P1 would run it into the break.
+        inp = tiny(periods="TTBT", rooms=[LAB], courses=[course("c1", labs=1, lab_length=2)],
+                   locks=[lock("c1:P1", 0, 1, "lab1")])
+        infeasible(inp, "Locked")
+
+    def test_lock_of_lab_mid_run_start(self):
+        # A 2-period lab may start at P1 of a 3-period run; locking it there is valid.
+        inp = tiny(periods="TTT", rooms=[LAB], courses=[course("c1", labs=1, lab_length=2)], locks=[lock("c1:P1", 0, 1, "lab1")])
+        solved(inp)
+
+    def test_same_lock_twice_is_harmless(self):
+        inp = tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 2), lock("c1:L1", 0, 2)])
+        assert placed(solved(inp))["c1:L1"].period == 2
+
+    def test_two_different_locks_for_one_session_are_infeasible(self):
+        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 0), lock("c1:L1", 0, 1)]))
+
+    def test_lock_that_starves_another_session_is_infeasible(self):
+        # One room, one period: locking a's lecture there leaves nowhere for b.
+        inp = tiny(periods="T", sections=[section("s1"), section("s2")],
+                   courses=[course("a", lectures=1, section="s1"), course("b", lectures=1, section="s2", teacher="t2")],
+                   locks=[lock("a:L1", 0, 0)])
+        infeasible(inp)
+
+    def test_lock_breaking_lunch_is_infeasible(self):
+        infeasible(tiny(lunch=[1], courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 1)]))
+
+    def test_lock_that_forces_a_penalty_is_still_optimal(self):
+        # Locks put both lectures of c1 on Monday: S1 = 10 is the best possible.
+        inp = tiny(days=2, courses=[course("c1", lectures=2)], locks=[lock("c1:L1", 0, 0), lock("c1:L2", 0, 2)])
+        res = solved(inp)
+        assert res.score.breakdown.subject_repeat == 10 and res.score.breakdown.section_gaps == 2
+
+    def test_locked_batch_lab_keeps_its_batch_partner_parallel(self):
+        inp = tiny(periods="TTT", rooms=[LAB, LAB2], sections=[section(batches=2)],
+                   courses=[course("c1", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])],
+                   locks=[lock("c1:P1:B1", 0, 2, "lab2")])
+        res = solved(inp)
+        assert placed(res)["c1:P1:B2"].period == 2 and placed(res)["c1:P1:B2"].room_id == "lab1"
+
+
+# --- Soft rules (S1–S4) and optimality ---------------------------------------------------------------------------------
+
+
+class TestSoftRules:
+    def test_s1_counts_every_extra_lecture(self):
+        res = solved(tiny(days=1, periods="TTTT", courses=[course("c1", lectures=3)]))
+        assert res.score.breakdown.subject_repeat == 20
+
+    def test_s1_ignores_labs(self):
+        inp = tiny(days=1, periods="TTTT", rooms=[ROOM, LAB], courses=[course("c1", lectures=1, labs=1, lab_length=2)])
+        assert solved(inp).score.breakdown.subject_repeat == 0
+
+    def test_s1_spreads_when_possible_even_with_other_courses(self):
+        res = solved(tiny(days=2, periods="TTT", courses=[course("a", lectures=2), course("b", lectures=2, teacher="t2")]))
+        assert res.score.breakdown.subject_repeat == 0
+
+    def test_s2_long_lab_counts_toward_a_teachers_run(self):
+        # t1 teaches a 3-period lab and then a lecture to another section: 4 in a row → 5 points unless avoided.
+        inp = tiny(periods="TTTT", rooms=[ROOM, LAB], sections=[section("s1"), section("s2")],
+                   courses=[course("lab", labs=1, lab_length=3, section="s1"), course("lec", lectures=1, section="s2")])
+        res = solved(inp)
+        assert res.score.breakdown.teacher_overload == 5  # the only arrangement on a 4-period day
+
+    def test_s2_counts_each_period_beyond_three(self):
+        sections = [section(f"s{i}") for i in range(1, 6)]
+        rooms = [room(f"r{i}") for i in range(1, 6)]
+        res = solved(tiny(periods="TTTTT", sections=sections, rooms=rooms,
+                          courses=[course(f"c{i}", lectures=1, section=f"s{i}") for i in range(1, 6)]))
+        assert res.score.breakdown.teacher_overload == 10
+
+    def test_s2_a_free_period_resets_the_run(self):
+        sections = [section(f"s{i}") for i in range(1, 5)]
+        rooms = [room(f"r{i}") for i in range(1, 5)]
+        res = solved(tiny(periods="TTTTT", sections=sections, rooms=rooms,
+                          courses=[course(f"c{i}", lectures=1, section=f"s{i}") for i in range(1, 5)]))
+        assert res.score.breakdown.teacher_overload == 0  # 4 lectures in 5 periods: a free period splits the run
+
+    def test_s3_counts_multiple_gaps(self):
+        locks = [lock("a:L1", 0, 0), lock("b:L1", 0, 4)]
+        inp = tiny(periods="TTTTT", courses=[course("a", lectures=1), course("b", lectures=1, teacher="t2")], locks=locks)
+        assert solved(inp).score.breakdown.section_gaps == 3 * 2
+
+    def test_s3_break_periods_are_not_gaps(self):
+        locks = [lock("a:L1", 0, 0), lock("b:L1", 0, 2)]
+        inp = tiny(periods="TBT", courses=[course("a", lectures=1), course("b", lectures=1, teacher="t2")], locks=locks)
+        assert solved(inp).score.breakdown.section_gaps == 0
+
+    def test_s3_free_periods_before_first_and_after_last_class_are_not_gaps(self):
+        locks = [lock("a:L1", 0, 1), lock("b:L1", 0, 2)]
+        inp = tiny(periods="TTTT", courses=[course("a", lectures=1), course("b", lectures=1, teacher="t2")], locks=locks)
+        assert solved(inp).score.total == 0
+
+    def test_s3_counts_per_day(self):
+        locks = [lock("a:L1", 0, 0), lock("a:L2", 1, 0), lock("b:L1", 0, 2), lock("b:L2", 1, 2)]
+        inp = tiny(days=2, courses=[course("a", lectures=2), course("b", lectures=2, teacher="t2")], locks=locks)
+        assert solved(inp).score.breakdown.section_gaps == 2 * 2
+
+    def test_s3_lab_closes_a_gap(self):
+        # Lecture at P0, 2-period lab at P1–P2, lecture at P3: no gaps.
+        inp = tiny(periods="TTTT", rooms=[ROOM, LAB], teachers=3,
+                   courses=[course("a", lectures=1), course("lab", labs=1, lab_length=2, teacher="t2"),
+                            course("b", lectures=1, teacher="t3")],
+                   locks=[lock("a:L1", 0, 0), lock("b:L1", 0, 3)])
+        res = solved(inp)
+        assert placed(res)["lab:P1"].period == 1 and res.score.total == 0
+
+    def test_s4_counts_per_idle_batch_per_period(self):
+        # 3 batches, 1 lab room, 1-period labs: each lab period has 2 idle batches, 3 periods → 6 idle × 3.
+        inp = tiny(periods="TTT", rooms=[LAB], sections=[section(batches=3)], teachers=3,
+                   courses=[course("c1", labs=1, lab_length=1, batchTeacherIds=["t1", "t2", "t3"])])
+        assert solved(inp).score.breakdown.batch_idle == 6 * 3
+
+    def test_s4_two_period_lab_counts_both_periods(self):
+        inp = tiny(periods="TTTT", rooms=[LAB], sections=[section(batches=2)],
+                   courses=[course("c1", labs=1, lab_length=2, batchTeacherIds=["t1", "t2"])])
+        assert solved(inp).score.breakdown.batch_idle == 4 * 3
+
+    def test_s4_is_zero_for_unsplit_sections(self):
+        inp = tiny(periods="TTTT", rooms=[LAB], courses=[course("c1", labs=2, lab_length=1)])
+        assert solved(inp).score.breakdown.batch_idle == 0
+
+    def test_weights_add_up_in_the_total(self):
+        # Force S1 (10) + S3 (2) with locks.
+        inp = tiny(days=1, periods="TTT", courses=[course("c1", lectures=2)], locks=[lock("c1:L1", 0, 0), lock("c1:L2", 0, 2)])
+        res = solved(inp)
+        assert (res.score.total, res.score.breakdown.subject_repeat, res.score.breakdown.section_gaps) == (12, 10, 2)
+
+    def test_unavoidable_penalty_does_not_bring_avoidable_ones(self):
+        # 2 lectures of c1 on a 1-day, 3-period week: S1 = 10 is unavoidable, but the lectures sit side by side (no gap).
+        res = solved(tiny(days=1, periods="TTT", courses=[course("c1", lectures=2)]))
+        assert res.score.total == 10
+
+
+# --- Symmetry breaking -----------------------------------------------------------------------------------------------
+
+
+class TestSymmetryBreaking:
+    def test_copies_are_placed_in_increasing_slot_order(self):
+        res = solved(tiny(days=3, periods="TT", courses=[course("c1", lectures=3)]))
+        slots = [(placed(res)[f"c1:L{i}"].day, placed(res)[f"c1:L{i}"].period) for i in (1, 2, 3)]
+        assert slots == sorted(slots)
+
+    def test_batch_labs_of_different_batches_are_not_ordered_against_each_other(self):
+        # B2 locked earlier than B1 would be impossible if batches were (wrongly) grouped together.
+        inp = tiny(periods="TTT", rooms=[LAB], sections=[section(batches=2)],
+                   courses=[course("c1", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])],
+                   locks=[lock("c1:P1:B2", 0, 0, "lab1")])
+        solved(inp)
+
+    def test_same_teacher_batch_labs_are_not_treated_as_interchangeable(self):
+        # X's B1 and B2 labs share teacher t1. Y's B1 lab is locked at P0, so the only timetable is
+        # P0: Y-B1 + X-B2, P1: X-B1 + Y-B2. Ordering X's labs B1-before-B2 (as if they were copies) would lose it.
+        inp = tiny(periods="TT", rooms=[LAB, LAB2], sections=[section(batches=2)], teachers=3,
+                   courses=[course("x", labs=1, lab_length=1),
+                            course("y", labs=1, lab_length=1, batchTeacherIds=["t2", "t3"])],
+                   locks=[lock("y:P1:B1", 0, 0, "lab1")])
+        res = solved(inp)
+        assert (placed(res)["x:P1:B2"].period, placed(res)["x:P1:B1"].period) == (0, 1)
+
+    def test_tight_instance_still_finds_the_only_arrangement(self):
+        # Every slot of a 2-day × 2-period week is needed by 4 copies; symmetry breaking must not cut it off.
+        res = solved(tiny(days=2, periods="TT", courses=[course("c1", lectures=4)]))
+        assert len(res.placements) == 4
+
+
+# --- Time limits, options and results -------------------------------------------------------------------------------
+
+
+class TestRunOptions:
+    def test_too_short_time_limit_on_the_sample_is_an_error_with_a_message(self):
+        inp = load_sample()
+        inp.options.time_limit_sec = 0.3
+        t = time.perf_counter()
+        res = solve(inp)
+        elapsed = time.perf_counter() - t
+        assert res.status == "error" and "found no solution in 0.3s" in res.message
+        assert elapsed < 0.3 + 3  # model building is not counted by CP-SAT; allow for it
+
+    def test_zero_time_limit_means_the_default(self):
+        inp = tiny(courses=[course("c1", lectures=1)])
+        inp.options = Options(time_limit_sec=0)
+        res = solved(inp)
+        assert res.status == "optimal"
+
+    def test_same_seed_gives_the_same_optimal_score(self):
+        inp = tiny(days=2, periods="TTTT", lunch=[2], courses=[course("a", lectures=3), course("b", lectures=3, teacher="t2")])
+        scores = {solve(inp).score.total for _ in range(3)}
+        assert len(scores) == 1
+
+    def test_time_ms_is_reported(self):
+        assert solve(tiny(courses=[course("c1", lectures=1)])).time_ms >= 0
+
+    def test_result_is_never_partial_and_never_lists_unplaced(self):
+        # CP-SAT is all-or-nothing; partial results come from the web heuristic only.
+        for inp in (tiny(courses=[course("c1", lectures=1)]), tiny(periods="T", courses=[course("c1", lectures=2)])):
+            res = solve(inp)
+            assert res.status != "partial" and res.unplaced == []
+
+    @pytest.mark.xfail(strict=True, reason="BUG: a non-optimal (feasible) result reports a score higher than its placements earn")
+    def test_feasible_result_reports_the_true_score(self, monkeypatch):
+        class FirstSolution(cp_model.CpSolver):
+            def solve(self, model, *args, **kwargs):
+                self.parameters.stop_after_first_solution = True
+                return super().solve(model, *args, **kwargs)
+
+        monkeypatch.setattr(solver_module.cp_model, "CpSolver", FirstSolution)
+        inp = load_sample()
+        inp.options.time_limit_sec = 30
+        res = solve(inp)
+        assert res.status == "feasible"
+        assert hard_violations(inp, res) == []
+        assert res.score.total == reference_score(inp, res.placements)["total"]
+
+
+# --- API ----------------------------------------------------------------------------------------------------------------
+
+
+class TestApi:
+    client = TestClient(main.app)
+
+    def body(self, inp: SolveInput) -> dict:
+        return inp.model_dump()
+
+    def test_locks_and_options_are_optional(self):
+        body = self.body(tiny(courses=[course("c1", lectures=1)]))
+        del body["locks"], body["options"]
+        res = self.client.post("/solve", json=body)
+        assert res.status_code == 200 and res.json()["status"] == "optimal"
+
+    def test_unknown_fields_are_ignored(self):
+        body = self.body(tiny(courses=[course("c1", lectures=1)]))
+        body["somethingNew"] = 1
+        body["courses"][0]["colour"] = "red"
+        assert self.client.post("/solve", json=body).json()["status"] == "optimal"
+
+    def test_bad_enum_value_is_a_422(self):
+        body = self.body(tiny())
+        body["rooms"][0]["type"] = "auditorium"
+        assert self.client.post("/solve", json=body).status_code == 422
+
+    def test_unknown_section_is_a_200_error_result(self):
+        body = self.body(tiny(courses=[course("c1", lectures=1, section="ghost")]))
+        res = self.client.post("/solve", json=body)
+        assert res.status_code == 200 and res.json()["status"] == "error"
+
+    def test_solver_crash_becomes_an_error_result(self, monkeypatch):
+        def boom(_inp):
+            raise RuntimeError("kaboom")
+
+        monkeypatch.setattr(main, "solve", boom)
+        res = self.client.post("/solve", json=self.body(tiny()))
+        assert res.status_code == 200
+        assert res.json() == {**res.json(), "status": "error", "engine": "cpsat", "message": "Solver crashed: kaboom"}
+
+    def test_result_round_trips_into_the_web_contract(self):
+        res = self.client.post("/solve", json=self.body(tiny(days=2, courses=[course("c1", lectures=2)]))).json()
+        assert set(res) == {"engine", "status", "placements", "unplaced", "score", "timeMs", "message"}
+        assert set(res["score"]) == {"total", "breakdown"}

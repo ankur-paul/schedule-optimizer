@@ -29,6 +29,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T05] Step ① preselects the working days Mon–Fri; periods and lunch candidates still start empty (Start over → step ①)
 - [T05] Step ① opens the *Generate periods* form straight away while there are no periods yet (Start over → step ①)
 - [T05] Generate periods form: while a break field is focused, a note says the break is a short break for everyone, not lunch; number fields drop leading zeros (clearing to 0 and typing 20 gives 20, not 020), and the logic is in `cleanWholeNumber` / `parseGeneratorForm` (step ① → Generate periods → edit Break length)
+- [T04] CP-SAT test suite: 97 edge-case tests (`server/tests/test_solver_edge_cases.py`), CP-SAT vs brute force on 300 random colleges (`test_solver_bruteforce.py`, independent scorer + optimiser in `tests/reference.py`); mutation testing caught 17/17 behaviour-changing solver bugs; results and 3 bugs found in `docs/cpsat-test-report.md` (`cd server && uv run pytest`)
 
 ## Known issues / cuts
 
@@ -40,3 +41,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T10] Locks are kept when the result is replaced, so an engine run that can't honour them (e.g. a lock that blocks every other slot) shows up as unplaced sessions rather than a dropped lock. Print sheets don't show 🔒.
 - [T13] Dragging works in the Section view only, with a mouse or pen (touch not tried; no keyboard dragging, so use *Lock here* in the dialog instead). Undo puts back the timetable from just before that move, so undoing an older move also reverts any made after it.
 - [T05] A browser that already saved the app state keeps its old (sample) week setup until *Start over*.
+- [T04] CP-SAT bugs found by the new tests (strict xfail, details in `docs/cpsat-test-report.md`): a `feasible` (non-optimal) result reports an inflated score (the UI re-scores, so only `/solve` callers see it); a break-period lunch candidate makes H8 stricter than the validator; duplicate course ids give a misleading "infeasible".
