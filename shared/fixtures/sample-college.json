@@ -1,0 +1,1019 @@
+{
+  "settings": {
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ],
+    "periods": [
+      {
+        "id": 0,
+        "label": "P1",
+        "start": "09:00",
+        "end": "09:50",
+        "kind": "teaching"
+      },
+      {
+        "id": 1,
+        "label": "P2",
+        "start": "09:50",
+        "end": "10:40",
+        "kind": "teaching"
+      },
+      {
+        "id": 2,
+        "label": "Break",
+        "start": "10:40",
+        "end": "11:00",
+        "kind": "break"
+      },
+      {
+        "id": 3,
+        "label": "P3",
+        "start": "11:00",
+        "end": "11:50",
+        "kind": "teaching"
+      },
+      {
+        "id": 4,
+        "label": "P4",
+        "start": "11:50",
+        "end": "12:40",
+        "kind": "teaching"
+      },
+      {
+        "id": 5,
+        "label": "P5",
+        "start": "12:40",
+        "end": "13:30",
+        "kind": "teaching"
+      },
+      {
+        "id": 6,
+        "label": "P6",
+        "start": "13:30",
+        "end": "14:20",
+        "kind": "teaching"
+      },
+      {
+        "id": 7,
+        "label": "P7",
+        "start": "14:20",
+        "end": "15:10",
+        "kind": "teaching"
+      },
+      {
+        "id": 8,
+        "label": "P8",
+        "start": "15:10",
+        "end": "16:00",
+        "kind": "teaching"
+      }
+    ],
+    "lunchCandidates": [
+      4,
+      5,
+      6
+    ]
+  },
+  "departments": [
+    {
+      "id": "cse",
+      "name": "Computer Science & Engineering"
+    },
+    {
+      "id": "ece",
+      "name": "Electronics & Communication"
+    },
+    {
+      "id": "me",
+      "name": "Mechanical Engineering"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "t-c1",
+      "name": "Dr. Anita Sharma",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c2",
+      "name": "Prof. Rahul Verma",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c3",
+      "name": "Dr. Meera Iyer",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c4",
+      "name": "Prof. Vikram Singh",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c5",
+      "name": "Dr. Kavita Rao",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c6",
+      "name": "Prof. Sanjay Gupta",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c7",
+      "name": "Dr. Neha Kapoor",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c8",
+      "name": "Prof. Arjun Nair",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-c9",
+      "name": "Dr. Pooja Mehta",
+      "departmentId": "cse"
+    },
+    {
+      "id": "t-e1",
+      "name": "Dr. Ravi Kumar",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e2",
+      "name": "Prof. Sunita Joshi",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e3",
+      "name": "Dr. Amit Patel",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e4",
+      "name": "Prof. Divya Menon",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e5",
+      "name": "Dr. Harpreet Gill",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e6",
+      "name": "Prof. Rohan Das",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e7",
+      "name": "Dr. Lakshmi Pillai",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-e8",
+      "name": "Prof. Manish Tiwari",
+      "departmentId": "ece"
+    },
+    {
+      "id": "t-m1",
+      "name": "Dr. Gurpreet Sandhu",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m2",
+      "name": "Prof. Asha Reddy",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m3",
+      "name": "Dr. Karan Malhotra",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m4",
+      "name": "Prof. Nisha Agarwal",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m5",
+      "name": "Dr. Suresh Babu",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m6",
+      "name": "Prof. Priya Bansal",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m7",
+      "name": "Dr. Imran Khan",
+      "departmentId": "me"
+    },
+    {
+      "id": "t-m8",
+      "name": "Prof. Deepak Chauhan",
+      "departmentId": "me"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "cr-cse-a",
+      "name": "CSE Room A",
+      "type": "classroom",
+      "departmentId": "cse"
+    },
+    {
+      "id": "cr-cse-b",
+      "name": "CSE Room B",
+      "type": "classroom",
+      "departmentId": "cse"
+    },
+    {
+      "id": "cr-cse-c",
+      "name": "CSE Room C",
+      "type": "classroom",
+      "departmentId": "cse"
+    },
+    {
+      "id": "cr-ece-a",
+      "name": "ECE Room A",
+      "type": "classroom",
+      "departmentId": "ece"
+    },
+    {
+      "id": "cr-ece-b",
+      "name": "ECE Room B",
+      "type": "classroom",
+      "departmentId": "ece"
+    },
+    {
+      "id": "cr-ece-c",
+      "name": "ECE Room C",
+      "type": "classroom",
+      "departmentId": "ece"
+    },
+    {
+      "id": "cr-me-a",
+      "name": "ME Room A",
+      "type": "classroom",
+      "departmentId": "me"
+    },
+    {
+      "id": "cr-me-b",
+      "name": "ME Room B",
+      "type": "classroom",
+      "departmentId": "me"
+    },
+    {
+      "id": "cr-me-c",
+      "name": "ME Room C",
+      "type": "classroom",
+      "departmentId": "me"
+    },
+    {
+      "id": "sh-1",
+      "name": "Seminar Hall 1",
+      "type": "classroom",
+      "departmentId": null
+    },
+    {
+      "id": "sh-2",
+      "name": "Seminar Hall 2",
+      "type": "classroom",
+      "departmentId": null
+    },
+    {
+      "id": "lab-cse1",
+      "name": "CSE Lab 1",
+      "type": "lab",
+      "departmentId": "cse"
+    },
+    {
+      "id": "lab-cse2",
+      "name": "CSE Lab 2",
+      "type": "lab",
+      "departmentId": "cse"
+    },
+    {
+      "id": "lab-elec",
+      "name": "Electronics Lab",
+      "type": "lab",
+      "departmentId": "ece"
+    },
+    {
+      "id": "lab-ws",
+      "name": "Workshop",
+      "type": "lab",
+      "departmentId": "me"
+    },
+    {
+      "id": "lab-phy",
+      "name": "Physics Lab",
+      "type": "lab",
+      "departmentId": null
+    },
+    {
+      "id": "lab-chem",
+      "name": "Chemistry Lab",
+      "type": "lab",
+      "departmentId": null
+    },
+    {
+      "id": "lab-cc",
+      "name": "Computer Centre",
+      "type": "lab",
+      "departmentId": null
+    }
+  ],
+  "sections": [
+    {
+      "id": "cse-a",
+      "name": "CSE A",
+      "departmentId": "cse",
+      "batches": 2
+    },
+    {
+      "id": "cse-b",
+      "name": "CSE B",
+      "departmentId": "cse",
+      "batches": 2
+    },
+    {
+      "id": "cse-c",
+      "name": "CSE C",
+      "departmentId": "cse",
+      "batches": 1
+    },
+    {
+      "id": "ece-a",
+      "name": "ECE A",
+      "departmentId": "ece",
+      "batches": 2
+    },
+    {
+      "id": "ece-b",
+      "name": "ECE B",
+      "departmentId": "ece",
+      "batches": 1
+    },
+    {
+      "id": "ece-c",
+      "name": "ECE C",
+      "departmentId": "ece",
+      "batches": 1
+    },
+    {
+      "id": "me-a",
+      "name": "ME A",
+      "departmentId": "me",
+      "batches": 2
+    },
+    {
+      "id": "me-b",
+      "name": "ME B",
+      "departmentId": "me",
+      "batches": 1
+    },
+    {
+      "id": "me-c",
+      "name": "ME C",
+      "departmentId": "me",
+      "batches": 1
+    }
+  ],
+  "courses": [
+    {
+      "id": "cse-a-ds",
+      "sectionId": "cse-a",
+      "subject": "Data Structures",
+      "teacherId": "t-c1",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": null,
+      "batchTeacherIds": [
+        "t-c1",
+        "t-c2"
+      ]
+    },
+    {
+      "id": "cse-a-dbms",
+      "sectionId": "cse-a",
+      "subject": "Database Systems",
+      "teacherId": "t-c3",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": null,
+      "batchTeacherIds": [
+        "t-c3",
+        "t-c4"
+      ]
+    },
+    {
+      "id": "cse-a-os",
+      "sectionId": "cse-a",
+      "subject": "Operating Systems",
+      "teacherId": "t-c5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-a-dm",
+      "sectionId": "cse-a",
+      "subject": "Discrete Mathematics",
+      "teacherId": "t-c6",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-a-cn",
+      "sectionId": "cse-a",
+      "subject": "Computer Networks",
+      "teacherId": "t-c8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-a-phy",
+      "sectionId": "cse-a",
+      "subject": "Engineering Physics",
+      "teacherId": "t-c9",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-phy",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-b-ds",
+      "sectionId": "cse-b",
+      "subject": "Data Structures",
+      "teacherId": "t-c2",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": null,
+      "batchTeacherIds": [
+        "t-c2",
+        "t-c1"
+      ]
+    },
+    {
+      "id": "cse-b-dbms",
+      "sectionId": "cse-b",
+      "subject": "Database Systems",
+      "teacherId": "t-c4",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": null,
+      "batchTeacherIds": [
+        "t-c4",
+        "t-c3"
+      ]
+    },
+    {
+      "id": "cse-b-os",
+      "sectionId": "cse-b",
+      "subject": "Operating Systems",
+      "teacherId": "t-c5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-b-dm",
+      "sectionId": "cse-b",
+      "subject": "Discrete Mathematics",
+      "teacherId": "t-c7",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-b-cn",
+      "sectionId": "cse-b",
+      "subject": "Computer Networks",
+      "teacherId": "t-c8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-b-phy",
+      "sectionId": "cse-b",
+      "subject": "Engineering Physics",
+      "teacherId": "t-c9",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-phy",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-c-ds",
+      "sectionId": "cse-c",
+      "subject": "Data Structures",
+      "teacherId": "t-c1",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-c-dbms",
+      "sectionId": "cse-c",
+      "subject": "Database Systems",
+      "teacherId": "t-c3",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-c-os",
+      "sectionId": "cse-c",
+      "subject": "Operating Systems",
+      "teacherId": "t-c6",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-c-dm",
+      "sectionId": "cse-c",
+      "subject": "Discrete Mathematics",
+      "teacherId": "t-c7",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-c-cn",
+      "sectionId": "cse-c",
+      "subject": "Computer Networks",
+      "teacherId": "t-c8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "cse-c-phy",
+      "sectionId": "cse-c",
+      "subject": "Engineering Physics",
+      "teacherId": "t-c5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-phy",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-a-ss",
+      "sectionId": "ece-a",
+      "subject": "Signals & Systems",
+      "teacherId": "t-e1",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-a-ae",
+      "sectionId": "ece-a",
+      "subject": "Analog Electronics",
+      "teacherId": "t-e3",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-elec",
+      "batchTeacherIds": [
+        "t-e3",
+        "t-e4"
+      ]
+    },
+    {
+      "id": "ece-a-de",
+      "sectionId": "ece-a",
+      "subject": "Digital Electronics",
+      "teacherId": "t-e5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-elec",
+      "batchTeacherIds": [
+        "t-e5",
+        "t-e6"
+      ]
+    },
+    {
+      "id": "ece-a-em",
+      "sectionId": "ece-a",
+      "subject": "Engineering Mathematics",
+      "teacherId": "t-e7",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-a-emt",
+      "sectionId": "ece-a",
+      "subject": "Electromagnetic Theory",
+      "teacherId": "t-e8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-a-pc",
+      "sectionId": "ece-a",
+      "subject": "Programming in C",
+      "teacherId": "t-e6",
+      "lecturesPerWeek": 2,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-cc",
+      "batchTeacherIds": [
+        "t-e6",
+        "t-e8"
+      ]
+    },
+    {
+      "id": "ece-b-ss",
+      "sectionId": "ece-b",
+      "subject": "Signals & Systems",
+      "teacherId": "t-e1",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-b-ae",
+      "sectionId": "ece-b",
+      "subject": "Analog Electronics",
+      "teacherId": "t-e3",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-elec",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-b-de",
+      "sectionId": "ece-b",
+      "subject": "Digital Electronics",
+      "teacherId": "t-e6",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-elec",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-b-em",
+      "sectionId": "ece-b",
+      "subject": "Engineering Mathematics",
+      "teacherId": "t-e7",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-b-emt",
+      "sectionId": "ece-b",
+      "subject": "Electromagnetic Theory",
+      "teacherId": "t-e8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-b-pc",
+      "sectionId": "ece-b",
+      "subject": "Programming in C",
+      "teacherId": "t-e6",
+      "lecturesPerWeek": 2,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-cc",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-c-ss",
+      "sectionId": "ece-c",
+      "subject": "Signals & Systems",
+      "teacherId": "t-e2",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-c-ae",
+      "sectionId": "ece-c",
+      "subject": "Analog Electronics",
+      "teacherId": "t-e4",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-elec",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-c-de",
+      "sectionId": "ece-c",
+      "subject": "Digital Electronics",
+      "teacherId": "t-e5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-elec",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-c-em",
+      "sectionId": "ece-c",
+      "subject": "Engineering Mathematics",
+      "teacherId": "t-e2",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-c-emt",
+      "sectionId": "ece-c",
+      "subject": "Electromagnetic Theory",
+      "teacherId": "t-e8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "ece-c-pc",
+      "sectionId": "ece-c",
+      "subject": "Programming in C",
+      "teacherId": "t-e4",
+      "lecturesPerWeek": 2,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-cc",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-a-td",
+      "sectionId": "me-a",
+      "subject": "Thermodynamics",
+      "teacherId": "t-m1",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-a-mp",
+      "sectionId": "me-a",
+      "subject": "Manufacturing Processes",
+      "teacherId": "t-m3",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 3,
+      "labRoomId": "lab-ws",
+      "batchTeacherIds": [
+        "t-m3",
+        "t-m4"
+      ]
+    },
+    {
+      "id": "me-a-emech",
+      "sectionId": "me-a",
+      "subject": "Engineering Mechanics",
+      "teacherId": "t-m5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-a-em",
+      "sectionId": "me-a",
+      "subject": "Engineering Mathematics",
+      "teacherId": "t-m6",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-a-chem",
+      "sectionId": "me-a",
+      "subject": "Engineering Chemistry",
+      "teacherId": "t-m7",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-chem",
+      "batchTeacherIds": [
+        "t-m7",
+        "t-m8"
+      ]
+    },
+    {
+      "id": "me-a-md",
+      "sectionId": "me-a",
+      "subject": "Machine Drawing",
+      "teacherId": "t-m2",
+      "lecturesPerWeek": 2,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-cc",
+      "batchTeacherIds": [
+        "t-m2",
+        "t-m5"
+      ]
+    },
+    {
+      "id": "me-b-td",
+      "sectionId": "me-b",
+      "subject": "Thermodynamics",
+      "teacherId": "t-m1",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-b-mp",
+      "sectionId": "me-b",
+      "subject": "Manufacturing Processes",
+      "teacherId": "t-m3",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 3,
+      "labRoomId": "lab-ws",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-b-emech",
+      "sectionId": "me-b",
+      "subject": "Engineering Mechanics",
+      "teacherId": "t-m5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-b-em",
+      "sectionId": "me-b",
+      "subject": "Engineering Mathematics",
+      "teacherId": "t-m6",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-b-chem",
+      "sectionId": "me-b",
+      "subject": "Engineering Chemistry",
+      "teacherId": "t-m7",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-chem",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-b-md",
+      "sectionId": "me-b",
+      "subject": "Machine Drawing",
+      "teacherId": "t-m6",
+      "lecturesPerWeek": 2,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-cc",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-c-td",
+      "sectionId": "me-c",
+      "subject": "Thermodynamics",
+      "teacherId": "t-m2",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-c-mp",
+      "sectionId": "me-c",
+      "subject": "Manufacturing Processes",
+      "teacherId": "t-m4",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 3,
+      "labRoomId": "lab-ws",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-c-emech",
+      "sectionId": "me-c",
+      "subject": "Engineering Mechanics",
+      "teacherId": "t-m5",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-c-em",
+      "sectionId": "me-c",
+      "subject": "Engineering Mathematics",
+      "teacherId": "t-m2",
+      "lecturesPerWeek": 4,
+      "labSessionsPerWeek": 0,
+      "labLength": 0,
+      "labRoomId": null,
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-c-chem",
+      "sectionId": "me-c",
+      "subject": "Engineering Chemistry",
+      "teacherId": "t-m8",
+      "lecturesPerWeek": 3,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-chem",
+      "batchTeacherIds": null
+    },
+    {
+      "id": "me-c-md",
+      "sectionId": "me-c",
+      "subject": "Machine Drawing",
+      "teacherId": "t-m8",
+      "lecturesPerWeek": 2,
+      "labSessionsPerWeek": 1,
+      "labLength": 2,
+      "labRoomId": "lab-cc",
+      "batchTeacherIds": null
+    }
+  ],
+  "locks": [],
+  "options": {
+    "timeLimitSec": 20,
+    "seed": 42
+  }
+}

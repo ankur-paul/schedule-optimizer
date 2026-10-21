@@ -1,5 +1,5 @@
 # T01 — Domain types, sessions, sample college, golden file
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T00 · **Branch:** main
 
 ## Goal
@@ -32,7 +32,7 @@ Freeze the shared contract so lanes A–D can work in parallel without merge pai
 - `eligibility.test.ts`: `validStarts` for length 2 excludes the start right before the break and the last period.
 
 ## Done when
-- [ ] Types match PLAN.md §3 exactly
-- [ ] Golden file generated and committed
-- [ ] Tests pass
-- [ ] Committed: `T01: domain contract + sample college`
+- [x] Types match PLAN.md §3 exactly
+- [x] Golden file generated and committed
+- [x] Tests pass
+- [x] Committed: `T01: domain contract + sample college`
