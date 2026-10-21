@@ -17,6 +17,8 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T08] Step ④ timetable grid: Section/Teacher/Room switcher, searchable grouped picker + prev/next, labs span columns, parallel batch labs stacked, colour per subject, hover tooltip, click → details dialog, empty state (step ④ → "Mock result (dev)" until T07 lands)
 - [T09] Stats panel under the step ④ grid: quality score with S1–S4 rows + ⓘ tips, room utilisation bars with shared-room headline, sortable teacher load table with per-day bars and Highest/Lowest badges; pure logic in `domain/stats.ts` (step ④ → "Mock result (dev)" or a generated timetable; `cd web && npm test`)
 - [T11] Print / PDF export: "Print this timetable" (any view) and "Print all sections" (one A4 landscape page each, subject colours kept, app chrome hidden), "Heading on printouts" line (college · semester, persisted), "CSV" download of all placements (step ④ → buttons top right; browser Print → Save as PDF)
+- [T06] Excel template/import/export logic (`web/src/features/data/excel.ts`: all-or-nothing parse with row-level errors, CSV per sheet) and data checks (`dataChecks.ts`: dangling refs, no eligible room, lab too long, section/teacher load vs free periods) (`cd web && npx vitest run src/features/data`)
+- [T06] Step ② Data UI: Load sample (toast), Download template / Export current data (.xlsx), Upload .xlsx or per-sheet CSVs with row-level errors and an Import confirm, summary (counts, busiest-section load bars, blocking problems + over-capacity warnings), editable tabs for Courses/Sections/Teachers/Rooms/Departments; Next blocked while data has errors (`cd web && npm run dev` → step 2)
 
 ## Known issues / cuts
 
@@ -25,3 +27,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T05] Steps ②–④ are placeholders in `web/src/App.tsx` until T06/T07/T08 swap in their components. Any settings edit clears `result` and `locks` (placements point at day/period indexes).
 - [T07] Exact – CP-SAT with the server off shows an error and keeps the previous result (no fallback, by design; Auto falls back). The infeasible → partial-heuristic path is unit-tested but not clicked through (needs T06 edit tables).
 - [T08] `web/src/features/view/mockResult.ts` (+ test) and the dev-only "Mock result" button in `ViewStep.tsx` are temporary; delete them during T07 integration.
+- [T06] Importing or loading the sample replaces all data tables (after a confirm). Inline table edits do not clear an existing timetable; T07's validator re-checks it. A course with an error is left out of the load numbers until fixed.

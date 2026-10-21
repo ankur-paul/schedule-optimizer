@@ -1,9 +1,12 @@
 import { ArrowLeft, ArrowRight, CalendarDays, Check, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { GenerateStep } from '@/features/generate/GenerateStep'
+import { DataStep } from '@/features/data/DataStep'
+import { useCollegeData } from '@/features/data/collegeData'
+import { checkData } from '@/features/data/dataChecks'
 import { SetupStep } from '@/features/setup/SetupStep'
 import { settingsErrors } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
@@ -21,9 +24,10 @@ function App() {
   const setStep = useAppStore((s) => s.setStep)
   const settings = useAppStore((s) => s.settings)
   const reset = useAppStore((s) => s.reset)
+  const data = useCollegeData()
 
-  // Only step ① can block moving on for now; later steps add their own checks.
-  const blockers = step === 0 ? settingsErrors(settings) : []
+  // Steps ① and ② block moving on until their input is usable.
+  const blockers = step === 0 ? settingsErrors(settings) : step === 1 ? checkData(data, settings).errors : []
   const current = STEPS[step]
 
   return (
@@ -60,7 +64,7 @@ function App() {
           </div>
 
           {step === 0 && <SetupStep />}
-          {step === 1 && <Placeholder ticket="T06" />}
+          {step === 1 && <DataStep />}
           {step === 2 && <GenerateStep />}
           {step === 3 && <ViewStep />}
 
@@ -77,6 +81,7 @@ function App() {
           </div>
         </main>
       </div>
+      <Toaster theme="light" position="bottom-right" />
     </TooltipProvider>
   )
 }
@@ -115,14 +120,6 @@ function Stepper({ step, onSelect }: { step: Step; onSelect: (step: Step) => voi
         })}
       </ol>
     </nav>
-  )
-}
-
-function Placeholder({ ticket }: { ticket: string }) {
-  return (
-    <Card>
-      <CardContent className="py-10 text-center text-sm text-muted-foreground">Coming in {ticket}.</CardContent>
-    </Card>
   )
 }
 
