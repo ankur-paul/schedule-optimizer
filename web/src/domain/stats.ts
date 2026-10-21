@@ -82,6 +82,19 @@ export function sortLoads(loads: TeacherLoad[], key: LoadSortKey, dir: "asc" | "
   });
 }
 
+/** Teacher load rows shown before "Show all". */
+export const LOAD_PREVIEW = 10;
+
+/** The first `limit` rows unless expanded; a list only one row longer is shown whole (no "Show all 11"). */
+export function previewRows<T>(rows: T[], expanded: boolean, limit = LOAD_PREVIEW): T[] {
+  return expanded || rows.length <= limit + 1 ? rows : rows.slice(0, limit);
+}
+
+/** Short day labels for the per-day bars: "Mon" → "Mo", so Tue/Thu and Sat/Sun stay distinct. */
+export function dayInitials(days: string[]): string[] {
+  return days.map((d) => d.slice(0, 2));
+}
+
 /** Highest and lowest weekly load; null when there are no teachers. */
 export function loadRange(loads: TeacherLoad[]): { max: number; min: number } | null {
   if (loads.length === 0) return null;

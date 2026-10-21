@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadRange, roomUtilisation, SCORE_ROWS, scoreCount, sortLoads, teacherLoads } from "./stats";
+import { dayInitials, LOAD_PREVIEW, loadRange, previewRows, roomUtilisation, SCORE_ROWS, scoreCount, sortLoads, teacherLoads } from "./stats";
 import { tinyCollege, tinyValid } from "./tinyCollege";
 
 // tinyValid: 2 days × 5 teaching periods, so each room has 10 slots.
@@ -93,5 +93,26 @@ describe("scoreCount", () => {
 
   it("says 0 with the plural unit when nothing was penalised", () => {
     expect(scoreCount("sectionGaps", 0)).toBe("0 free periods");
+  });
+});
+
+describe("previewRows", () => {
+  const rows = Array.from({ length: 25 }, (_, i) => i);
+
+  it("shows the first LOAD_PREVIEW rows until expanded", () => {
+    expect(previewRows(rows, false)).toEqual(rows.slice(0, LOAD_PREVIEW));
+    expect(previewRows(rows, true)).toEqual(rows);
+  });
+
+  it("shows a short list whole, including one just a row over the limit", () => {
+    expect(previewRows(rows.slice(0, 3), false)).toHaveLength(3);
+    expect(previewRows(rows.slice(0, LOAD_PREVIEW + 1), false)).toHaveLength(LOAD_PREVIEW + 1);
+    expect(previewRows(rows.slice(0, LOAD_PREVIEW + 2), false)).toHaveLength(LOAD_PREVIEW);
+  });
+});
+
+describe("dayInitials", () => {
+  it("keeps two letters so Tue/Thu and Sat/Sun differ", () => {
+    expect(dayInitials(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])).toEqual(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]);
   });
 });

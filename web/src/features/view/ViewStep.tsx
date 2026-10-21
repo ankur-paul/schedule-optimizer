@@ -20,7 +20,7 @@ import { DraggableUnplaced, MoveDnd } from "./MoveDnd";
 import { placementsCsv } from "./exportCsv";
 import { entityGroups, entitySubtitle, placementsFor, stepEntity, unplacedFor, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 import { SessionDialog } from "./SessionDialog";
-import { StatsPanel } from "./StatsPanel";
+import { ScoreStrip, StatsPanel } from "./StatsPanel";
 import { TimetableSheet } from "./TimetableSheet";
 
 const KINDS: { kind: ViewKind; label: string }[] = [
@@ -194,6 +194,7 @@ export function ViewStep() {
           </span>
         </div>
       )}
+      {validation && <ScoreStrip data={data} placements={result.placements} />}
 
       {currentId ? (
         <MoveDnd data={data} sessions={sessions} colors={colors} locked={lockedIds}>
