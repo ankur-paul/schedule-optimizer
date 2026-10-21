@@ -36,7 +36,7 @@ flowchart LR
 ## How a timetable is generated
 
 1. The store builds a `SolveInput` from the admin's data and any locked cells.
-2. `solveClient` checks `GET /health`. If the server answers, it posts the input to `/solve` and CP-SAT runs for up to 30 seconds.
+2. `solveClient` checks `GET /health`. If the server answers, it posts the input to `/solve` and CP-SAT runs for up to the time limit set in step 3 (20 seconds by default).
 3. If the server is unreachable or times out, the heuristic solver runs in a Web Worker so the page stays responsive.
 4. If CP-SAT reports the input is infeasible, the heuristic runs anyway. It returns a partial timetable and a reason for each class it could not place, e.g. "no 2 consecutive periods where teacher R. Gupta and Physics Lab are both free".
 5. The validator checks the result against the hard rules H1 to H8, and the scorer computes penalties S1 to S4. Both run in the browser, so every engine is judged by the same code.
