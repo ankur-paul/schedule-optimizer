@@ -21,3 +21,27 @@ College timetable generator (2-hour solo hackathon). Read `PLAN.md` for decision
 - **Append only:** add one line at the bottom of the log as `- [TNN] what was built (how to see/try it)`. Never rewrite or reorder other entries.
 - Parallel branches will conflict on this file; resolve by keeping **both** sides' lines.
 - Note anything cut, known bugs or workarounds under "Known issues / cuts" so the demo has no surprises.
+
+## Scheduling rules
+
+Hard rules, which a valid timetable never breaks:
+
+| ID  | Rule                                                                                                                                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1  | A teacher is in one session at a time.                                                                                                       |
+| H2  | A section is in one session at a time. A whole-section class clashes with every batch; two batch labs clash only if they are the same batch. |
+| H3  | A room hosts one session at a time.                                                                                                          |
+| H4  | The room type matches the session, the room is shared or owned by the section's department, and a lab that requires a specific room gets it. |
+| H5  | Every session is placed exactly once, or listed as unplaced with a reason.                                                                   |
+| H6  | A lab fills consecutive teaching periods on one day and never spans a break.                                                                 |
+| H7  | Nothing is placed in a break.                                                                                                                |
+| H8  | Every section and every teacher has a free lunch-candidate period each day.                                                                  |
+
+Soft rules, which add to the score (lower is better):
+
+| ID  | Rule                                                           | Penalty                 |
+| --- | -------------------------------------------------------------- | ----------------------- |
+| S1  | The same subject lectured more than once a day                 | 10 per extra lecture    |
+| S2  | A teacher teaching more than 3 periods in a row                | 5 per period beyond 3   |
+| S3  | Idle periods in a section's day, not counting lunch candidates | 2 per period            |
+| S4  | One batch idle while another batch of the section is in a lab  | 3 per idle batch-period |
