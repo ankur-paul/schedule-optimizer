@@ -210,6 +210,7 @@ export function ViewStep() {
                 colors={colors}
                 onSelect={setOpen}
                 locked={lockedIds}
+                onToggleLock={(entry) => setLocks(toggleLock(locks, entry.placement))}
                 dnd={kind === "section" ? dnd : undefined}
                 className={cn(printAll && "print:hidden")}
               />

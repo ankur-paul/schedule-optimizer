@@ -10,6 +10,7 @@ import {
   layoutWeek,
   placementsFor,
   sessionDetails,
+  cellLabel,
   stepEntity,
   timeRange,
   unplacedFor,
@@ -224,6 +225,15 @@ describe("layoutWeek / timeRange / sessionDetails", () => {
       periods: "P3–P4",
       time: "11:00–12:40",
     });
+  });
+
+  it("reads a whole card out for screen readers, saying when it is locked", () => {
+    const s = expandSessions(data).find((x) => x.id === "cse-a-ds:P1:B2")!;
+    const details = sessionDetails(data, { session: s, placement: { sessionId: s.id, day: 1, period: 3, roomId: "lab-cse1" } });
+    expect(cellLabel(details, false)).toBe("Data Structures lab (B2), CSE A, Prof. Rahul Verma, CSE Lab 1, Tue P3–P4, 11:00–12:40");
+    expect(cellLabel({ ...details, kind: "lecture", batch: null }, true)).toBe(
+      "Data Structures, CSE A, Prof. Rahul Verma, CSE Lab 1, Tue P3–P4, 11:00–12:40, locked",
+    );
   });
 
   it("falls back to ids for unknown references", () => {

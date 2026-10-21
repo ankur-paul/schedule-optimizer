@@ -169,6 +169,20 @@ export function sessionDetails(data: ViewData, { session, placement }: PlacedSes
   };
 }
 
+/** What a screen reader hears for a grid card (the card itself only shows part of this). */
+export function cellLabel(info: SessionDetails, locked: boolean): string {
+  return [
+    `${info.subject}${info.kind === "lab" ? " lab" : ""}${info.batch ? ` (${info.batch})` : ""}`,
+    info.section,
+    info.teacher,
+    info.room,
+    `${info.day} ${info.periods}, ${info.time}`,
+    locked ? "locked" : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 /** Unplaced sessions of one section or teacher (rooms have none: an unplaced session has no room). */
 export function unplacedFor(
   kind: ViewKind,
