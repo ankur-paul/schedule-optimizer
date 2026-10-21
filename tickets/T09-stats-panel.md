@@ -1,5 +1,5 @@
 # T09 — Stats: score breakdown, teacher load, room utilisation
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** any · **Prereqs:** T02, T08 · **Branch:** t09-stats
 
 ## Goal

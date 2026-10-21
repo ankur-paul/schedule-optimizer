@@ -1,12 +1,12 @@
-import { buildGrid } from "./grid";
-import type { Placement, Score, SolveInput } from "./types";
+import { buildGrid, type CollegeData } from "./grid";
+import type { Placement, Score } from "./types";
 
 /** Soft-constraint weights (PLAN.md §2). */
 export const WEIGHTS = { subjectRepeat: 10, teacherOverload: 5, sectionGaps: 2, batchIdle: 3 } as const;
 const MAX_CONSECUTIVE = 3;
 
 /** Score a timeline (lower is better). Source of truth for the UI, whichever engine ran. */
-export function score(input: SolveInput, placements: Placement[]): Score {
+export function score(input: CollegeData, placements: Placement[]): Score {
   const { settings } = input;
   const grid = buildGrid(input, placements);
   const teaching = settings.periods.map((p) => p.kind === "teaching");
