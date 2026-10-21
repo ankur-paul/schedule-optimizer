@@ -51,3 +51,12 @@ export function setBatchTeacher(course: Course, batches: number, b: number, teac
 export function labRoomsFor(rooms: Room[], section: Section | undefined): Room[] {
   return rooms.filter((r) => r.type === "lab" && (r.departmentId === null || r.departmentId === section?.departmentId));
 }
+
+/** Data tabs in the order the data depends on: courses need sections, teachers and rooms. */
+export const DATA_TABS = ["departments", "rooms", "teachers", "sections", "courses"] as const;
+export type DataTab = (typeof DATA_TABS)[number];
+
+/** Open on Courses once there are some (the table people edit most), otherwise at the start. */
+export function defaultDataTab(data: Pick<CollegeData, "courses">): DataTab {
+  return data.courses.length > 0 ? "courses" : "departments";
+}

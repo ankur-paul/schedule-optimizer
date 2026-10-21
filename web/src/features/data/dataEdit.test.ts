@@ -3,7 +3,7 @@ import { sampleCollege } from "@/domain/sampleCollege";
 import { useAppStore } from "@/store/useAppStore";
 import type { Course } from "@/domain/types";
 import type { CollegeData } from "./excel";
-import { labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
+import { DATA_TABS, defaultDataTab, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
 
 const data = (): CollegeData => ({
   departments: [
@@ -86,5 +86,17 @@ describe("store setData", () => {
     expect(after.result).toBeNull();
     expect(after.settings).toEqual(sampleCollege.settings);
     after.reset();
+  });
+});
+
+describe("data tabs", () => {
+  it("lists tables in dependency order, courses last", () => {
+    expect(DATA_TABS).toEqual(["departments", "rooms", "teachers", "sections", "courses"]);
+  });
+
+  it("opens on Courses when there are courses, otherwise on Departments", () => {
+    expect(defaultDataTab(data())).toBe("courses");
+    expect(defaultDataTab({ courses: [] })).toBe("departments");
+    expect(defaultDataTab(sampleCollege)).toBe("courses");
   });
 });

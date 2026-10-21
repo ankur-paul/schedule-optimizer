@@ -10,7 +10,7 @@ import type { Course, Department, Id, Room, Section, Teacher } from "@/domain/ty
 import { useAppStore } from "@/store/useAppStore";
 import { useCollegeData } from "./collegeData";
 import type { DataReport } from "./dataChecks";
-import { labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
+import { DATA_TABS, defaultDataTab, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount, type DataTab } from "./dataEdit";
 
 const selectClass =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
@@ -104,32 +104,30 @@ function DepartmentOptions({ departments, shared }: { departments: Department[];
 
 export function DataTables({ report }: { report: DataReport }) {
   const data = useCollegeData();
+  const tabs: Record<DataTab, { title: string; count: number; table: React.ReactNode }> = {
+    departments: { title: "Departments", count: data.departments.length, table: <DepartmentsTable /> },
+    rooms: { title: "Rooms", count: data.rooms.length, table: <RoomsTable /> },
+    teachers: { title: "Teachers", count: data.teachers.length, table: <TeachersTable report={report} /> },
+    sections: { title: "Sections", count: data.sections.length, table: <SectionsTable report={report} /> },
+    courses: { title: "Courses", count: data.courses.length, table: <CoursesTable /> },
+  };
   return (
     <Card>
       <CardContent>
-        <Tabs defaultValue="courses">
+        {/* Remount when courses appear or vanish (sample, import, Start over) so the default tab follows. */}
+        <Tabs key={defaultDataTab(data)} defaultValue={defaultDataTab(data)}>
           <TabsList>
-            <TabsTrigger value="courses">Courses ({data.courses.length})</TabsTrigger>
-            <TabsTrigger value="sections">Sections ({data.sections.length})</TabsTrigger>
-            <TabsTrigger value="teachers">Teachers ({data.teachers.length})</TabsTrigger>
-            <TabsTrigger value="rooms">Rooms ({data.rooms.length})</TabsTrigger>
-            <TabsTrigger value="departments">Departments ({data.departments.length})</TabsTrigger>
+            {DATA_TABS.map((t) => (
+              <TabsTrigger key={t} value={t}>
+                {tabs[t].title} ({tabs[t].count})
+              </TabsTrigger>
+            ))}
           </TabsList>
-          <TabsContent value="courses" className="pt-3">
-            <CoursesTable />
-          </TabsContent>
-          <TabsContent value="sections" className="pt-3">
-            <SectionsTable report={report} />
-          </TabsContent>
-          <TabsContent value="teachers" className="pt-3">
-            <TeachersTable report={report} />
-          </TabsContent>
-          <TabsContent value="rooms" className="pt-3">
-            <RoomsTable />
-          </TabsContent>
-          <TabsContent value="departments" className="pt-3">
-            <DepartmentsTable />
-          </TabsContent>
+          {DATA_TABS.map((t) => (
+            <TabsContent key={t} value={t} className="pt-3">
+              {tabs[t].table}
+            </TabsContent>
+          ))}
         </Tabs>
       </CardContent>
     </Card>

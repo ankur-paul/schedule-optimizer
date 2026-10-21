@@ -34,6 +34,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Changing step scrolls back to the top (it used to keep the old scroll position, so "View timetable" landed on the Teacher load table); the scrollbar space is reserved so pages no longer shift sideways between steps (step ③ scrolled down → View timetable)
 - [T12] Stepper on narrow screens shows step numbers only, plus the current step's name, so it fits on one line (browser window under 640px wide)
 - [T12] Step ① with no periods yet says "Create periods to continue." in grey instead of a red error (real problems are still red, logic in `setupFooterNote`); the generator button reads *Create periods* until there are periods to replace; the periods table drops its row-number column, which didn't match the P1–P8 labels (Start over → step ①)
+- [T12] Step ② tabs follow the order the data depends on (Departments → Rooms → Teachers → Sections → Courses); they open on Departments while empty and switch to Courses once courses exist, e.g. after Load sample (`DATA_TABS` / `defaultDataTab` in `dataEdit.ts`) (Start over → step ② → Load sample)
 
 ## Known issues / cuts
 
