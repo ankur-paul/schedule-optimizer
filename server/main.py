@@ -8,7 +8,8 @@ app = FastAPI(title="Timetable Solver")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    # Any local port: Vite moves off 5173 when it's taken (e.g. several dev servers running at once).
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )

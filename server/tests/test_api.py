@@ -40,3 +40,14 @@ def test_cors_allows_dev_frontend():
         headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "POST"},
     )
     assert res.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
+def test_cors_allows_other_local_ports_only():
+    def allowed(origin: str):
+        res = client.options("/solve", headers={"Origin": origin, "Access-Control-Request-Method": "POST"})
+        return res.headers.get("access-control-allow-origin") == origin
+
+    assert allowed("http://localhost:5174")
+    assert allowed("http://127.0.0.1:5173")
+    assert not allowed("http://evil.example")
+    assert not allowed("http://localhost.evil.example")

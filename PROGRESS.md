@@ -12,6 +12,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T03] Heuristic engine `solveHeuristic` (most-constrained-first greedy + seeded restarts + move/swap local search, clash-free by construction, unplaced reasons) and Web Worker wrapper `await runHeuristic(input, opts)`; sample college: all 210 sessions placed, score 18 in 1.5 s (`cd web && npm test`)
 - [T04] CP-SAT solver service: `POST /solve` places all 210 sample sessions, optimal (score 18) in ~10 s; models H1–H8 + all soft rules S1–S4, locks, infeasible/error messages (`cd server && .venv/bin/uvicorn main:app --port 8000`, then `curl -X POST localhost:8000/solve -H 'content-type: application/json' --data @../shared/fixtures/sample-college.json`; tests: `.venv/bin/pytest`)
 - [T05] App shell with 4-step stepper (Back/Next, hints), zustand store persisted to localStorage `timetable-v1` (`loadSample`, `reset`), Step ① Setup: day chips, editable periods table + "Generate periods" helper, lunch candidates, inline validation (`cd web && npm run dev`; edit settings and reload; tests in `src/features/setup/periods.test.ts`)
+- [T07] Solver server CORS allows any `localhost`/`127.0.0.1` port, so a dev server that moved off 5173 can still reach CP-SAT (`server/tests/test_api.py`)
 
 ## Known issues / cuts
 
