@@ -10,14 +10,16 @@ import type { Period } from "@/domain/types";
 import { useAppStore } from "@/store/useAppStore";
 import {
   ALL_DAYS,
+  cleanWholeNumber,
   defaultLunchCandidates,
   fromMinutes,
   generatePeriods,
+  parseGeneratorForm,
   periodErrors,
   toMinutes,
   toggleDay,
   withPeriods,
-  type GenerateOptions,
+  type GeneratorForm,
 } from "./periods";
 
 export function SetupStep() {
@@ -226,33 +228,41 @@ function KindToggle({ value, onChange }: { value: Period["kind"]; onChange: (kin
 }
 
 function PeriodGenerator({ onGenerate, onCancel }: { onGenerate: (periods: Period[]) => void; onCancel: () => void }) {
-  const [o, setO] = useState<GenerateOptions>({ start: "09:00", lengthMin: 50, count: 8, breakAfter: 2, breakMin: 20 });
-  const valid = !Number.isNaN(toMinutes(o.start)) && o.lengthMin > 0 && o.count > 0 && o.breakAfter >= 0;
-  const num = (key: keyof GenerateOptions) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setO({ ...o, [key]: Math.max(0, Math.floor(Number(e.target.value) || 0)) });
+  const [form, setForm] = useState<GeneratorForm>({ start: "09:00", lengthMin: "50", count: "8", breakAfter: "2", breakMin: "20" });
+  const [editingBreak, setEditingBreak] = useState(false);
+  const options = parseGeneratorForm(form);
+  const num = (key: keyof GeneratorForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [key]: cleanWholeNumber(e.target.value) });
+  const breakFocus = { onFocus: () => setEditingBreak(true), onBlur: () => setEditingBreak(false) };
 
   return (
     <div className="grid gap-3 rounded-lg border bg-muted/40 p-4">
       <p className="text-sm text-muted-foreground">Builds an evenly spaced schedule. This replaces the current periods.</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Field label="First period starts">
-          <Input type="time" value={o.start} onChange={(e) => setO({ ...o, start: e.target.value })} />
+          <Input type="time" value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} />
         </Field>
         <Field label="Period length (min)">
-          <Input type="number" min={1} value={o.lengthMin} onChange={num("lengthMin")} />
+          <Input type="number" min={1} value={form.lengthMin} onChange={num("lengthMin")} />
         </Field>
         <Field label="Teaching periods">
-          <Input type="number" min={1} value={o.count} onChange={num("count")} />
+          <Input type="number" min={1} value={form.count} onChange={num("count")} />
         </Field>
         <Field label="Break after period" tip="Put a break after this teaching period. 0 means no break.">
-          <Input type="number" min={0} value={o.breakAfter} onChange={num("breakAfter")} />
+          <Input type="number" min={0} value={form.breakAfter} onChange={num("breakAfter")} {...breakFocus} />
         </Field>
         <Field label="Break length (min)">
-          <Input type="number" min={0} value={o.breakMin} onChange={num("breakMin")} />
+          <Input type="number" min={0} value={form.breakMin} onChange={num("breakMin")} {...breakFocus} />
         </Field>
       </div>
+      {editingBreak && (
+        <p className="text-xs text-muted-foreground">
+          This is a short break for everyone, like a tea break. It is not lunch: lunch periods are picked under Lunch
+          candidates below.
+        </p>
+      )}
       <div className="flex gap-2">
-        <Button size="sm" disabled={!valid} onClick={() => onGenerate(generatePeriods(o))}>
+        <Button size="sm" disabled={!options} onClick={() => options && onGenerate(generatePeriods(options))}>
           Replace periods
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>

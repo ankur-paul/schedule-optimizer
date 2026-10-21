@@ -3,9 +3,11 @@ import { sampleCollege } from "@/domain/sampleCollege";
 import { useAppStore } from "@/store/useAppStore";
 import type { Period } from "@/domain/types";
 import {
+  cleanWholeNumber,
   defaultLunchCandidates,
   fromMinutes,
   generatePeriods,
+  parseGeneratorForm,
   periodErrors,
   settingsErrors,
   toMinutes,
@@ -84,6 +86,35 @@ describe("setup helper edge cases", () => {
     }
     const periods = generatePeriods({ start: "08:30", lengthMin: 45, count: 3, breakAfter: 3, breakMin: 15 });
     expect(periods.at(-1)).toEqual(p(3, "Break", "10:45", "11:00", "break"));
+  });
+
+  it("cleans whole-number text: no leading zeros, digits only, empty stays empty", () => {
+    expect(cleanWholeNumber("020")).toBe("20");
+    expect(cleanWholeNumber("0")).toBe("0");
+    expect(cleanWholeNumber("000")).toBe("0");
+    expect(cleanWholeNumber("05")).toBe("5");
+    expect(cleanWholeNumber("20")).toBe("20");
+    expect(cleanWholeNumber("100")).toBe("100");
+    expect(cleanWholeNumber("")).toBe("");
+    expect(cleanWholeNumber("2.5")).toBe("2");
+    expect(cleanWholeNumber("-3")).toBe("");
+    expect(cleanWholeNumber(" 07 ")).toBe("7");
+  });
+
+  it("parses the generator form, treating empty break fields as 0", () => {
+    const form = { start: "09:00", lengthMin: "50", count: "8", breakAfter: "2", breakMin: "20" };
+    expect(parseGeneratorForm(form)).toEqual({ start: "09:00", lengthMin: 50, count: 8, breakAfter: 2, breakMin: 20 });
+    expect(parseGeneratorForm({ ...form, breakAfter: "", breakMin: "" })).toMatchObject({ breakAfter: 0, breakMin: 0 });
+  });
+
+  it("rejects a generator form without a start time, length or period count", () => {
+    const form = { start: "09:00", lengthMin: "50", count: "8", breakAfter: "2", breakMin: "20" };
+    expect(parseGeneratorForm({ ...form, start: "" })).toBeNull();
+    expect(parseGeneratorForm({ ...form, lengthMin: "" })).toBeNull();
+    expect(parseGeneratorForm({ ...form, lengthMin: "0" })).toBeNull();
+    expect(parseGeneratorForm({ ...form, count: "" })).toBeNull();
+    expect(parseGeneratorForm({ ...form, count: "1.5" })).toBeNull();
+    expect(parseGeneratorForm({ ...form, breakMin: "-5" })).toBeNull();
   });
 
   it("default lunch window ignores breaks and periods outside 11:30–14:00", () => {

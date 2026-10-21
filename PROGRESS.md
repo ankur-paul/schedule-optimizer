@@ -28,6 +28,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T05] Step ① starts as an empty form (no days, periods or lunch candidates) instead of the sample week; *Start over* also empties it, and *Load sample* in step ② still fills the sample week (open the app in a fresh browser, or Start over)
 - [T05] Step ① preselects the working days Mon–Fri; periods and lunch candidates still start empty (Start over → step ①)
 - [T05] Step ① opens the *Generate periods* form straight away while there are no periods yet (Start over → step ①)
+- [T05] Generate periods form: while a break field is focused, a note says the break is a short break for everyone, not lunch; number fields drop leading zeros (clearing to 0 and typing 20 gives 20, not 020), and the logic is in `cleanWholeNumber` / `parseGeneratorForm` (step ① → Generate periods → edit Break length)
 
 ## Known issues / cuts
 

@@ -49,6 +49,23 @@ export interface GenerateOptions {
   breakMin: number;
 }
 
+/** The generator form as typed: number fields are kept as text so they can be empty while editing. */
+export type GeneratorForm = { [K in keyof GenerateOptions]: string };
+
+/** Text for a whole-number field: the digits before any decimal point, without leading zeros ("020" → "20"). */
+export function cleanWholeNumber(text: string): string {
+  const digits = /^\d*/.exec(text.trim())?.[0] ?? "";
+  return digits.replace(/^0+(?=\d)/, "");
+}
+
+/** Generator options from the form, or null if the start time is missing or there are no periods to build. */
+export function parseGeneratorForm(f: GeneratorForm): GenerateOptions | null {
+  const whole = (text: string) => (/^\d*$/.test(text.trim()) ? Number(text) : NaN); // "" → 0
+  const o = { start: f.start, lengthMin: whole(f.lengthMin), count: whole(f.count), breakAfter: whole(f.breakAfter), breakMin: whole(f.breakMin) };
+  const ok = !Number.isNaN(toMinutes(o.start)) && o.lengthMin > 0 && o.count > 0 && o.breakAfter >= 0 && o.breakMin >= 0;
+  return ok ? o : null;
+}
+
 export function generatePeriods(o: GenerateOptions): Period[] {
   const periods: Period[] = [];
   let t = toMinutes(o.start);
