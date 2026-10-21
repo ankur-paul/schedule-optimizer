@@ -1,5 +1,5 @@
 # T04 — FastAPI + CP-SAT solver
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** B · **Prereqs:** T01 · **Branch:** t04-cpsat
 
 ## Goal
