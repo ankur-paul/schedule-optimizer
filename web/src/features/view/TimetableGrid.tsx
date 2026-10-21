@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Settings } from "@/domain/types";
+import type { Id, Settings } from "@/domain/types";
 import { subjectColor } from "./colors";
 import { sessionDetails, type Block, type DayLayout, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 
@@ -11,10 +11,12 @@ interface Props {
   week: DayLayout[];
   colors: Map<string, number>;
   onSelect: (entry: PlacedSession) => void;
+  /** Session ids to mark as locked (🔒 + thicker border). */
+  locked?: ReadonlySet<Id>;
 }
 
 /** Week grid: rows = days, columns = periods. Labs span columns; parallel batch sessions stack inside a day. */
-export function TimetableGrid({ data, kind, week, colors, onSelect }: Props) {
+export function TimetableGrid({ data, kind, week, colors, onSelect, locked }: Props) {
   const { settings } = data;
   const columns = ["5rem", ...settings.periods.map((p) => (p.kind === "break" ? "2rem" : "minmax(7.5rem, 1fr)"))];
   // Fill the card, but scroll sideways (inside the card only) once columns would get narrower than their minimum.
@@ -64,6 +66,7 @@ export function TimetableGrid({ data, kind, week, colors, onSelect }: Props) {
                 block={block}
                 colors={colors}
                 onSelect={onSelect}
+                locked={locked?.has(block.session.id) ?? false}
                 gridRow={`${firstRow[d] + block.lane} / span ${block.laneSpan}`}
                 gridColumn={`${block.start + 2} / span ${block.span}`}
               />
@@ -132,11 +135,12 @@ interface CellProps {
   block: Block;
   colors: Map<string, number>;
   onSelect: (entry: PlacedSession) => void;
+  locked: boolean;
   gridRow: string;
   gridColumn: string;
 }
 
-function Cell({ data, kind, block, colors, onSelect, gridRow, gridColumn }: CellProps) {
+function Cell({ data, kind, block, colors, onSelect, locked, gridRow, gridColumn }: CellProps) {
   const info = sessionDetails(data, block);
   const color = subjectColor(colors, info.subject);
   // The line under the subject names whatever the current view doesn't already tell you.
@@ -147,13 +151,22 @@ function Cell({ data, kind, block, colors, onSelect, gridRow, gridColumn }: Cell
     <Tooltip>
       <TooltipTrigger
         onClick={() => onSelect(block)}
-        className="relative z-10 m-0.5 flex min-w-0 cursor-pointer flex-col items-start gap-0.5 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className={cn(
+          "relative z-10 m-0.5 flex min-w-0 cursor-pointer flex-col items-start gap-0.5 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+          locked && "border-[3px] px-[6px] py-[4px]",
+        )}
+        aria-label={locked ? `${info.subject} (locked)` : undefined}
         style={{ gridRow, gridColumn, backgroundColor: color.bg, borderColor: color.border, color: color.fg }}
       >
         <span className="flex w-full items-start gap-1">
           <span className="line-clamp-2 leading-tight font-semibold">{info.subject}</span>
           {info.kind === "lab" && <Chip>Lab</Chip>}
           {info.batch && <Chip strong>{info.batch}</Chip>}
+          {locked && (
+            <span className="ml-auto shrink-0 leading-tight" title="Locked: kept in place when you regenerate">
+              🔒
+            </span>
+          )}
         </span>
         {lines.map((line, i) => (
           <span key={i} className="w-full truncate leading-tight opacity-80 print:whitespace-normal">
@@ -163,7 +176,7 @@ function Cell({ data, kind, block, colors, onSelect, gridRow, gridColumn }: Cell
       </TooltipTrigger>
       <TooltipContent className="block">
         <div className="font-semibold">
-          {info.subject} {info.kind === "lab" ? "(lab)" : ""}
+          {info.subject} {info.kind === "lab" ? "(lab)" : ""} {locked ? "· locked" : ""}
         </div>
         <div>
           {info.section}

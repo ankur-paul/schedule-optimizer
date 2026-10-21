@@ -46,6 +46,20 @@ export function hasTimetable(result: Pick<SolveResult, "status" | "placements">)
   return !(result.status === "error" && result.placements.length === 0);
 }
 
+/** What the last run said, beyond the stored result: why it fell back, or why nothing was produced. */
+export interface Notice { fallbackReason?: string; error?: string }
+
+export function outcomeNotice(result: Pick<SolveResult, "status" | "placements" | "message">, fallbackReason?: string): Notice {
+  return hasTimetable(result) ? { fallbackReason } : { error: result.message ?? "The engine failed." };
+}
+
+/** One-line toast after Regenerate in step ④, e.g. "New timetable: 210 sessions placed · score 18". */
+export function regenerateSummary(result: Pick<SolveResult, "placements" | "unplaced" | "score">): string {
+  const n = result.placements.length;
+  const unplaced = result.unplaced.length > 0 ? ` · ${result.unplaced.length} unplaced` : "";
+  return `New timetable: ${n} session${n === 1 ? "" : "s"} placed${unplaced} · score ${result.score.total}`;
+}
+
 /** A fresh seed per run so "Generate" again can give a different timetable. Fits CP-SAT's int32 seed. */
 export function newSeed(): number {
   return Math.floor(Math.random() * 2 ** 31);

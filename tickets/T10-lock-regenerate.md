@@ -1,5 +1,5 @@
 # T10 — Lock cells + regenerate
-**Status:** TODO
+**Status:** DONE
 **Lane:** any · **Prereqs:** T07, T08 · **Branch:** t10-locks
 
 ## Goal
@@ -15,5 +15,5 @@
 - Covered by T03 lock test; manual check with CP-SAT and heuristic.
 
 ## Done when
-- [ ] Locked sessions survive regenerate on both engines
-- [ ] Committed: `T10: lock + regenerate`
+- [x] Locked sessions survive regenerate on both engines
+- [x] Committed: `T10: lock + regenerate`

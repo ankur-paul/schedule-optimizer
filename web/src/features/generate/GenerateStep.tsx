@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, CircleX, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CircleX, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,13 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { WEIGHTS } from "@/domain/score";
 import type { ScoreBreakdown } from "@/domain/types";
 import { validate } from "@/domain/validator";
-import { checkServer, generate } from "@/engine/solveClient";
+import { checkServer } from "@/engine/solveClient";
+import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
-import { badgeText, buildSolveInput, ENGINE_OPTIONS, generateBlockers, hasTimetable, newSeed, TIME_LIMIT } from "./generate";
+import { badgeText, ENGINE_OPTIONS, generateBlockers, TIME_LIMIT, type Notice } from "./generate";
+import { useGenerate } from "./useGenerate";
 
 type ServerState = "checking" | "online" | "offline";
-/** What the last run said, beyond the stored result: why it fell back, or why nothing was produced. */
-interface Notice { fallbackReason?: string; error?: string }
 
 export function GenerateStep() {
   const [server, setServer] = useState<ServerState>("checking");
@@ -46,33 +46,13 @@ function EngineCard({ server, onRefresh, onDone }: {
   onDone: (notice: Notice) => void;
 }) {
   const data = useAppStore();
-  const { engineMode, setEngineMode, timeLimitSec, setTimeLimitSec, setResult, loadSample } = data;
-  const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
+  const { engineMode, setEngineMode, timeLimitSec, setTimeLimitSec, loadSample, locks, setLocks } = data;
+  const { running, elapsed, run: runEngine } = useGenerate();
   const blockers = generateBlockers(data);
 
-  useEffect(() => {
-    if (!running) return;
-    const t0 = Date.now();
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 250);
-    return () => clearInterval(id);
-  }, [running]);
-
   const run = async () => {
-    setElapsed(0);
-    setRunning(true);
-    try {
-      const outcome = await generate(buildSolveInput(data, { timeLimitSec, seed: newSeed() }), engineMode);
-      // An engine error has no timetable: keep the previous result rather than wiping it.
-      if (hasTimetable(outcome.result)) {
-        setResult(outcome.result);
-        onDone({ fallbackReason: outcome.fallbackReason });
-      } else {
-        onDone({ error: outcome.result.message ?? "The engine failed." });
-      }
-    } finally {
-      setRunning(false);
-    }
+    const notice = await runEngine();
+    if (notice) onDone(notice);
   };
 
   return (
@@ -143,8 +123,13 @@ function EngineCard({ server, onRefresh, onDone }: {
         <div className="flex flex-wrap items-center gap-3">
           <Button size="lg" disabled={running || blockers.length > 0} onClick={run}>
             {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
-            {running ? "Generating…" : "Generate timetable"}
+            {running ? "Generating…" : data.result || locks.length > 0 ? regenerateLabel(locks.length) : "Generate timetable"}
           </Button>
+          {locks.length > 0 && !running && (
+            <Button variant="ghost" size="sm" onClick={() => setLocks([])}>
+              <Lock /> Clear all locks
+            </Button>
+          )}
           {running && (
             <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
               {elapsed} s elapsed{engineMode !== "heuristic" && ` · up to ${timeLimitSec} s`}

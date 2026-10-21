@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { sampleCollege } from "@/domain/sampleCollege";
 import type { Placement } from "@/domain/types";
 import type { AppData } from "@/store/useAppStore";
-import { badgeText, buildSolveInput, engineLabel, generateBlockers, hasTimetable, newSeed } from "./generate";
+import { badgeText, buildSolveInput, engineLabel, generateBlockers, hasTimetable, newSeed, outcomeNotice, regenerateSummary } from "./generate";
 
 const lock: Placement = { sessionId: "cse-a-ds:L1", day: 0, period: 0, roomId: "cr-cse-a" };
 const data: AppData = {
@@ -84,5 +84,30 @@ describe("hasTimetable", () => {
     expect(hasTimetable({ status: "error", placements: [lock] })).toBe(true);
     expect(hasTimetable({ status: "infeasible", placements: [] })).toBe(true);
     expect(hasTimetable({ status: "partial", placements: [] })).toBe(true);
+  });
+});
+
+describe("outcomeNotice", () => {
+  it("passes the fallback reason through when there is a timetable", () => {
+    expect(outcomeNotice({ status: "feasible", placements: [lock] }, "Server offline")).toEqual({ fallbackReason: "Server offline" });
+    expect(outcomeNotice({ status: "optimal", placements: [lock] })).toEqual({ fallbackReason: undefined });
+  });
+
+  it("turns an empty error into an error notice, with a default message", () => {
+    expect(outcomeNotice({ status: "error", placements: [], message: "boom" }, "ignored")).toEqual({ error: "boom" });
+    expect(outcomeNotice({ status: "error", placements: [] })).toEqual({ error: "The engine failed." });
+  });
+});
+
+describe("regenerateSummary", () => {
+  const score = { total: 18, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 18 } };
+  it("counts placed sessions and the score", () => {
+    expect(regenerateSummary({ placements: [lock, lock], unplaced: [], score })).toBe("New timetable: 2 sessions placed · score 18");
+  });
+
+  it("mentions unplaced sessions only when there are some", () => {
+    expect(regenerateSummary({ placements: [lock], unplaced: [{ sessionId: "x", reason: "r" }], score })).toBe(
+      "New timetable: 1 session placed · 1 unplaced · score 18",
+    );
   });
 });

@@ -20,6 +20,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T06] Excel template/import/export logic (`web/src/features/data/excel.ts`: all-or-nothing parse with row-level errors, CSV per sheet) and data checks (`dataChecks.ts`: dangling refs, no eligible room, lab too long, section/teacher load vs free periods) (`cd web && npx vitest run src/features/data`)
 - [T06] Step ② Data UI: Load sample (toast), Download template / Export current data (.xlsx), Upload .xlsx or per-sheet CSVs with row-level errors and an Import confirm, summary (counts, busiest-section load bars, blocking problems + over-capacity warnings), editable tabs for Courses/Sections/Teachers/Rooms/Departments; Next blocked while data has errors (`cd web && npm run dev` → step 2)
 - [T07] Integration: steps ② Data, ③ Generate and ④ View all wired into the stepper; T08 mock result and dev button removed, stats panel hidden when printing (step ④ with no result links back to Generate)
+- [T10] Lock + regenerate: click a cell in step ④ → Lock here / Unlock (🔒 + thick border, tooltip says locked); "Regenerate (keep N locked)" in steps ③ and ④ re-solves everything else with the step ③ engine (toast with score); "Clear all locks"; locks that no longer fit the data (session/room gone, ineligible room, break, clash between locks) are dropped with a warning toast before solving. Checked in the browser: locks kept on heuristic and CP-SAT (`npm run dev` + server, Generate → step ④ → lock two cells → Regenerate)
 
 ## Known issues / cuts
 
@@ -28,3 +29,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T05] Any settings edit clears `result` and `locks` (placements point at day/period indexes).
 - [T07] Exact – CP-SAT with the server off shows an error and keeps the previous result (no fallback, by design; Auto falls back). The infeasible → partial-heuristic path is unit-tested but not clicked through (needs T06 edit tables).
 - [T06] Importing or loading the sample replaces all data tables (after a confirm). Inline table edits do not clear an existing timetable; T07's validator re-checks it. A course with an error is left out of the load numbers until fixed.
+- [T10] Locks are kept when the result is replaced, so an engine run that can't honour them (e.g. a lock that blocks every other slot) shows up as unplaced sessions rather than a dropped lock. Print sheets don't show 🔒.
