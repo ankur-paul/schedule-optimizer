@@ -15,6 +15,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T07] Solver server CORS allows any `localhost`/`127.0.0.1` port, so a dev server that moved off 5173 can still reach CP-SAT (`server/tests/test_api.py`)
 - [T07] Step ③ Generate: engine choice (Auto / Exact CP-SAT / Fast in-browser), time-limit slider, solver server status dot, elapsed timer; `generate()` (`web/src/engine/solveClient.ts`) falls back to the heuristic when the server is offline, times out, errors or says infeasible; every result is re-scored and re-validated → badge `✓ Verified: 0 clashes · engine: …`, score breakdown, unplaced list (start server + `npm run dev`, step ③ → Load sample college → Generate; stop the server and Generate again to see the fallback)
 - [T08] Step ④ timetable grid: Section/Teacher/Room switcher, searchable grouped picker + prev/next, labs span columns, parallel batch labs stacked, colour per subject, hover tooltip, click → details dialog, empty state (step ④ → "Mock result (dev)" until T07 lands)
+- [T09] Stats panel under the step ④ grid: quality score with S1–S4 rows + ⓘ tips, room utilisation bars with shared-room headline, sortable teacher load table with per-day bars and Highest/Lowest badges; pure logic in `domain/stats.ts` (step ④ → "Mock result (dev)" or a generated timetable; `cd web && npm test`)
 
 ## Known issues / cuts
 

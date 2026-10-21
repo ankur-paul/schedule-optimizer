@@ -8,6 +8,9 @@ export type Cell = PlacedSession[];
 /** `timeline[day][periodId]` */
 export type Timeline = Cell[][];
 
+/** The parts of a SolveInput that describe the college (no locks/options). */
+export type CollegeData = Pick<SolveInput, "settings" | "teachers" | "sections" | "rooms" | "courses">;
+
 export interface Grid {
   sessions: Map<Id, Session>;
   byTeacher: Map<Id, Timeline>;
@@ -20,7 +23,7 @@ export interface Grid {
  * or periods past the end of the day are skipped (the validator reports them).
  * Every teacher/section/room in the input gets a timeline, even if empty.
  */
-export function buildGrid(input: SolveInput, placements: Placement[], sessions: Session[] = expandSessions(input)): Grid {
+export function buildGrid(input: CollegeData, placements: Placement[], sessions: Session[] = expandSessions(input)): Grid {
   const days = input.settings.days.length;
   const periods = input.settings.periods.length;
   const emptyTimeline = (): Timeline => Array.from({ length: days }, () => Array.from({ length: periods }, () => []));
