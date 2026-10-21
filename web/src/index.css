@@ -141,4 +141,10 @@
     -webkit-print-color-adjust: exact;
     background: white;
   }
+
+  /* Portaled outside the app, so `print:hidden` on the chrome doesn't reach them. */
+  [data-sonner-toaster],
+  [data-slot="tooltip-content"] {
+    display: none !important;
+  }
 }

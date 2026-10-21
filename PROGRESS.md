@@ -21,6 +21,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T06] Step ② Data UI: Load sample (toast), Download template / Export current data (.xlsx), Upload .xlsx or per-sheet CSVs with row-level errors and an Import confirm, summary (counts, busiest-section load bars, blocking problems + over-capacity warnings), editable tabs for Courses/Sections/Teachers/Rooms/Departments; Next blocked while data has errors (`cd web && npm run dev` → step 2)
 - [T07] Integration: steps ② Data, ③ Generate and ④ View all wired into the stepper; T08 mock result and dev button removed, stats panel hidden when printing (step ④ with no result links back to Generate)
 - [T10] Lock + regenerate: click a cell in step ④ → Lock here / Unlock (🔒 + thick border, tooltip says locked); "Regenerate (keep N locked)" in steps ③ and ④ re-solves everything else with the step ③ engine (toast with score); "Clear all locks"; locks that no longer fit the data (session/room gone, ineligible room, break, clash between locks) are dropped with a warning toast before solving. Checked in the browser: locks kept on heuristic and CP-SAT (`npm run dev` + server, Generate → step ④ → lock two cells → Regenerate)
+- [T12] Toasts and hover tooltips no longer print on top of the timetable (step ④ → regenerate, then Print this timetable straight away)
 
 ## Known issues / cuts
 

@@ -1,5 +1,5 @@
 # T12 — Polish, tooltips audit, README, user test
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main · **Prereqs:** T06, T07, T09, T10, T11 · **Branch:** main
 
 ## Goal
