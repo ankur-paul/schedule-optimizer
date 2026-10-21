@@ -3,7 +3,14 @@ import { ArrowDown, ArrowUp, Plus, Trash2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Period } from "@/domain/types";
@@ -41,7 +48,9 @@ function DaysCard() {
     <Card>
       <CardHeader>
         <CardTitle>Working days</CardTitle>
-        <CardDescription>Days that have classes. Every day uses the same periods.</CardDescription>
+        <CardDescription>
+          Days that have classes. Every day uses the same periods.
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         {[...ALL_DAYS, ...extraDays].map((day) => {
@@ -51,7 +60,12 @@ function DaysCard() {
               key={day}
               type="button"
               aria-pressed={on}
-              onClick={() => setSettings({ ...settings, days: toggleDay(settings.days, day) })}
+              onClick={() =>
+                setSettings({
+                  ...settings,
+                  days: toggleDay(settings.days, day),
+                })
+              }
               className={cn(
                 "h-9 min-w-14 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
                 on
@@ -63,7 +77,11 @@ function DaysCard() {
             </button>
           );
         })}
-        {settings.days.length === 0 && <p className="w-full text-sm text-destructive">Pick at least one working day.</p>}
+        {settings.days.length === 0 && (
+          <p className="w-full text-sm text-destructive">
+            Pick at least one working day.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -78,7 +96,8 @@ function PeriodsCard() {
   const errors = periodErrors(periods);
 
   const replace = (next: Period[]) => setSettings(withPeriods(settings, next));
-  const update = (i: number, patch: Partial<Period>) => replace(periods.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  const update = (i: number, patch: Partial<Period>) =>
+    replace(periods.map((p, j) => (j === i ? { ...p, ...patch } : p)));
   const move = (i: number, by: -1 | 1) => {
     const next = [...periods];
     [next[i], next[i + by]] = [next[i + by], next[i]];
@@ -88,10 +107,22 @@ function PeriodsCard() {
   const add = () => {
     const last = periods.at(-1);
     const lastTeaching = periods.findLast((p) => p.kind === "teaching");
-    const length = lastTeaching ? toMinutes(lastTeaching.end) - toMinutes(lastTeaching.start) || 50 : 50;
-    const start = last && !Number.isNaN(toMinutes(last.end)) ? toMinutes(last.end) : 9 * 60;
+    const length = lastTeaching
+      ? toMinutes(lastTeaching.end) - toMinutes(lastTeaching.start) || 50
+      : 50;
+    const start =
+      last && !Number.isNaN(toMinutes(last.end)) ? toMinutes(last.end) : 9 * 60;
     const n = periods.filter((p) => p.kind === "teaching").length + 1;
-    replace([...periods, { id: -1, label: `P${n}`, start: fromMinutes(start), end: fromMinutes(start + length), kind: "teaching" }]);
+    replace([
+      ...periods,
+      {
+        id: -1,
+        label: `P${n}`,
+        start: fromMinutes(start),
+        end: fromMinutes(start + length),
+        kind: "teaching",
+      },
+    ]);
   };
 
   return (
@@ -100,12 +131,20 @@ function PeriodsCard() {
         <CardTitle className="flex items-center gap-1.5">
           Periods
           <InfoTip>
-            Teaching periods can hold classes. Break periods never do, and a lab can't run across a break.
+            The daily bell schedule, in time order. Include breaks as their own
+            rows.
           </InfoTip>
         </CardTitle>
-        <CardDescription>The daily bell schedule, in time order. Include breaks as their own rows.</CardDescription>
+        <CardDescription>
+          Teaching periods can hold classes or be lunch breaks. Break periods
+          are free time for everyone.
+        </CardDescription>
         <CardAction>
-          <Button variant="outline" size="sm" onClick={() => setShowGenerator((v) => !v)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowGenerator((v) => !v)}
+          >
             <Wand2 /> Generate periods
           </Button>
         </CardAction>
@@ -114,7 +153,11 @@ function PeriodsCard() {
         {showGenerator && (
           <PeriodGenerator
             onGenerate={(next) => {
-              setSettings({ ...settings, periods: next, lunchCandidates: defaultLunchCandidates(next) });
+              setSettings({
+                ...settings,
+                periods: next,
+                lunchCandidates: defaultLunchCandidates(next),
+              });
               setShowGenerator(false);
             }}
             onCancel={() => setShowGenerator(false)}
@@ -137,8 +180,16 @@ function PeriodsCard() {
               {periods.map((p, i) => {
                 const error = errors.get(p.id);
                 return (
-                  <tr key={p.id} className={cn("align-top", p.kind === "break" && "bg-muted/50")}>
-                    <td className="py-1.5 pt-3 text-muted-foreground tabular-nums">{i + 1}</td>
+                  <tr
+                    key={p.id}
+                    className={cn(
+                      "align-top",
+                      p.kind === "break" && "bg-muted/50",
+                    )}
+                  >
+                    <td className="py-1.5 pt-3 text-muted-foreground tabular-nums">
+                      {i + 1}
+                    </td>
                     <td className="py-1.5 pr-2">
                       <Input
                         aria-label={`Period ${i + 1} label`}
@@ -153,7 +204,9 @@ function PeriodsCard() {
                         type="time"
                         aria-label={`Period ${i + 1} start`}
                         value={p.start}
-                        aria-invalid={(error && error !== "Label is empty") || undefined}
+                        aria-invalid={
+                          (error && error !== "Label is empty") || undefined
+                        }
                         onChange={(e) => update(i, { start: e.target.value })}
                       />
                     </td>
@@ -162,17 +215,30 @@ function PeriodsCard() {
                         type="time"
                         aria-label={`Period ${i + 1} end`}
                         value={p.end}
-                        aria-invalid={(error && error !== "Label is empty") || undefined}
+                        aria-invalid={
+                          (error && error !== "Label is empty") || undefined
+                        }
                         onChange={(e) => update(i, { end: e.target.value })}
                       />
-                      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+                      {error && (
+                        <p className="mt-1 text-xs text-destructive">{error}</p>
+                      )}
                     </td>
                     <td className="py-1.5 pr-2">
-                      <KindToggle value={p.kind} onChange={(kind) => update(i, { kind })} />
+                      <KindToggle
+                        value={p.kind}
+                        onChange={(kind) => update(i, { kind })}
+                      />
                     </td>
                     <td className="py-1.5">
                       <div className="flex justify-end gap-0.5">
-                        <Button variant="ghost" size="icon-sm" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Move up"
+                          disabled={i === 0}
+                          onClick={() => move(i, -1)}
+                        >
                           <ArrowUp />
                         </Button>
                         <Button
@@ -184,7 +250,12 @@ function PeriodsCard() {
                         >
                           <ArrowDown />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" aria-label="Remove period" onClick={() => remove(i)}>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Remove period"
+                          onClick={() => remove(i)}
+                        >
                           <Trash2 />
                         </Button>
                       </div>
@@ -205,9 +276,19 @@ function PeriodsCard() {
   );
 }
 
-function KindToggle({ value, onChange }: { value: Period["kind"]; onChange: (kind: Period["kind"]) => void }) {
+function KindToggle({
+  value,
+  onChange,
+}: {
+  value: Period["kind"];
+  onChange: (kind: Period["kind"]) => void;
+}) {
   return (
-    <div className="inline-flex rounded-lg border p-0.5" role="radiogroup" aria-label="Period kind">
+    <div
+      className="inline-flex rounded-lg border p-0.5"
+      role="radiogroup"
+      aria-label="Period kind"
+    >
       {(["teaching", "break"] as const).map((kind) => (
         <button
           key={kind}
@@ -217,7 +298,9 @@ function KindToggle({ value, onChange }: { value: Period["kind"]; onChange: (kin
           onClick={() => onChange(kind)}
           className={cn(
             "h-7 rounded-md px-2.5 text-xs font-medium capitalize transition-colors",
-            value === kind ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            value === kind
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {kind}
@@ -227,42 +310,93 @@ function KindToggle({ value, onChange }: { value: Period["kind"]; onChange: (kin
   );
 }
 
-function PeriodGenerator({ onGenerate, onCancel }: { onGenerate: (periods: Period[]) => void; onCancel: () => void }) {
-  const [form, setForm] = useState<GeneratorForm>({ start: "09:00", lengthMin: "50", count: "8", breakAfter: "2", breakMin: "20" });
+function PeriodGenerator({
+  onGenerate,
+  onCancel,
+}: {
+  onGenerate: (periods: Period[]) => void;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState<GeneratorForm>({
+    start: "09:00",
+    lengthMin: "50",
+    count: "8",
+    breakAfter: "2",
+    breakMin: "20",
+  });
   const [editingBreak, setEditingBreak] = useState(false);
   const options = parseGeneratorForm(form);
-  const num = (key: keyof GeneratorForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [key]: cleanWholeNumber(e.target.value) });
-  const breakFocus = { onFocus: () => setEditingBreak(true), onBlur: () => setEditingBreak(false) };
+  const num =
+    (key: keyof GeneratorForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm({ ...form, [key]: cleanWholeNumber(e.target.value) });
+  const breakFocus = {
+    onFocus: () => setEditingBreak(true),
+    onBlur: () => setEditingBreak(false),
+  };
 
   return (
     <div className="grid gap-3 rounded-lg border bg-muted/40 p-4">
-      <p className="text-sm text-muted-foreground">Builds an evenly spaced schedule. This replaces the current periods.</p>
+      <p className="text-sm text-muted-foreground">
+        Builds an evenly spaced schedule. This replaces the current periods.
+      </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Field label="First period starts">
-          <Input type="time" value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} />
+          <Input
+            type="time"
+            value={form.start}
+            onChange={(e) => setForm({ ...form, start: e.target.value })}
+          />
         </Field>
         <Field label="Period length (min)">
-          <Input type="number" min={1} value={form.lengthMin} onChange={num("lengthMin")} />
+          <Input
+            type="number"
+            min={1}
+            value={form.lengthMin}
+            onChange={num("lengthMin")}
+          />
         </Field>
         <Field label="Teaching periods">
-          <Input type="number" min={1} value={form.count} onChange={num("count")} />
+          <Input
+            type="number"
+            min={1}
+            value={form.count}
+            onChange={num("count")}
+          />
         </Field>
-        <Field label="Break after period" tip="Put a break after this teaching period. 0 means no break.">
-          <Input type="number" min={0} value={form.breakAfter} onChange={num("breakAfter")} {...breakFocus} />
+        <Field
+          label="Break after period"
+          tip="Put a break after this teaching period. 0 means no break."
+        >
+          <Input
+            type="number"
+            min={0}
+            value={form.breakAfter}
+            onChange={num("breakAfter")}
+            {...breakFocus}
+          />
         </Field>
         <Field label="Break length (min)">
-          <Input type="number" min={0} value={form.breakMin} onChange={num("breakMin")} {...breakFocus} />
+          <Input
+            type="number"
+            min={0}
+            value={form.breakMin}
+            onChange={num("breakMin")}
+            {...breakFocus}
+          />
         </Field>
       </div>
       {editingBreak && (
         <p className="text-xs text-muted-foreground">
-          This is a short break for everyone, like a tea break. It is not lunch: lunch periods are picked under Lunch
-          candidates below.
+          This is a short break for everyone, like a tea break. It is not lunch:
+          lunch periods are picked under Lunch candidates below.
         </p>
       )}
       <div className="flex gap-2">
-        <Button size="sm" disabled={!options} onClick={() => options && onGenerate(generatePeriods(options))}>
+        <Button
+          size="sm"
+          disabled={!options}
+          onClick={() => options && onGenerate(generatePeriods(options))}
+        >
           Replace periods
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>
@@ -273,7 +407,15 @@ function PeriodGenerator({ onGenerate, onCancel }: { onGenerate: (periods: Perio
   );
 }
 
-function Field({ label, tip, children }: { label: string; tip?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  tip,
+  children,
+}: {
+  label: string;
+  tip?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="grid gap-1.5">
       <Label className="text-xs text-muted-foreground">
@@ -292,7 +434,9 @@ function LunchCard() {
 
   const toggle = (id: number) => {
     const has = settings.lunchCandidates.includes(id);
-    const next = has ? settings.lunchCandidates.filter((x) => x !== id) : [...settings.lunchCandidates, id];
+    const next = has
+      ? settings.lunchCandidates.filter((x) => x !== id)
+      : [...settings.lunchCandidates, id];
     setSettings({ ...settings, lunchCandidates: next.sort((a, b) => a - b) });
   };
 
@@ -301,9 +445,14 @@ function LunchCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
           Lunch candidates
-          <InfoTip>Each section and teacher gets at least one of these free every day.</InfoTip>
+          <InfoTip>
+            Each section and teacher gets at least one of these free every day.
+          </InfoTip>
         </CardTitle>
-        <CardDescription>Periods where lunch can happen. Pick two or three so the timetable has room to move.</CardDescription>
+        <CardDescription>
+          Periods where lunch can happen. Pick two or three so the timetable has
+          room to move.
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         {teaching.map((p) => {
@@ -316,7 +465,12 @@ function LunchCard() {
                 on ? "border-primary bg-primary/5" : "hover:bg-muted",
               )}
             >
-              <input type="checkbox" className="size-4 accent-primary" checked={on} onChange={() => toggle(p.id)} />
+              <input
+                type="checkbox"
+                className="size-4 accent-primary"
+                checked={on}
+                onChange={() => toggle(p.id)}
+              />
               <span className="font-medium">{p.label}</span>
               <span className="text-xs text-muted-foreground tabular-nums">
                 {p.start}–{p.end}
@@ -324,9 +478,15 @@ function LunchCard() {
             </label>
           );
         })}
-        {teaching.length === 0 && <p className="text-sm text-muted-foreground">Add a teaching period first.</p>}
+        {teaching.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Add a teaching period first.
+          </p>
+        )}
         {teaching.length > 0 && settings.lunchCandidates.length === 0 && (
-          <p className="w-full text-sm text-destructive">Pick at least one lunch candidate period.</p>
+          <p className="w-full text-sm text-destructive">
+            Pick at least one lunch candidate period.
+          </p>
         )}
       </CardContent>
     </Card>
