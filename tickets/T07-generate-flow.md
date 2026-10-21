@@ -1,8 +1,10 @@
 # T07 — Step ③ Generate: engine selection, fallback, verify badge
 **Status:** DONE
-**Lane:** main (integration) · **Prereqs:** T02, T03, T05 (T04 optional) · **Branch:** t07-generate
+**Lane:** main (integration) · **Prereqs:** T02, T03, T05 · **Branch:** t07-generate
 
 ## Goal
+T04 (CP-SAT) was optional for this ticket: Auto fell back to the heuristic without it.
+
 One big "Generate timetable" button that always produces a verified result.
 
 ## Scope / files
