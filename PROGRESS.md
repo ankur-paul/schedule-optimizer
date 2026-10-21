@@ -14,6 +14,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T05] App shell with 4-step stepper (Back/Next, hints), zustand store persisted to localStorage `timetable-v1` (`loadSample`, `reset`), Step ① Setup: day chips, editable periods table + "Generate periods" helper, lunch candidates, inline validation (`cd web && npm run dev`; edit settings and reload; tests in `src/features/setup/periods.test.ts`)
 - [T07] Solver server CORS allows any `localhost`/`127.0.0.1` port, so a dev server that moved off 5173 can still reach CP-SAT (`server/tests/test_api.py`)
 - [T07] Step ③ Generate: engine choice (Auto / Exact CP-SAT / Fast in-browser), time-limit slider, solver server status dot, elapsed timer; `generate()` (`web/src/engine/solveClient.ts`) falls back to the heuristic when the server is offline, times out, errors or says infeasible; every result is re-scored and re-validated → badge `✓ Verified: 0 clashes · engine: …`, score breakdown, unplaced list (start server + `npm run dev`, step ③ → Load sample college → Generate; stop the server and Generate again to see the fallback)
+- [T08] Step ④ timetable grid: Section/Teacher/Room switcher, searchable grouped picker + prev/next, labs span columns, parallel batch labs stacked, colour per subject, hover tooltip, click → details dialog, empty state (step ④ → "Mock result (dev)" until T07 lands)
 
 ## Known issues / cuts
 
@@ -21,3 +22,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T04] CP-SAT needs ~2 s before its first solution on the sample; `timeLimitSec` < 3 may return `error` (client then falls back to heuristic). Empty `lunchCandidates` disables H8.
 - [T05] Steps ②–④ are placeholders in `web/src/App.tsx` until T06/T07/T08 swap in their components. Any settings edit clears `result` and `locks` (placements point at day/period indexes).
 - [T07] Exact – CP-SAT with the server off shows an error and keeps the previous result (no fallback, by design; Auto falls back). The infeasible → partial-heuristic path is unit-tested but not clicked through (needs T06 edit tables).
+- [T08] `web/src/features/view/mockResult.ts` (+ test) and the dev-only "Mock result" button in `ViewStep.tsx` are temporary; delete them during T07 integration.

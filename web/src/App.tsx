@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { GenerateStep } from '@/features/generate/GenerateStep'
 import { SetupStep } from '@/features/setup/SetupStep'
 import { settingsErrors } from '@/features/setup/periods'
+import { ViewStep } from '@/features/view/ViewStep'
 import { useAppStore, type Step } from '@/store/useAppStore'
 
 const STEPS: { title: string; hint: string }[] = [
@@ -61,7 +62,7 @@ function App() {
           {step === 0 && <SetupStep />}
           {step === 1 && <Placeholder ticket="T06" />}
           {step === 2 && <GenerateStep />}
-          {step === 3 && <Placeholder ticket="T08" />}
+          {step === 3 && <ViewStep />}
 
           <div className="flex items-center gap-3 border-t pt-6">
             <Button variant="outline" disabled={step === 0} onClick={() => setStep((step - 1) as Step)}>

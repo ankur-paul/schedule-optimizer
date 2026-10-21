@@ -1,5 +1,5 @@
 # T08 — Step ④ Timetable grid with Section/Teacher/Room views
-**Status:** TODO
+**Status:** DONE
 **Lane:** D · **Prereqs:** T01, T05 · **Branch:** t08-views
 
 ## Goal
@@ -24,5 +24,5 @@ Timetables that are easy to read — this is what judges look at most.
 - None (visual). Check manually with sample at 1280px and phone width (horizontal scroll inside grid only).
 
 ## Done when
-- [ ] All three views render correctly for the sample
-- [ ] Committed: `T08: timetable grid views`
+- [x] All three views render correctly for the sample
+- [x] Committed: `T08: timetable grid views`
