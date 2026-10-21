@@ -14,6 +14,9 @@ Admin can use it without help; demo is rehearsed.
 - [x] README: problem, features, screenshots, how to run, architecture (2 engines + validator), rules H/S table
 - [x] `npm test` and `pytest` green
 - [x] Demo script (90 s): sample → generate → verified badge → 3 views → stats → lock + regenerate → print
+- [x] Design critique fixes (branch `t12-design`): scroll to top per step, one primary action per screen, one score
+      vocabulary with counts, cancel a run, Print popover, score strip + reworked stats, lock button on grid cards,
+      distinct subject colours, data tab order, one-line course rows, compact stepper
 - [ ] Committed: `T12: polish + README`
 
 ## Notes
