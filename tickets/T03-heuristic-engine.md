@@ -1,5 +1,5 @@
 # T03 — Heuristic engine + improvement pass + Web Worker
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** T01, T02 · **Branch:** t03-heuristic
 
 ## Goal
@@ -30,6 +30,6 @@ Browser-side fallback engine that always returns a clash-free (possibly partial)
 - Overloaded tiny case (teacher with more periods than slots) → `partial` with a non-empty reason.
 
 ## Done when
-- [ ] Tests pass
-- [ ] Worker wrapper usable from React: `await runHeuristic(input, opts)`
-- [ ] Committed: `T03: heuristic engine + worker`
+- [x] Tests pass
+- [x] Worker wrapper usable from React: `await runHeuristic(input, opts)`
+- [x] Committed: `T03: heuristic engine + worker`
