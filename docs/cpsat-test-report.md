@@ -1,15 +1,15 @@
 # CP-SAT solver test report
 
-How the CP-SAT engine (`server/solver.py`) was tested, what passed, and the three bugs the tests found.
+How the CP-SAT engine (`server/solver.py`) was tested, what passed, and the three bugs the tests found (all fixed).
 
 **Run on** 2026-10-22 · Python 3.12.14 · OR-Tools 9.15.6755 · 12 CPU cores · Linux
-**Result:** 431 passed · 3 expected failures (known bugs, below) · 0 failures · 46 s for the whole server suite
+**Result:** 440 passed · 0 failures · 45 s for the whole server suite. The 3 bugs found are fixed; their tests now pass.
 
 ```bash
 cd server && uv run pytest                                  # everything (≈ 46 s)
 uv run pytest tests/test_solver_edge_cases.py               # targeted edge cases (≈ 6 s)
 uv run pytest tests/test_solver_bruteforce.py               # 300 random colleges vs brute force (≈ 35 s)
-uv run pytest --runxfail -k "duplicate_course or break_period_lunch or feasible_result"   # see the 3 bugs fail
+uv run pytest -k "duplicate_course or break_period_lunch or feasible_result"   # the tests for the 3 fixed bugs
 ```
 
 ## Summary
@@ -17,7 +17,7 @@ uv run pytest --runxfail -k "duplicate_course or break_period_lunch or feasible_
 | Suite | File | Tests | Result |
 |---|---|---:|---|
 | Brute-force cross-check (new) | `tests/test_solver_bruteforce.py` | 301 | ✅ all pass |
-| Edge cases (new) | `tests/test_solver_edge_cases.py` | 97 | ✅ 94 pass · ⚠️ 3 xfail (bugs) |
+| Edge cases (new) | `tests/test_solver_edge_cases.py` | 103 | ✅ all pass (incl. the 3 bug tests) |
 | Solver basics (existing) | `tests/test_solver.py` | 29 | ✅ all pass |
 | API (existing) | `tests/test_api.py` | 5 | ✅ all pass |
 | Session expansion vs golden file (existing) | `tests/test_sessions.py` | 1 | ✅ pass |
@@ -41,12 +41,12 @@ re-derives the answer independently:
 5. **Cross-check with the web app** (one-off). CP-SAT results were fed to the real TypeScript `validate()` and
    `score()`.
 
-A test marked xfail documents a bug. It is *strict*: once the bug is fixed the test starts to pass, pytest reports
-that as a failure, and the marker must be removed.
+Each bug below was first pinned by a strict xfail test (the test written for the correct behaviour, expected to
+fail). After the fix the markers were removed and the tests pass.
 
-## Bugs found
+## Bugs found (all fixed)
 
-### 1. The score of a non-optimal result is overstated (API only)
+### 1. The score of a non-optimal result is overstated (API only) · ✅ fixed
 
 When CP-SAT stops before proving optimality (status `feasible`, e.g. a short time limit), the reported `score` is
 higher than the placements actually earn. On the sample college, stopped at the first solution with 5 different
@@ -67,11 +67,12 @@ With a 3 s limit (no stopping trick) it reported 345 against a true 126. When th
   reads the score back from these variables.
 - **Impact:** low in the app. The web client re-scores every result with `score()`, so the UI shows the right
   number. Any other caller of `/solve` gets an inflated score.
-- **Fix:** compute the returned score from the placements, by porting `reference_score` into the solver, instead of
-  reading the penalty variables. Alternatively, make the penalty variables exact (two-sided constraints).
-- **Test:** `TestRunOptions::test_feasible_result_reports_the_true_score`.
+- **Fix:** the returned score is now computed from the placements (`score_placements` in `solver.py`, written like
+  `score.ts`) instead of read from the penalty variables, which still drive the search. After the fix, the same
+  first-solution runs report 147, 386, 416, 978 and 506: in each case exactly what the placements earn.
+- **Tests:** `TestRunOptions::test_feasible_result_reports_the_true_score`, plus `TestScorePlacements` (3 tests).
 
-### 2. A lunch candidate that is a break makes lunch (H8) stricter than the validator
+### 2. A lunch candidate that is a break makes lunch (H8) stricter than the validator · ✅ fixed
 
 With periods `[P0 teaching, P1 break]` and lunch candidates `[P0, P1]`, the web validator treats the break as a free
 lunch period, so a lecture at P0 is fine. The solver drops the break from the candidates, keeps only P0, and then
@@ -79,19 +80,22 @@ forbids every class at P0. It answers "No clash-free timetable exists" for data 
 
 - **Impact:** low. Step ① only offers teaching periods as lunch candidates, but the `/solve` contract allows this
   input and the two engines disagree on it.
-- **Fix:** if any lunch candidate is a break, H8 is always satisfied, so skip the lunch constraints. That is how
-  `validator.ts` behaves.
-- **Test:** `TestLunch::test_break_period_lunch_candidate_counts_as_free`.
+- **Fix:** `h8_lunch_periods` in `solver.py` now follows `validator.ts`. It ignores out-of-range candidates, drops
+  duplicates, and switches H8 off when any candidate is a break, since a break is always free. S3 still treats every
+  lunch candidate as lunch, not a gap.
+- **Tests:** `TestLunch::test_break_period_lunch_candidate_counts_as_free`,
+  `test_teaching_lunch_candidate_is_still_not_a_gap_when_a_break_switches_h8_off`, `test_h8_lunch_periods`.
 
-### 3. Duplicate course ids give a misleading "infeasible"
+### 3. Duplicate course ids give a misleading "infeasible" · ✅ fixed
 
 Two courses with the same id both expand to session `c1:L1`. Their solver variables collide, and the result is
 `infeasible` with the generic "check teacher/section/room loads" message, although the real problem is the
 duplicate id.
 
 - **Impact:** low. The web app generates unique ids on import. A hand-written `/solve` request could hit it.
-- **Fix:** reject duplicate session ids up front with `status: "error"` and a message naming them.
-- **Test:** `TestInputShape::test_duplicate_course_ids_are_reported_as_such`.
+- **Fix:** the solver now checks for repeated course (and session) ids before building the model and returns
+  `status: "error"` with "Each course needs its own id; used more than once: c1".
+- **Tests:** `TestInputShape::test_duplicate_course_ids_are_reported_as_such`, `test_duplicate_ids_lists_each_repeat_once_in_order`.
 
 ## Brute-force cross-check (300 random colleges)
 
@@ -125,8 +129,8 @@ the edge cases with locks that force gaps, and by the reported-vs-reference scor
 ## Mutation testing
 
 Each change below was applied to a copy of `solver.py` (never the real one), one at a time, and each suite was run
-against it. ✅ = the suite failed, i.e. it caught the broken solver. The xfail tests were excluded so they couldn't
-count as catches.
+against it. ✅ = the suite failed, i.e. it caught the broken solver. Run before the bug fixes with the xfail tests excluded, and again after
+the fixes (see below the table).
 
 | Broken on purpose | Existing tests | New edge cases | New brute force |
 |---|:-:|:-:|:-:|
@@ -149,8 +153,21 @@ count as catches.
 | S4 weight 3 → 2 | ✅ | ✅ | ✅ |
 | S4 ignores whole-section classes | ❌ | ❌ | ❌ |
 
-**Caught: 17 of 17 changes that alter behaviour.** The last row is an *equivalent mutant*. H2 already forbids a
+**Before the fixes: caught 17 of 17 changes that alter behaviour.** The last row is an *equivalent mutant*. H2 already forbids a
 whole-section class during a batch session, so the removed term is always 0 and no test can tell the difference.
+
+**After the bug fixes** the run was repeated against the fixed solver. The results are the same except for two
+rows:
+
+- *Symmetry breaking treats B1/B2 labs as copies* is now caught by the edge cases, thanks to the test added below.
+- *S3 counts lunch candidates as gaps* **is no longer caught.** Before the fix, the reported score was read from the
+  penalty variables, so a wrong gap term showed up as a wrong score. Now the score is computed from the placements,
+  so this mutant only changes what CP-SAT optimises. It is visible only if it makes CP-SAT pick a worse timetable. A
+  search of about 7,000 random colleges (single sections with up to 3 lunch candidates, and the brute-force generator
+  with all but one teaching period as lunch candidates) found no instance where it does. It looks close to
+  equivalent: the scoring weights rarely make it worth trading a real penalty for fewer free lunch periods.
+
+So after the fixes: **16 of 18 caught**, 1 equivalent and 1 survivor that couldn't be shown to change any result.
 
 ¹ Missed by the first draft of the edge cases. Two tests were added
 (`test_lecture_and_batch_labs_cannot_share_the_only_period`,
@@ -198,7 +215,7 @@ user sees.
 
 ## Edge-case results
 
-All 97 tests in `tests/test_solver_edge_cases.py`, grouped as in the file. The slowest are the sample-college
+All 103 tests in `tests/test_solver_edge_cases.py`, grouped as in the file. The slowest are the sample-college
 time-limit test (0.7 s) and the first-solution score test (2.1 s); the rest take under 0.05 s each.
 
 
@@ -222,7 +239,8 @@ time-limit test (0.7 s) and the first-solution score test (2.1 s); the rest take
 | `test_negative_counts_produce_no_sessions` | ✅ pass |
 | `test_zero_batches_silently_drops_labs` | ✅ pass |
 | `test_zero_lab_length_is_reported_as_unplaceable` | ✅ pass |
-| `test_duplicate_course_ids_are_reported_as_such` | ⚠️ xfail (known bug) |
+| `test_duplicate_course_ids_are_reported_as_such` | ✅ pass |
+| `test_duplicate_ids_lists_each_repeat_once_in_order` | ✅ pass |
 
 ### TestPeriodsAndLabs
 
@@ -276,7 +294,9 @@ time-limit test (0.7 s) and the first-solution score test (2.1 s); the rest take
 | `test_duplicate_lunch_candidates_behave_like_one` | ✅ pass |
 | `test_lab_over_every_candidate_is_rejected` | ✅ pass |
 | `test_teacher_lunch_across_sections` | ✅ pass |
-| `test_break_period_lunch_candidate_counts_as_free` | ⚠️ xfail (known bug) |
+| `test_break_period_lunch_candidate_counts_as_free` | ✅ pass |
+| `test_teaching_lunch_candidate_is_still_not_a_gap_when_a_break_switches_h8_off` | ✅ pass |
+| `test_h8_lunch_periods` | ✅ pass |
 
 ### TestLocks
 
@@ -336,7 +356,15 @@ time-limit test (0.7 s) and the first-solution score test (2.1 s); the rest take
 | `test_same_seed_gives_the_same_optimal_score` | ✅ pass |
 | `test_time_ms_is_reported` | ✅ pass |
 | `test_result_is_never_partial_and_never_lists_unplaced` | ✅ pass |
-| `test_feasible_result_reports_the_true_score` | ⚠️ xfail (known bug) |
+| `test_feasible_result_reports_the_true_score` | ✅ pass |
+
+### TestScorePlacements
+
+| Test | Result |
+|---|---|
+| `test_matches_the_reference_on_a_hand_made_timetable` | ✅ pass |
+| `test_teacher_overload_counts_across_sections_and_labs` | ✅ pass |
+| `test_empty_timetable_scores_zero` | ✅ pass |
 
 ### TestApi
 

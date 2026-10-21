@@ -1,8 +1,8 @@
 """Edge cases for the CP-SAT solver, beyond the basics in test_solver.py.
 
 Every feasible result is re-checked with the independent hard-rule checker (`hard_violations`) and re-scored with
-the independent scorer (`reference_score`). Tests marked xfail document known bugs (see docs/cpsat-test-report.md);
-they are strict, so fixing a bug makes its test fail until the marker is removed.
+the independent scorer (`reference_score`). Tests named in docs/cpsat-test-report.md under "Bugs found" were strict
+xfails until those bugs were fixed.
 """
 
 import time
@@ -13,8 +13,9 @@ from ortools.sat.python import cp_model
 
 import main
 import solver as solver_module
-from models import Options, SolveInput
-from solver import solve, teaching_runs, valid_starts
+from models import Options, Placement, SolveInput
+from sessions import expand_sessions
+from solver import duplicate_ids, h8_lunch_periods, score_placements, solve, teaching_runs, valid_starts
 from tests.helpers import course, hard_violations, tiny
 from tests.reference import reference_score
 from tests.test_sessions import load_sample
@@ -133,13 +134,17 @@ class TestInputShape:
     def test_zero_lab_length_is_reported_as_unplaceable(self):
         infeasible(tiny(rooms=[LAB], courses=[course("c1", labs=1, lab_length=0)]), "no 0 consecutive teaching periods")
 
-    @pytest.mark.xfail(strict=True, reason="BUG: duplicate course ids give a misleading 'no clash-free timetable exists'")
     def test_duplicate_course_ids_are_reported_as_such(self):
-        # Two courses share id c1, so both expand to session c1:L1. Expected: an error naming the duplicate id.
-        # Actual: the sessions' variables collide and the solver says the data is infeasible.
+        # Two courses share id c1, so both expand to session c1:L1; their solver variables would collide.
         inp = tiny(periods="TT", courses=[course("c1", lectures=1), course("c1", lectures=1, teacher="t2")])
         res = solve(inp)
-        assert res.status == "error" and "c1" in (res.message or "")
+        assert res.status == "error"
+        assert res.message == "Each course needs its own id; used more than once: c1"
+
+    def test_duplicate_ids_lists_each_repeat_once_in_order(self):
+        assert duplicate_ids(["b", "a", "b", "c", "a", "b"]) == ["a", "b"]
+        assert duplicate_ids(["a", "b"]) == []
+        assert duplicate_ids([]) == []
 
 
 # --- Periods, breaks and labs (H6, H7) ---------------------------------------------------------------------------
@@ -347,12 +352,23 @@ class TestLunch:
         res = solved(inp)
         assert placed(res)["b:L1"].period != 2
 
-    @pytest.mark.xfail(strict=True, reason="BUG: a break-period lunch candidate is dropped, making H8 stricter than the validator")
     def test_break_period_lunch_candidate_counts_as_free(self):
-        # The web validator (validator.ts) treats a break candidate as always free, so H8 holds without
-        # touching P0. The solver drops the break candidate, keeps only P0, and forbids the only teaching slot.
-        res = solve(tiny(periods="TB", lunch=[0, 1], courses=[course("c1", lectures=1)]))
-        assert res.status == "optimal"
+        # Like validator.ts: a break candidate is always free, so H8 holds and P0 may be used.
+        res = solved(tiny(periods="TB", lunch=[0, 1], courses=[course("c1", lectures=1)]))
+        assert placed(res)["c1:L1"].period == 0
+
+    def test_teaching_lunch_candidate_is_still_not_a_gap_when_a_break_switches_h8_off(self):
+        # Candidates P1 (teaching) and P3 (break): H8 is off, but a free P1 between classes is still lunch, not a gap.
+        locks = [lock("a:L1", 0, 0), lock("b:L1", 0, 2)]
+        inp = tiny(periods="TTTB", lunch=[1, 3], courses=[course("a", lectures=1), course("b", lectures=1, teacher="t2")], locks=locks)
+        assert solved(inp).score.total == 0
+
+    def test_h8_lunch_periods(self):
+        assert h8_lunch_periods(tiny(periods="TTT", lunch=[2, 1, 1])) == [1, 2]  # sorted, duplicates dropped
+        assert h8_lunch_periods(tiny(periods="TTT", lunch=[1, 99, -1])) == [1]  # out of range ignored
+        assert h8_lunch_periods(tiny(periods="TTB", lunch=[1, 2])) == []  # a break candidate: H8 always holds
+        assert h8_lunch_periods(tiny(periods="TTT", lunch=[99])) == []
+        assert h8_lunch_periods(tiny(periods="TTT")) == []
 
 
 # --- Locks -----------------------------------------------------------------------------------------------------------
@@ -583,8 +599,8 @@ class TestRunOptions:
             res = solve(inp)
             assert res.status != "partial" and res.unplaced == []
 
-    @pytest.mark.xfail(strict=True, reason="BUG: a non-optimal (feasible) result reports a score higher than its placements earn")
     def test_feasible_result_reports_the_true_score(self, monkeypatch):
+        # Stopping at the first solution leaves the penalty variables loose; the score must come from the placements.
         class FirstSolution(cp_model.CpSolver):
             def solve(self, model, *args, **kwargs):
                 self.parameters.stop_after_first_solution = True
@@ -597,6 +613,37 @@ class TestRunOptions:
         assert res.status == "feasible"
         assert hard_violations(inp, res) == []
         assert res.score.total == reference_score(inp, res.placements)["total"]
+
+
+# --- Scoring a finished timetable ------------------------------------------------------------------------------------
+
+
+class TestScorePlacements:
+    def test_matches_the_reference_on_a_hand_made_timetable(self):
+        # S1: 3 lectures of a on Monday (2 extra × 10); S4: B2 idles during B1's lab at P0 and B1 during B2's at P1 (2 × 3).
+        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], teachers=3,
+                   courses=[course("a", lectures=3, teacher="t3"), course("lab", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])])
+        placements = [Placement(session_id=sid, day=0, period=p, room_id=r) for sid, p, r in [
+            ("lab:P1:B1", 0, "lab1"), ("lab:P1:B2", 1, "lab1"), ("a:L1", 2, "r1"), ("a:L2", 4, "r1"), ("a:L3", 3, "r1")]]
+        sessions = {s.id: s for s in expand_sessions(inp)}
+        got = score_placements(inp, sessions, placements)
+        assert got.breakdown.model_dump(by_alias=False) == {"subject_repeat": 20, "teacher_overload": 0, "section_gaps": 0, "batch_idle": 6}
+        ref = reference_score(inp, placements)
+        assert got.total == ref["total"] == 26
+
+    def test_teacher_overload_counts_across_sections_and_labs(self):
+        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section("s1"), section("s2")],
+                   courses=[course("lab", labs=1, lab_length=3, section="s1"), course("lec", lectures=2, section="s2")])
+        placements = [Placement(session_id="lab:P1", day=0, period=0, room_id="lab1"),
+                      Placement(session_id="lec:L1", day=0, period=3, room_id="r1"),
+                      Placement(session_id="lec:L2", day=0, period=4, room_id="r1")]
+        got = score_placements(inp, {s.id: s for s in expand_sessions(inp)}, placements)
+        assert got.breakdown.teacher_overload == 2 * 5
+        assert got.total == reference_score(inp, placements)["total"]
+
+    def test_empty_timetable_scores_zero(self):
+        inp = tiny(courses=[course("c1", lectures=1)])
+        assert score_placements(inp, {s.id: s for s in expand_sessions(inp)}, []).total == 0
 
 
 # --- API ----------------------------------------------------------------------------------------------------------------

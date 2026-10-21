@@ -62,11 +62,14 @@ def solve(inp: SolveInput) -> SolveResult:
         sessions = expand_sessions(inp)
     except ValueError as e:
         return result(status="error", message=str(e))
+    duplicates = duplicate_ids([c.id for c in inp.courses]) or duplicate_ids([s.id for s in sessions])
+    if duplicates:
+        return result(status="error", message="Each course needs its own id; used more than once: " + ", ".join(duplicates[:5]))
 
     settings = inp.settings
     days = range(len(settings.days))
     teaching = [p.id for p in settings.periods if p.kind == "teaching"]
-    lunch = [p for p in settings.lunch_candidates if p in teaching]
+    lunch = h8_lunch_periods(inp)
     sections = {s.id: s for s in inp.sections}
     by_id = {s.id: s for s in sessions}
 
@@ -185,7 +188,7 @@ def solve(inp: SolveInput) -> SolveResult:
     # --- H2 + H8 (sections), S3 section gaps, S4 batch idle.
     gap_terms = []
     idle_terms = []
-    lunch_set = set(lunch)
+    lunch_set = set(settings.lunch_candidates)  # S3 never counts a lunch candidate as a gap, even when H8 is off
     for sec_id, sec_sessions in by_section.items():
         batches = sections[sec_id].batches
         whole = [s.id for s in sec_sessions if s.batch is None]
@@ -292,21 +295,81 @@ def solve(inp: SolveInput) -> SolveResult:
     order = {sid: i for i, sid in enumerate(by_id)}
     placements.sort(key=lambda pl: order[pl.session_id])
 
-    def total(terms) -> int:
-        return int(sum(solver.value(v) for v in terms))
-
-    breakdown = ScoreBreakdown(
-        subject_repeat=W_SUBJECT_REPEAT * total(repeat_terms),
-        teacher_overload=W_TEACHER_OVERLOAD * total(overload_terms),
-        section_gaps=W_SECTION_GAPS * total(gap_terms),
-        batch_idle=W_BATCH_IDLE * total(idle_terms),
-    )
-    score = Score(
-        total=breakdown.subject_repeat + breakdown.teacher_overload + breakdown.section_gaps + breakdown.batch_idle,
-        breakdown=breakdown,
-    )
+    # Scored from the placements, not read back from the penalty variables: those are only bounded from below, so
+    # in a solution found before the search finishes they can be higher than the placements deserve.
     return result(
         status="optimal" if status == cp_model.OPTIMAL else "feasible",
         placements=placements,
-        score=score,
+        score=score_placements(inp, by_id, placements),
     )
+
+
+def duplicate_ids(ids: list[str]) -> list[str]:
+    seen: set[str] = set()
+    return sorted({i for i in ids if i in seen or seen.add(i)})
+
+
+def h8_lunch_periods(inp: SolveInput) -> list[int]:
+    """Lunch candidates H8 has to keep one of free each day; [] when H8 can't be broken.
+
+    Mirrors validator.ts: out-of-range candidates are ignored, and a break candidate is always free (nothing is ever
+    placed in a break), so then every section and teacher already has their lunch period.
+    """
+    periods = inp.settings.periods
+    lunch = sorted({p for p in inp.settings.lunch_candidates if 0 <= p < len(periods)})
+    if any(periods[p].kind != "teaching" for p in lunch):
+        return []
+    return lunch
+
+
+def score_placements(inp: SolveInput, sessions: dict[str, Session], placements: list[Placement]) -> Score:
+    """S1–S4 of a finished timetable, computed the way the web app does (web/src/domain/score.ts)."""
+    periods = inp.settings.periods
+    teaching = [p.kind == "teaching" for p in periods]
+    lunch = set(inp.settings.lunch_candidates)
+    days = len(inp.settings.days)
+
+    teacher_busy: dict[tuple[str, int], set[int]] = defaultdict(set)
+    section_cells: dict[tuple[str, int, int], list[Session]] = defaultdict(list)
+    lectures: dict[tuple[str, int], int] = defaultdict(int)
+    for pl in placements:
+        s = sessions[pl.session_id]
+        if s.kind == "lecture":
+            lectures[s.course_id, pl.day] += 1
+        for k in range(s.length):
+            teacher_busy[s.teacher_id, pl.day].add(pl.period + k)
+            section_cells[s.section_id, pl.day, pl.period + k].append(s)
+
+    subject_repeat = sum(n - 1 for n in lectures.values() if n > 1)
+
+    teacher_overload = 0
+    for busy in teacher_busy.values():
+        run = 0
+        for t in range(len(periods)):
+            run = run + 1 if teaching[t] and t in busy else 0
+            teacher_overload += run > MAX_CONSECUTIVE
+
+    section_gaps = 0
+    batch_idle = 0
+    for sec in inp.sections:
+        for d in range(days):
+            busy = [teaching[t] and bool(section_cells.get((sec.id, d, t))) for t in range(len(periods))]
+            if any(busy):
+                first, last = busy.index(True), len(busy) - 1 - busy[::-1].index(True)
+                section_gaps += sum(1 for t in range(first + 1, last) if teaching[t] and not busy[t] and t not in lunch)
+            if sec.batches > 1:
+                for t in range(len(periods)):
+                    cell = section_cells.get((sec.id, d, t), [])
+                    if teaching[t] and any(s.kind == "lab" and s.batch is not None for s in cell):
+                        batch_idle += sum(
+                            1 for b in range(1, sec.batches + 1) if not any(s.batch in (None, b) for s in cell)
+                        )
+
+    breakdown = ScoreBreakdown(
+        subject_repeat=W_SUBJECT_REPEAT * subject_repeat,
+        teacher_overload=W_TEACHER_OVERLOAD * teacher_overload,
+        section_gaps=W_SECTION_GAPS * section_gaps,
+        batch_idle=W_BATCH_IDLE * batch_idle,
+    )
+    total = breakdown.subject_repeat + breakdown.teacher_overload + breakdown.section_gaps + breakdown.batch_idle
+    return Score(total=total, breakdown=breakdown)
