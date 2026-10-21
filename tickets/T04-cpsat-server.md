@@ -1,5 +1,5 @@
 # T04 — FastAPI + CP-SAT solver
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** B · **Prereqs:** T01 · **Branch:** t04-cpsat
 
 ## Goal
@@ -35,5 +35,5 @@ Primary engine: optimal/near-optimal timetables via OR-Tools CP-SAT behind `POST
 - `test_api.py`: `POST /solve` with sample returns 200.
 
 ## Done when
-- [ ] Tests pass; sample solves in < 30 s
-- [ ] Committed: `T04: CP-SAT solver service`
+- [x] Tests pass; sample solves in < 30 s (optimal in ~10 s)
+- [x] Committed: `T04: CP-SAT solver service`
