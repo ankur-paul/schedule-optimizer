@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { ArrowLeft, ArrowRight, CalendarDays, Check, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,11 @@ function App() {
   const settings = useAppStore((s) => s.settings)
   const reset = useAppStore((s) => s.reset)
   const data = useCollegeData()
+
+  // Each step starts at its top, not wherever the previous step was scrolled to.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [step])
 
   // Steps ① and ② block moving on until their input is usable.
   const blockers = step === 0 ? settingsErrors(settings) : step === 1 ? checkData(data, settings).errors : []
