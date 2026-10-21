@@ -32,6 +32,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T04] CP-SAT test suite: 97 edge-case tests (`server/tests/test_solver_edge_cases.py`), CP-SAT vs brute force on 300 random colleges (`test_solver_bruteforce.py`, independent scorer + optimiser in `tests/reference.py`); mutation testing caught 17/17 behaviour-changing solver bugs; results and 3 bugs found in `docs/cpsat-test-report.md` (`cd server && uv run pytest`)
 - [T04] Fixed the 3 CP-SAT bugs above: `/solve` now scores results from the placements (`score_placements`), a break lunch candidate switches H8 off like the validator does (`h8_lunch_periods`), and duplicate course ids return an error naming them. Report updated (`docs/cpsat-test-report.md`).
 - [T12] Changing step scrolls back to the top (it used to keep the old scroll position, so "View timetable" landed on the Teacher load table); the scrollbar space is reserved so pages no longer shift sideways between steps (step ③ scrolled down → View timetable)
+- [T12] Stepper on narrow screens shows step numbers only, plus the current step's name, so it fits on one line (browser window under 640px wide)
 
 ## Known issues / cuts
 

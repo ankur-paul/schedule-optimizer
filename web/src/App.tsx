@@ -95,19 +95,19 @@ function App() {
 function Stepper({ step, onSelect }: { step: Step; onSelect: (step: Step) => void }) {
   return (
     <nav aria-label="Steps" className="mx-auto max-w-6xl px-6 pb-3">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      <ol className="flex items-center gap-2">
         {STEPS.map((s, i) => {
           const state = i < step ? 'done' : i === step ? 'current' : 'todo'
           return (
             <li key={s.title} className="flex items-center gap-2">
-              {i > 0 && <span className="h-px w-6 bg-border sm:w-10" aria-hidden />}
+              {i > 0 && <span className="h-px w-4 bg-border sm:w-10" aria-hidden />}
               <button
                 type="button"
                 onClick={() => onSelect(i as Step)}
                 aria-current={state === 'current' ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
-                  state === 'current' ? 'font-medium text-foreground' : 'text-muted-foreground',
+                  'flex items-center gap-2 rounded-full py-1 pl-1 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+                  state === 'current' ? 'pr-3 font-medium text-foreground' : 'pr-1 text-muted-foreground sm:pr-3',
                 )}
               >
                 <span
@@ -119,7 +119,8 @@ function Stepper({ step, onSelect }: { step: Step; onSelect: (step: Step) => voi
                 >
                   {state === 'done' ? <Check className="size-3.5" /> : i + 1}
                 </span>
-                {s.title}
+                {/* Narrow screens: numbers only, plus the current step's name. */}
+                <span className={cn(state !== 'current' && 'sr-only sm:not-sr-only')}>{s.title}</span>
               </button>
             </li>
           )
