@@ -1,5 +1,5 @@
 # T00 — Repo + web + server scaffold
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** — · **Branch:** main
 
 ## Goal
@@ -19,6 +19,6 @@ An empty but runnable monorepo so every lane can start in its own worktree.
 - `npm test` runs (one trivial test), `pytest` runs (health endpoint test).
 
 ## Done when
-- [ ] `npm run dev` shows a page; `uvicorn` serves `/health`
-- [ ] Both test commands pass
-- [ ] Committed: `T00: scaffold web + server`
+- [x] `npm run dev` shows a page; `uvicorn` serves `/health`
+- [x] Both test commands pass
+- [x] Committed: `T00: scaffold web + server`
