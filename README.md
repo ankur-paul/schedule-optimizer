@@ -25,6 +25,8 @@ sees it.
 - **Section, teacher and room views** of the same timetable, colour-coded by subject.
 - **Quality stats.** Score breakdown, teacher load per day, room utilisation.
 - **Lock and regenerate.** Lock the cells you want to keep, re-solve everything else.
+- **Drag and drop.** Drag a class to another slot: free slots go green with the score change, the rest red with
+  the reason. Every drop is re-validated and locked, with Undo.
 - **Print / PDF.** One timetable, or every section on its own A4 page. CSV export of every placement.
 
 Everything is saved in the browser (localStorage). There are no accounts and no database.
@@ -44,15 +46,15 @@ Everything is saved in the browser (localStorage). There are no accounts and no 
 
 ## Run it
 
-You need Node 20.19+ (Vite 8) and Python 3. Tested with Node 24 and Python 3.12.
+You need Node 20.19+ (Vite 8) and [uv](https://docs.astral.sh/uv/), which installs Python 3.12+ if it's missing.
+Tested with Node 24 and Python 3.12.
 
 ```bash
 # 1. Web app → http://localhost:5173
 cd web && npm install && npm run dev
 
 # 2. Solver server → http://localhost:8000 (optional: without it the in-browser engine is used)
-cd server && python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn main:app --port 8000
+cd server && uv sync && uv run uvicorn main:app --port 8000
 ```
 
 Then open the app, go to step **2 Add data → Load sample**, step **3 Generate → Generate timetable**, and
@@ -119,7 +121,7 @@ unavoidable, and CP-SAT proves nothing better exists.
 
 ```bash
 cd web && npm test && npx tsc -b     # Vitest: domain, engines, import, stats, locks…
-cd server && .venv/bin/pytest        # Pytest: API, session parity with the web app, CP-SAT model
+cd server && uv run pytest           # Pytest: API, session parity with the web app, CP-SAT model
 ```
 
 The web and server sides both expand the sample college into sessions and compare against the same golden
@@ -137,7 +139,8 @@ drift apart.
    one shared hall used by all three departments.
 5. **Stats (10 s).** Scroll down: score explained rule by rule, shared room utilisation, teacher load bars.
 6. **Lock + regenerate (15 s).** Click a cell → *Lock here*; lock a second one. *Regenerate (keep 2 locked)*.
-   The two 🔒 cells stay put, everything else moves, still 0 clashes.
+   The two 🔒 cells stay put, everything else moves, still 0 clashes. Then drag a class: green slots show the
+   score change, hover a red one for the reason, drop on green → moved, locked, still `✓ Verified: 0 clashes`.
 7. **Print (10 s).** *Print all sections* → one A4 page per section, colours kept.
 
 Backup: stop the server and generate again. Auto falls back to the in-browser engine with a note saying why,

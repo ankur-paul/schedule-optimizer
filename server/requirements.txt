@@ -1,6 +1,0 @@
-fastapi
-uvicorn[standard]
-ortools
-pydantic
-pytest
-httpx

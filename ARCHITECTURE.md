@@ -109,4 +109,4 @@ Soft rules (penalised in the score): the same subject twice in a day (S1), a tea
 
 ### Stretch goals
 
-Drag-and-drop editing with valid slots highlighted (T13), and a Vercel deploy with an optional in-browser glpk.js solver (T14).
+Drag-and-drop editing with valid slots highlighted (T13) is built: `web/src/features/view/moves.ts` checks every slot for a dragged class against the hard rules and the validator re-checks each drop. Still to do: a Vercel deploy with an optional in-browser glpk.js solver (T14).
