@@ -1,5 +1,5 @@
 # T10 — Lock cells + regenerate
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** any · **Prereqs:** T07, T08 · **Branch:** t10-locks
 
 ## Goal
