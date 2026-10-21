@@ -2,7 +2,11 @@ import { ArrowLeft, ArrowRight, CalendarDays, Check, RotateCcw } from 'lucide-re
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { DataStep } from '@/features/data/DataStep'
+import { useCollegeData } from '@/features/data/collegeData'
+import { checkData } from '@/features/data/dataChecks'
 import { SetupStep } from '@/features/setup/SetupStep'
 import { settingsErrors } from '@/features/setup/periods'
 import { useAppStore, type Step } from '@/store/useAppStore'
@@ -19,9 +23,10 @@ function App() {
   const setStep = useAppStore((s) => s.setStep)
   const settings = useAppStore((s) => s.settings)
   const reset = useAppStore((s) => s.reset)
+  const data = useCollegeData()
 
-  // Only step ① can block moving on for now; later steps add their own checks.
-  const blockers = step === 0 ? settingsErrors(settings) : []
+  // Steps ① and ② block moving on until their input is usable.
+  const blockers = step === 0 ? settingsErrors(settings) : step === 1 ? checkData(data, settings).errors : []
   const current = STEPS[step]
 
   return (
@@ -58,7 +63,7 @@ function App() {
           </div>
 
           {step === 0 && <SetupStep />}
-          {step === 1 && <Placeholder ticket="T06" />}
+          {step === 1 && <DataStep />}
           {step === 2 && <Placeholder ticket="T07" />}
           {step === 3 && <Placeholder ticket="T08" />}
 
@@ -75,6 +80,7 @@ function App() {
           </div>
         </main>
       </div>
+      <Toaster theme="light" position="bottom-right" />
     </TooltipProvider>
   )
 }

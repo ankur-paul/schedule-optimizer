@@ -29,6 +29,8 @@ export interface AppState extends AppData {
   setResult: (result: SolveResult | null) => void;
   setLocks: (locks: Placement[]) => void;
   setStep: (step: Step) => void;
+  /** Replace all five data tables at once (import); drops the result and locks. */
+  setData: (data: Pick<AppData, "departments" | "teachers" | "rooms" | "sections" | "courses">) => void;
   /** Replace all data with the demo college (keeps the current step). */
   loadSample: () => void;
   /** Back to an empty college with the sample week settings, on step ①. */
@@ -85,6 +87,8 @@ export const useAppStore = create<AppState>()(
       setResult: (result) => set({ result }),
       setLocks: (locks) => set({ locks }),
       setStep: (step) => set({ step }),
+      setData: ({ departments, teachers, rooms, sections, courses }) =>
+        set({ departments, teachers, rooms, sections, courses, result: null, locks: [] }),
       loadSample: () => {
         const s = structuredClone(sampleCollege);
         set({

@@ -1,5 +1,5 @@
 # T06 — Step ② Data: sample, Excel import/template, edit tables
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** A · **Prereqs:** T05 · **Branch:** t06-data
 
 ## Goal
@@ -27,5 +27,5 @@ Admin gets all college data in within a minute.
 - `excel.test.ts`: parse a workbook built in-test with SheetJS → expected entities; one unknown-teacher error.
 
 ## Done when
-- [ ] Sample load, template download, upload with errors all work
-- [ ] Committed: `T06: data step with excel import`
+- [x] Sample load, template download, upload with errors all work
+- [x] Committed: `T06: data step with excel import`
