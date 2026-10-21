@@ -1,5 +1,5 @@
 # T07 — Step ③ Generate: engine selection, fallback, verify badge
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main (integration) · **Prereqs:** T02, T03, T05 (T04 optional) · **Branch:** t07-generate
 
 ## Goal
