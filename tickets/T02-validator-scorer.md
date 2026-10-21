@@ -1,5 +1,5 @@
 # T02 — Validator + scorer
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** T01 · **Branch:** t02-validator
 
 ## Goal
@@ -21,5 +21,5 @@ Independent checker that proves a result is clash-free, plus the single source o
 - Score: one case each for S1, S2, S3, S4 with exact expected numbers.
 
 ## Done when
-- [ ] All tests pass
-- [ ] Committed: `T02: validator + scorer`
+- [x] All tests pass
+- [x] Committed: `T02: validator + scorer`
