@@ -15,14 +15,14 @@ tickets in [`tickets/`](tickets/README.md).
 | Departments      | Rooms have an optional **owning department**. Owned rooms → only that department. No owner → **shared** (seminar halls, central labs).                                                                                 |
 | Batches          | Each section has `batches` (1 = no split). Split sections have **per-batch lab sessions**; batch labs can run in parallel. Lab teacher can be the same or differ per batch.                                            |
 | Rooms            | Type = `classroom` or `lab`. **No capacity** constraint. A lab course may require a specific lab room.                                                                                                                 |
-| Engines          | **Primary:** Python FastAPI + OR-Tools CP-SAT. **Fallback:** TypeScript heuristic (in a Web Worker), used automatically if the server is unreachable / times out, or picked manually.                                  |
-| Infeasible input | CP-SAT says infeasible → run heuristic to get a partial timetable + "why unplaced" reasons.                                                                                                                            |
-| Validator        | Independent TS validator re-checks **every** result. UI badge: `✓ Verified: 0 clashes · engine: CP-SAT (optimal)`.                                                                                                     |
+| Engines          | **Exact solver** (Python FastAPI + OR-Tools CP-SAT) is the only main engine; one *Generate timetable* button, no engine picker. **Quick draft** (TypeScript heuristic in a Web Worker) runs only (a) when the server is offline before the click: a banner says so and the button reads *Make a quick draft*; or (b) when the user picks it after the exact solver failed or proved the data impossible. Never a silent fallback. Time limit (default 20 s, max 120 s) sits under *Advanced*. See T15–T18. |
+| Infeasible input | Exact solver proves it impossible → step ③ shows a red *This timetable can't be built* card: ranked causes (proven ones first: no valid slot, bad lock, locks probe; then section/teacher/room load maths), each with a fix link into step ②/④; if nothing explains it, say so. *Make a partial timetable* (quick draft) is an opt-in secondary action; a partial result is amber, can go on to step ④ and lists unplaced sessions grouped by cause. |
+| Validator        | Independent TS validator re-checks **every** result. Complete result: green `✓ Timetable ready · 0 clashes (independently checked)`; partial: amber `Partial: N classes not placed`. |
 | Editing          | Click cell → details. **Lock** cells → **Regenerate** keeps locks. Drag-and-drop = stretch.                                                                                                                            |
 | Views            | One week grid with **Section / Teacher / Room** switcher, colour-coded subjects, print CSS (browser "Print → PDF"). Stats: score breakdown, teacher load table, shared room utilisation.                               |
 | UI               | Vite + React + TS + Tailwind + shadcn/ui. Clean, modern, light theme. **4-step guided flow:** ① Setup week → ② Add data → ③ Generate → ④ View & export. One-line hint per step, ⓘ tooltips on every non-obvious field. |
 | Storage          | Browser `localStorage` (zustand `persist`). No database, no auth.                                                                                                                                                      |
-| Demo             | Local (`npm run dev` + `uvicorn`). Vercel deploy of frontend only if time allows (uses fallback engine).                                                                                                               |
+| Demo             | Local (`npm run dev` + `uvicorn`). Vercel deploy of frontend only if time allows (no server → offline banner → quick draft). |
 
 ## 2. Rules
 
@@ -136,14 +136,32 @@ export interface Score {
   breakdown: ScoreBreakdown;
 }
 
+/** Why a session has no slot. `noRoom` / `noStart`: it can never be placed; the rest: what blocked it most. */
+export type UnplacedCause = "noRoom" | "noStart" | "teacher" | "section" | "room" | "lunch";
+
+/**
+ * A structured reason the exact solver gives for `infeasible` (contract T15, filled by the server in T16). The client turns these into sentences,
+ * fixes and links, so the server never writes user-facing copy here.
+ * - noSlot: these sessions have no valid (day, start, room) at all.
+ * - badLock: these locks are not valid placements.
+ * - locks: proven: without the locks the data solves. `ids` = locked session ids.
+ * - locksLikely: same probe, but it ran out of time, so the locks are only suspected.
+ */
+export interface Diagnosis {
+  kind: "noSlot" | "badLock" | "locks" | "locksLikely";
+  ids: Id[]; // session ids
+  detail?: string; // noSlot: "noRoom" | "noStart"
+}
+
 export interface SolveResult {
   engine: "cpsat" | "heuristic";
   status: "optimal" | "feasible" | "partial" | "infeasible" | "error";
   placements: Placement[];
-  unplaced: { sessionId: Id; reason: string }[];
+  unplaced: { sessionId: Id; reason: string; cause?: UnplacedCause }[];
   score: Score;
   timeMs: number;
-  message?: string;
+  message?: string; // human-readable fallback; the UI renders `diagnosis` when present
+  diagnosis?: Diagnosis[]; // only with status "infeasible"
 }
 ```
 
@@ -176,7 +194,8 @@ Expansion order and IDs (deterministic, courses in input order):
 ### Server API
 
 - `GET  /health` → `{ "ok": true }`
-- `POST /solve` body `SolveInput` → `SolveResult` (`score` may be zeros; client re-scores)
+- `POST /solve` body `SolveInput` → `SolveResult` (`score` may be zeros; client re-scores). On `infeasible` it fills
+  `diagnosis`; with locks it also re-solves once without them (feasibility only, ≤ 5 s) to tell `locks` from `locksLikely`.
 - Port **8000**, CORS allows `http://localhost:5173`. Frontend reads `VITE_SOLVER_URL` (default `http://localhost:8000`).
 
 ## 4. Repository layout
@@ -220,14 +239,22 @@ Test **logic**, not UI. Each ticket lists its own minimal tests. Overall:
 
 ### Cut order if behind (first → last)
 
-1. T14 glpk.js / Vercel deploy · 2. T13 drag-and-drop · 3. per-batch teachers (one teacher for all batches)
-2. S4 batch-idle rule · 5. H8 lunch for teachers (keep for sections) · 6. edit tables in T06 (keep import + sample)
-3. T04 CP-SAT engine (heuristic + validator carry the demo)
+1. T14 glpk.js / Vercel deploy
+2. T13 drag-and-drop
+3. Per-batch teachers (one teacher for all batches)
+4. S4 batch-idle rule
+5. H8 lunch for teachers (keep for sections)
+6. Edit tables in T06 (keep import + sample)
+7. T17 teacher filter (fix links open the Courses tab unfiltered)
+8. T17 department/room-type pool checks (keep the required-lab-room check)
+9. T16 locks probe (a locks cause becomes "may be" whenever locks exist)
 
-**Never cut:** validator, the three views, sample data, guided flow.
+**Never cut:** exact solver (CP-SAT), validator, the "can't be built" card with specific causes, quick draft only
+by the user's choice, the three views, sample data, guided flow.
 
 ## 7. Conventions
 
 - Branch per ticket: `tNN-short-name`; commit messages prefixed `TNN:`; small commits.
-- When starting a ticket set `Status: IN PROGRESS`, when finished set `Status: DONE` **in the ticket file** and tick its checklist.
-- Do not edit `web/src/domain/types.ts` outside T01 without telling the main session.
+- Pick and claim tickets with the board (`python3 tickets/board.py`; rules in `tickets/README.md`): claim = create the
+  ticket's branch; set `Status: IN PROGRESS` when starting, `Status: DONE` when finished, **in the ticket file**, and tick its checklist.
+- Change `web/src/domain/types.ts` (and `server/models.py`) only in a ticket whose Scope says so (T01, T15).

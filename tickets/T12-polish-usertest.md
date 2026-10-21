@@ -1,5 +1,5 @@
 # T12 — Polish, tooltips audit, README, user test
-**Status:** IN PROGRESS
+**Status:** BLOCKED (needs human: 5-minute user test)
 **Lane:** main · **Prereqs:** T06, T07, T09, T10, T11 · **Branch:** main
 
 ## Goal

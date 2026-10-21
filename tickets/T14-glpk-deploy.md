@@ -1,5 +1,5 @@
 # T14 — Stretch: glpk.js exact engine in browser / Vercel deploy
-**Status:** TODO
+**Status:** PARKED (revisit after T18; an in-browser exact engine changes the offline story)
 **Lane:** any · **Prereqs:** T07 · **Branch:** t14-glpk
 
 ## Goal
