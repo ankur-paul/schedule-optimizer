@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { score } from "@/domain/score";
-import { loadRange, roomUtilisation, SCORE_ROWS, sortLoads, teacherLoads, type LoadSortKey, type StatsData } from "@/domain/stats";
+import { loadRange, roomUtilisation, SCORE_ROWS, scoreCount, sortLoads, teacherLoads, type LoadSortKey, type StatsData } from "@/domain/stats";
 import type { Placement, Score } from "@/domain/types";
 
 interface Props {
@@ -54,7 +54,8 @@ function ScoreCard({ score }: { score: Score }) {
                   {row.label}
                   <InfoTip>{row.tip}</InfoTip>
                 </span>
-                <span className={cn("tabular-nums font-medium", value === 0 && "text-muted-foreground")}>{value}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, value)} ·</span>
+                <span className={cn("tabular-nums font-medium", value === 0 && "text-muted-foreground")}>{value} pts</span>
               </li>
             );
           })}

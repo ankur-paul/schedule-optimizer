@@ -4,8 +4,7 @@ import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WEIGHTS } from "@/domain/score";
-import type { ScoreBreakdown } from "@/domain/types";
+import { SCORE_ROWS, scoreCount } from "@/domain/stats";
 import { validate } from "@/domain/validator";
 import { checkServer } from "@/engine/solveClient";
 import { regenerateLabel } from "@/features/lock/locks";
@@ -174,13 +173,6 @@ function ServerDot({ state, onRefresh }: { state: ServerState; onRefresh: () => 
   );
 }
 
-const SCORE_ROWS: { key: keyof ScoreBreakdown; label: string; rule: string }[] = [
-  { key: "subjectRepeat", label: "Subject repeats", rule: `Same subject twice in a day · ${WEIGHTS.subjectRepeat} per extra lecture` },
-  { key: "teacherOverload", label: "Teacher overload", rule: `More than 3 periods in a row · ${WEIGHTS.teacherOverload} per extra period` },
-  { key: "sectionGaps", label: "Section gaps", rule: `Idle periods between classes (lunch excluded) · ${WEIGHTS.sectionGaps} each` },
-  { key: "batchIdle", label: "Batch idle", rule: `One batch idle while another is in a lab · ${WEIGHTS.batchIdle} each` },
-];
-
 function ErrorCard({ message }: { message: string }) {
   const hasPrevious = useAppStore((s) => s.result !== null);
   return (
@@ -277,15 +269,21 @@ function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
             <span className="font-normal text-muted-foreground">(lower is better, 0 is perfect)</span>
           </p>
           <div className="grid gap-2 sm:grid-cols-4">
-            {SCORE_ROWS.map((row) => (
-              <div key={row.key} className="rounded-lg border p-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  {row.label}
-                  <InfoTip>{row.rule}</InfoTip>
+            {SCORE_ROWS.map((row) => {
+              const points = result.score.breakdown[row.key];
+              return (
+                <div key={row.key} className="rounded-lg border p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {row.label}
+                    <InfoTip>{row.tip}</InfoTip>
+                  </div>
+                  <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
+                    {points} <span className="text-sm font-normal text-muted-foreground">pts</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, points)}</div>
                 </div>
-                <div className="text-xl font-semibold tabular-nums">{result.score.breakdown[row.key]}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </CardContent>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadRange, roomUtilisation, SCORE_ROWS, sortLoads, teacherLoads } from "./stats";
+import { loadRange, roomUtilisation, SCORE_ROWS, scoreCount, sortLoads, teacherLoads } from "./stats";
 import { tinyCollege, tinyValid } from "./tinyCollege";
 
 // tinyValid: 2 days × 5 teaching periods, so each room has 10 slots.
@@ -80,5 +80,18 @@ describe("SCORE_ROWS", () => {
       ["S3", "sectionGaps"],
       ["S4", "batchIdle"],
     ]);
+  });
+});
+
+describe("scoreCount", () => {
+  it("turns penalty points back into what was counted, using the rule's weight", () => {
+    expect(scoreCount("batchIdle", 18)).toBe("6 batch-periods");
+    expect(scoreCount("subjectRepeat", 20)).toBe("2 extra lectures");
+    expect(scoreCount("teacherOverload", 5)).toBe("1 extra period");
+    expect(scoreCount("sectionGaps", 4)).toBe("2 free periods");
+  });
+
+  it("says 0 with the plural unit when nothing was penalised", () => {
+    expect(scoreCount("sectionGaps", 0)).toBe("0 free periods");
   });
 });

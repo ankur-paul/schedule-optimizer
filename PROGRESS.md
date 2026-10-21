@@ -37,6 +37,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Step ② tabs follow the order the data depends on (Departments → Rooms → Teachers → Sections → Courses); they open on Departments while empty and switch to Courses once courses exist, e.g. after Load sample (`DATA_TABS` / `defaultDataTab` in `dataEdit.ts`) (Start over → step ② → Load sample)
 - [T12] Courses table rows are all one line high: the Batch teachers cell shows only the overrides ("B2: Prof. Rahul Verma", or a muted "Course teacher") and opens a small popover with one select per batch (`batchTeacherSummary` in `dataEdit.ts`); Section is narrower and Subject/Teacher wider so names aren't cut off (step ② → Courses → click a Batch teachers cell)
 - [T12] Step ② "All sections" filter uses the same searchable section picker as step ④ (grouped by department); the picker now opens above or below its button and shrinks to fit short windows instead of jumping to the side; *Export current data* is an outlined button with an icon like *Template* (step ② with data → Courses → filter)
+- [T12] Steps ③ and ④ name the score rules the same way (the plain-English `SCORE_ROWS` labels) and show what was counted next to the points, e.g. "Batches waiting during labs · 18 pts · 6 batch-periods" (`scoreCount` in `domain/stats.ts`) (generate → step ③ Result and step ④ Quality score)
 
 ## Known issues / cuts
 
