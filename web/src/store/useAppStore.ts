@@ -42,12 +42,12 @@ export interface AppState extends AppData {
   setData: (data: Pick<AppData, "departments" | "teachers" | "rooms" | "sections" | "courses">) => void;
   /** Replace all data with the demo college (keeps the current step). */
   loadSample: () => void;
-  /** Back to an empty college and an empty week setup, on step ①. */
+  /** Back to an empty college and a Mon–Fri week with no periods, on step ①. */
   reset: () => void;
 }
 
 const initialData = (): AppData => ({
-  settings: { days: [], periods: [], lunchCandidates: [] },
+  settings: { days: ["Mon", "Tue", "Wed", "Thu", "Fri"], periods: [], lunchCandidates: [] },
   departments: [],
   teachers: [],
   rooms: [],

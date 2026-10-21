@@ -26,6 +26,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [chore] Server moved to uv: `server/pyproject.toml` + `uv.lock` pin exact versions (pytest/httpx in the dev group), `requirements.txt` removed; README and CLAUDE.md commands updated (`cd server && uv sync && uv run uvicorn main:app --port 8000`; tests: `uv run pytest`)
 - [T13] Drag and drop in step ④ Section view: dragging a class tints every slot green (with the score change) or red, and the floating card shows the reason or the change for the slot under the pointer; labs keep the period you grabbed them by; a drop is re-validated, moved, locked, re-scored, with an Undo toast; unplaced sessions can be dragged onto the grid; step ④ now shows the verified badge too. Logic in `features/view/moves.ts` is tested against `validate()` for every slot (`npm run dev` → generate → step ④ → drag a class)
 - [T05] Step ① starts as an empty form (no days, periods or lunch candidates) instead of the sample week; *Start over* also empties it, and *Load sample* in step ② still fills the sample week (open the app in a fresh browser, or Start over)
+- [T05] Step ① preselects the working days Mon–Fri; periods and lunch candidates still start empty (Start over → step ①)
 
 ## Known issues / cuts
 
