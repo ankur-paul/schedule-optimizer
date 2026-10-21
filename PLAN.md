@@ -257,4 +257,4 @@ by the user's choice, the three views, sample data, guided flow.
 - Branch per ticket: `tNN-short-name`; commit messages prefixed `TNN:`; small commits.
 - Pick and claim tickets with the board (`python3 tickets/board.py`; rules in `tickets/README.md`): claim = create the
   ticket's branch; set `Status: IN PROGRESS` when starting, `Status: DONE` when finished, **in the ticket file**, and tick its checklist.
-- Do not edit `web/src/domain/types.ts` outside T01 without telling the main session.
+- Change `web/src/domain/types.ts` (and `server/models.py`) only in a ticket whose Scope says so (T01, T15).

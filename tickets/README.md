@@ -29,11 +29,15 @@ newest copy of a ticket wins, except that DONE on `main` is final. States:
 2. **Claim:** `git branch <the ticket's **Branch:** name> main`. Git refuses if the branch already exists, so only
    one agent wins; if it fails, run the board again and take the next ticket. Then work on that branch (or
    `git worktree add ../<repo>-tNN <branch>`), and set `**Status:** IN PROGRESS` in the first commit.
-3. **Finish:** set `**Status:** DONE` and tick the checklist in the commit that completes the ticket; it counts as
-   done for others once it is merged into `main`.
-4. **Stuck:** `**Status:** BLOCKED (reason)`, e.g. `BLOCKED (needs human: user test)`. Shelved on purpose:
+3. **Read:** read the whole ticket and the PLAN.md sections it names before writing code. Its Scope and Done when
+   are the spec; ask the user before going beyond them. The data contract (`web/src/domain/types.ts`,
+   `server/models.py`, PLAN.md §3) changes only in a ticket whose Scope says so, such as T15.
+4. **Finish:** in the commit that completes the ticket, set `**Status:** DONE`, tick the checklist, add a
+   PROGRESS.md line and update FEATURES.md if what users see changed (rules in CLAUDE.md). Other tickets count it
+   as done once it is merged into `main`.
+5. **Stuck:** `**Status:** BLOCKED (reason)`, e.g. `BLOCKED (needs human: user test)`. Shelved on purpose:
    `**Status:** PARKED (reason)`.
-5. **Ticket headers** must parse; the board lists any that don't under *Problems*:
+6. **Ticket headers** must parse; the board lists any that don't under *Problems*:
    - `# TNN — Title`
    - `**Status:** TODO | IN PROGRESS | BLOCKED (reason) | PARKED (reason) | DONE`
    - `**Lane:** … · **Prereqs:** T01, T02 · **Branch:** tNN-short-name`. Prereqs are whole tickets or `—`;
