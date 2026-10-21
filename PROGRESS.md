@@ -25,6 +25,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] README rewritten: problem, features, screenshots (`docs/screenshots/`), run steps, how the two engines + validator fit, H/S rules table, 90 s demo script; ARCHITECTURE.md time limit corrected (open README.md)
 - [chore] Server moved to uv: `server/pyproject.toml` + `uv.lock` pin exact versions (pytest/httpx in the dev group), `requirements.txt` removed; README and CLAUDE.md commands updated (`cd server && uv sync && uv run uvicorn main:app --port 8000`; tests: `uv run pytest`)
 - [T13] Drag and drop in step ④ Section view: dragging a class tints every slot green (with the score change) or red, and the floating card shows the reason or the change for the slot under the pointer; labs keep the period you grabbed them by; a drop is re-validated, moved, locked, re-scored, with an Undo toast; unplaced sessions can be dragged onto the grid; step ④ now shows the verified badge too. Logic in `features/view/moves.ts` is tested against `validate()` for every slot (`npm run dev` → generate → step ④ → drag a class)
+- [T05] Step ① starts as an empty form (no days, periods or lunch candidates) instead of the sample week; *Start over* also empties it, and *Load sample* in step ② still fills the sample week (open the app in a fresh browser, or Start over)
 
 ## Known issues / cuts
 
@@ -35,3 +36,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T06] Importing or loading the sample replaces all data tables (after a confirm). Inline table edits do not clear an existing timetable; T07's validator re-checks it. A course with an error is left out of the load numbers until fixed.
 - [T10] Locks are kept when the result is replaced, so an engine run that can't honour them (e.g. a lock that blocks every other slot) shows up as unplaced sessions rather than a dropped lock. Print sheets don't show 🔒.
 - [T13] Dragging works in the Section view only, with a mouse or pen (touch not tried; no keyboard dragging, so use *Lock here* in the dialog instead). Undo puts back the timetable from just before that move, so undoing an older move also reverts any made after it.
+- [T05] A browser that already saved the app state keeps its old (sample) week setup until *Start over*.

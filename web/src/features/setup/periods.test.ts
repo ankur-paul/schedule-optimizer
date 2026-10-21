@@ -166,6 +166,6 @@ describe("store", () => {
     expect(s.sections).toHaveLength(sampleCollege.sections.length);
     s.reset();
     expect(useAppStore.getState().courses).toEqual([]);
-    expect(useAppStore.getState().settings).toEqual(settings);
+    expect(useAppStore.getState().settings).toEqual({ days: [], periods: [], lunchCandidates: [] });
   });
 });

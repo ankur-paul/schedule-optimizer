@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useAppStore } from "./useAppStore";
 
+describe("initial state", () => {
+  beforeEach(() => useAppStore.getState().reset());
+
+  it("starts with an empty week setup, not the sample", () => {
+    expect(useAppStore.getState().settings).toEqual({ days: [], periods: [], lunchCandidates: [] });
+    expect(useAppStore.getState().step).toBe(0);
+  });
+});
+
 describe("printHeading", () => {
   beforeEach(() => useAppStore.getState().reset());
 
