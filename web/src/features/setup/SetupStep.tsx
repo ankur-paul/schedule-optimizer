@@ -70,7 +70,8 @@ function DaysCard() {
 function PeriodsCard() {
   const settings = useAppStore((s) => s.settings);
   const setSettings = useAppStore((s) => s.setSettings);
-  const [showGenerator, setShowGenerator] = useState(false);
+  // Start with the generator open while there are no periods yet.
+  const [showGenerator, setShowGenerator] = useState(settings.periods.length === 0);
   const periods = settings.periods;
   const errors = periodErrors(periods);
 
