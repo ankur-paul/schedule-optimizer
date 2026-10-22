@@ -688,5 +688,6 @@ class TestApi:
 
     def test_result_round_trips_into_the_web_contract(self):
         res = self.client.post("/solve", json=self.body(tiny(days=2, courses=[course("c1", lectures=2)]))).json()
-        assert set(res) == {"engine", "status", "placements", "unplaced", "score", "timeMs", "message"}
+        required = {"engine", "status", "placements", "unplaced", "score", "timeMs"}
+        assert required <= set(res) <= required | {"message", "diagnosis"}
         assert set(res["score"]) == {"total", "breakdown"}

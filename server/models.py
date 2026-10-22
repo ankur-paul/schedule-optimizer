@@ -98,9 +98,22 @@ class Score(Model):
     breakdown: ScoreBreakdown = ScoreBreakdown()
 
 
+# Why a session has no slot. noRoom / noStart: it can never be placed; the rest: what blocked it most.
+UnplacedCause = Literal["noRoom", "noStart", "teacher", "section", "room", "lunch"]
+
+
 class Unplaced(Model):
     session_id: Id
     reason: str
+    cause: Optional[UnplacedCause] = None
+
+
+class Diagnosis(Model):
+    """A structured reason for `infeasible`; the client writes the user-facing copy (see Diagnosis in types.ts)."""
+
+    kind: Literal["noSlot", "badLock", "locks", "locksLikely"]
+    ids: list[Id]  # session ids
+    detail: Optional[str] = None  # noSlot: "noRoom" | "noStart"
 
 
 class SolveResult(Model):
@@ -110,7 +123,8 @@ class SolveResult(Model):
     unplaced: list[Unplaced] = []
     score: Score = Score()
     time_ms: int = 0
-    message: Optional[str] = None
+    message: Optional[str] = None  # human-readable fallback; the UI renders `diagnosis` when present
+    diagnosis: Optional[list[Diagnosis]] = None  # only with status "infeasible"
 
 
 class Session(Model):

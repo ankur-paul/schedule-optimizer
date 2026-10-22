@@ -20,7 +20,8 @@ def health() -> dict:
     return {"ok": True}
 
 
-@app.post("/solve")
+# Drop None fields so optional ones (message, diagnosis, unplaced cause) are absent, as in types.ts, not null.
+@app.post("/solve", response_model_exclude_none=True)
 def solve_endpoint(inp: SolveInput) -> SolveResult:
     # Sync def: FastAPI runs it in a worker thread, so a long solve doesn't block /health.
     try:

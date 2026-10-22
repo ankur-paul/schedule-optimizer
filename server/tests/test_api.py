@@ -51,3 +51,10 @@ def test_cors_allows_other_local_ports_only():
     assert allowed("http://127.0.0.1:5173")
     assert not allowed("http://evil.example")
     assert not allowed("http://localhost.evil.example")
+
+
+def test_solve_omits_unset_optional_fields():
+    body = tiny(periods="T", courses=[course("c1", lectures=1)]).model_dump()
+    data = client.post("/solve", json=body).json()
+    assert data["status"] in ("optimal", "feasible")
+    assert "diagnosis" not in data and "message" not in data

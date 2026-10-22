@@ -52,14 +52,32 @@ export interface SolveInput {
 export interface ScoreBreakdown { subjectRepeat: number; teacherOverload: number; sectionGaps: number; batchIdle: number }
 export interface Score { total: number; breakdown: ScoreBreakdown }
 
+/** Why a session has no slot. `noRoom` / `noStart`: it can never be placed; the rest: what blocked it most. */
+export type UnplacedCause = "noRoom" | "noStart" | "teacher" | "section" | "room" | "lunch";
+
+/**
+ * A structured reason the exact solver gives for `infeasible` (contract T15, filled by the server in T16). The client turns these into sentences,
+ * fixes and links, so the server never writes user-facing copy here.
+ * - noSlot: these sessions have no valid (day, start, room) at all.
+ * - badLock: these locks are not valid placements.
+ * - locks: proven: without the locks the data solves. `ids` = locked session ids.
+ * - locksLikely: same probe, but it ran out of time, so the locks are only suspected.
+ */
+export interface Diagnosis {
+  kind: "noSlot" | "badLock" | "locks" | "locksLikely";
+  ids: Id[];                  // session ids
+  detail?: string;            // noSlot: "noRoom" | "noStart"
+}
+
 export interface SolveResult {
   engine: "cpsat" | "heuristic";
   status: "optimal" | "feasible" | "partial" | "infeasible" | "error";
   placements: Placement[];
-  unplaced: { sessionId: Id; reason: string }[];
+  unplaced: { sessionId: Id; reason: string; cause?: UnplacedCause }[];
   score: Score;
   timeMs: number;
-  message?: string;
+  message?: string;           // human-readable fallback; the UI renders `diagnosis` when present
+  diagnosis?: Diagnosis[];    // only with status "infeasible"
 }
 
 export interface Session {
