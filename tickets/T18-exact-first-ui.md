@@ -1,5 +1,5 @@
 # T18 — Exact-first Generate UI
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** main · **Prereqs:** T16, T17 · **Branch:** t18-exact-first
 
 ## Goal
@@ -62,9 +62,10 @@ do, and gets the quick draft (heuristic) only by choosing it. Part 3 of the exac
   step ④ banner → drag one in → print warning, a 5 s limit timeout (→ try again with 10 s).
 
 ## Done when
-- [ ] Every state above reachable and clicked through
-- [ ] No path runs the heuristic without the user clicking a button that says "quick draft" / "partial"
-- [ ] Committed in small steps, e.g. `T18: exact-only generate()`, `T18: step ③ impossible state`, …
+- [x] Every state above reachable and clicked through (except dragging a class in from a partial timetable: the
+      over-booked test data had no free slot; that drag is T13 code, unchanged)
+- [x] No path runs the heuristic without the user clicking a button that says "quick draft" / "partial"
+- [x] Committed in small steps, e.g. `T18: exact-only generate()`, `T18: step ③ impossible state`, …
 
 ## Cuts / deferred
 - A complete quick draft gets no special label and no *Improve with exact solver* button (deferred in the

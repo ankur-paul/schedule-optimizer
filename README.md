@@ -18,10 +18,12 @@ sees it.
   the built-in sample college (3 departments, 9 sections, 25 teachers, 18 rooms, 54 courses).
 - **Real-college rules.** Department-owned and shared rooms, labs that run for 2–3 consecutive periods, sections
   split into lab batches that run different labs at the same time, a guaranteed lunch period for everyone.
-- **Two engines.** An exact optimiser (OR-Tools CP-SAT) in a small Python server, and a fast heuristic that
-  runs in the browser. *Auto* uses the server when it's up and falls back to the browser when it isn't.
-- **Verified results.** `✓ Verified: 0 clashes · engine: CP-SAT (optimal)`, re-checked in the browser
-  whichever engine ran. Sessions that can't be placed come with a reason.
+- **Exact solver first.** An exact optimiser (OR-Tools CP-SAT) in a small Python server finds the best
+  timetable or proves none exists. If it can't be built, step ③ says why (an over-booked teacher, a lab
+  with no room, a lock in the way…) with a fix link for each cause. A quick draft (a fast heuristic in the
+  browser) runs only when you ask for one: when the server is offline, or as a partial timetable.
+- **Verified results.** `✓ Timetable ready · 0 clashes (independently checked)`, re-checked in the browser
+  whichever engine ran. A partial timetable lists the classes it couldn't place, grouped by cause.
 - **Section, teacher and room views** of the same timetable, colour-coded by subject.
 - **Quality stats.** Score breakdown, teacher load per day, room utilisation.
 - **Lock and regenerate.** Lock the cells you want to keep, re-solve everything else.
@@ -33,7 +35,7 @@ Everything is saved in the browser (localStorage). There are no accounts and no 
 
 | Add data | Generate |
 |---|---|
-| ![Data step with the sample college loaded](docs/screenshots/data.png) | ![Generate step with a verified CP-SAT result](docs/screenshots/generate.png) |
+| ![Data step with the sample college loaded](docs/screenshots/data.png) | ![Generate step with a verified exact-solver result](docs/screenshots/generate.png) |
 | **Teacher view** | **Stats** |
 | ![A teacher's week](docs/screenshots/teacher.png) | ![Quality score, room utilisation and teacher load](docs/screenshots/stats.png) |
 
@@ -53,7 +55,7 @@ Tested with Node 24 and Python 3.12.
 # 1. Web app → http://localhost:5173
 cd web && npm install && npm run dev
 
-# 2. Solver server → http://localhost:8000 (optional: without it the in-browser engine is used)
+# 2. Solver server → http://localhost:8000 (without it, step ③ offers a quick draft in the browser)
 cd server && uv sync && uv run uvicorn main:app --port 8000
 ```
 
@@ -70,8 +72,8 @@ The web app looks for the server at `http://localhost:8000`; set `VITE_SOLVER_UR
  │ 1 Setup → 2 Data → 3 Generate → 4 View/export  │        │ FastAPI  POST /solve     │
  │                        │                       │  JSON  │   └ OR-Tools CP-SAT      │
  │                   solveClient ─────────────────┼───────►│     (exact, optimal)     │
- │                        │ server down / slow /   │        └──────────────────────────┘
- │                        │ infeasible             │
+ │                        │ quick draft, only when │        └──────────────────────────┘
+ │                        │ you click for one      │
  │                        ▼                        │
  │             heuristic engine (Web Worker)       │
  │                        │                        │
@@ -80,10 +82,12 @@ The web app looks for the server at `http://localhost:8000`; set `VITE_SOLVER_UR
 ```
 
 - **CP-SAT** models every hard rule as a constraint and minimises the soft-rule penalties. On the sample
-  college it places all 210 sessions and proves the result optimal in about 10 s.
+  college it places all 210 sessions and proves the result optimal in about 10 s. When no timetable exists
+  it says which sessions have no slot or which locks are to blame; the browser adds section, teacher and room
+  load maths and ranks the causes.
 - **The heuristic** places the most constrained sessions first, restarts with different random seeds, then
   improves the timetable by moving and swapping sessions. It never creates a clash. On the sample it reaches
-  the same score in about 5 s with no server.
+  the same score in about 5 s with no server. It runs only when you ask for a quick draft or a partial timetable.
 - **The validator and scorer** are plain TypeScript, separate from both engines. They are the source of truth
   for the badge and the score, so the two engines are judged by the same code.
 
@@ -132,19 +136,21 @@ drift apart.
 
 1. **Setup (5 s).** Step 1 shows the bell schedule: 8 periods, a break, three lunch candidates. *Next.*
 2. **Data (10 s).** *Load sample.* "3 departments, 9 sections, 54 courses; every section fits in the week."
-3. **Generate (20 s).** Server dot is green. *Generate timetable.* While it runs: "CP-SAT is proving the best
-   possible timetable." Point at `✓ Verified: 0 clashes · engine: CP-SAT (optimal)` and the score breakdown.
+3. **Generate (20 s).** Server dot is green. *Generate timetable.* While it runs: "the exact solver is proving
+   the best possible timetable." Point at *Timetable ready · best possible*, the
+   `✓ Timetable ready · 0 clashes (independently checked)` badge and the score breakdown.
 4. **Views (20 s).** *View timetable.* CSE A: labs span two periods, batches B1/B2 run labs side by side.
    Switch to **Teacher**, search "Anita": her whole week. Switch to **Room** and pick Seminar Hall 1:
    one shared hall used by all three departments.
 5. **Stats (10 s).** Scroll down: score explained rule by rule, shared room utilisation, teacher load bars.
 6. **Lock + regenerate (15 s).** Click a cell → *Lock here*; lock a second one. *Regenerate (keep 2 locked)*.
    The two 🔒 cells stay put, everything else moves, still 0 clashes. Then drag a class: green slots show the
-   score change, hover a red one for the reason, drop on green → moved, locked, still `✓ Verified: 0 clashes`.
+   score change, hover a red one for the reason, drop on green → moved, locked, still `✓ Timetable ready · 0 clashes`.
 7. **Print (10 s).** *Print all sections* → one A4 page per section, colours kept.
 
-Backup: stop the server and generate again. Auto falls back to the in-browser engine with a note saying why,
-and the badge still reads 0 clashes.
+Backup: stop the server. Within 5 s step ③ shows an amber "Exact solver is offline" banner and the button reads
+*Make a quick draft*; the draft still reads 0 clashes. To show *can't be built*, give one course 30 lectures
+in step ②: step ③ names the over-booked section and teacher with fix links.
 
 ## Project docs
 

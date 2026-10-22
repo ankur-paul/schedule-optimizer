@@ -1,6 +1,6 @@
 # Architecture
 
-The app runs in the browser. An admin enters the college's week, rooms, teachers, sections and courses, then generates a weekly timetable. A Python server solves the timetable exactly with OR-Tools CP-SAT. If the server is down or too slow, a heuristic solver in the browser takes over. Either way, a validator in the browser re-checks every result for clashes before the admin sees it.
+The app runs in the browser. An admin enters the college's week, rooms, teachers, sections and courses, then generates a weekly timetable. A Python server solves the timetable exactly with OR-Tools CP-SAT, or proves that none exists and says why. A heuristic solver in the browser makes a quick draft only when the admin asks for one: when the server is offline, or after the exact solver failed. Either way, a validator in the browser re-checks every result for clashes before the admin sees it.
 
 ```mermaid
 flowchart LR
@@ -9,7 +9,7 @@ flowchart LR
   subgraph Browser["Browser: Vite + React + TypeScript"]
     UI["Guided flow<br/>1 Setup · 2 Data · 3 Generate · 4 View"]
     Store["Zustand store<br/>saved to localStorage"]
-    Client["solveClient<br/>chooses engine, falls back"]
+    Client["solveClient<br/>generate · makeDraft"]
     Worker["Heuristic solver<br/>Web Worker"]
     Domain["Domain logic<br/>sessions · eligibility · validator · scorer"]
   end
@@ -25,7 +25,7 @@ flowchart LR
   UI <--> Store
   UI -- "Generate" --> Client
   Client -- "SolveInput JSON" --> API --> CPSAT
-  Client -- "server down, timeout<br/>or infeasible" --> Worker
+  Client -- "quick draft,<br/>only on request" --> Worker
   Worker --> Domain
   Client -- "every result" --> Domain
   Domain -- "verified result + score" --> UI
@@ -36,11 +36,12 @@ flowchart LR
 ## How a timetable is generated
 
 1. The store builds a `SolveInput` from the admin's data and any locked cells.
-2. `solveClient` checks `GET /health`. If the server answers, it posts the input to `/solve` and CP-SAT runs for up to the time limit set in step 3 (20 seconds by default).
-3. If the server is unreachable or times out, the heuristic solver runs in a Web Worker so the page stays responsive.
-4. If CP-SAT reports the input is infeasible, the heuristic runs anyway. It returns a partial timetable and a reason for each class it could not place, e.g. "no 2 consecutive periods where teacher R. Gupta and Physics Lab are both free".
-5. The validator checks the result against the hard rules H1 to H8, and the scorer computes penalties S1 to S4. Both run in the browser, so every engine is judged by the same code.
-6. The UI shows the timetable with a badge such as `✓ Verified: 0 clashes · engine: CP-SAT (optimal)`.
+2. Step 3 polls `GET /health` every 5 s. While the server is up, `generate()` posts the input to `/solve` and CP-SAT runs for up to the time limit set in step 3 (20 seconds by default, 120 at most).
+3. If CP-SAT proves the input infeasible, the server sends a `diagnosis` (sessions with no slot, invalid locks, or locks that make it impossible). `causes.ts` combines it with the section, teacher and room load checks from step 2 into ranked causes with fix links. Nothing runs in the browser.
+4. If CP-SAT runs out of time, the server fails or can't be reached, `generate()` returns a `failure` of that kind and the stored timetable stays.
+5. `makeDraft()` runs the heuristic in a Web Worker only when the admin clicks *Make a quick draft* (server offline), *Make a partial timetable* or *Make a quick draft instead*. It returns a partial timetable when needed, with a reason and a cause for each class it could not place, e.g. "no 2 consecutive periods where teacher R. Gupta and Physics Lab are both free".
+6. The validator checks the result against the hard rules H1 to H8, and the scorer computes penalties S1 to S4. Both run in the browser, so every engine is judged by the same code.
+7. `generateView()` picks what step 3 shows: ready, can't be built, couldn't finish or partial, with a badge such as `✓ Timetable ready · 0 clashes (independently checked)`.
 
 ## Shared contract
 
@@ -83,11 +84,13 @@ Both solvers read the same `SolveInput` JSON and return the same `SolveResult` J
 
 | Feature | What it does | Ticket |
 |---|---|---|
-| CP-SAT solver | Finds the best timetable under the hard rules, or proves none exists. | T04 |
-| Heuristic solver | Places the hardest sessions first, retries with random restarts, then improves the result by moving and swapping sessions. | T03 |
-| Automatic fallback | Switches to the heuristic when the server is down, slow or reports infeasible. | T07 |
-| Unplaced reasons | Lists each session that could not be placed, with the resource that blocked it. | T03, T07 |
-| Validator badge | Re-checks every result for clashes and shows the engine that produced it. | T02, T07 |
+| Exact solver (CP-SAT) | Finds the best timetable under the hard rules, or proves none exists and names the cause. The only engine Generate runs. | T04, T16, T18 |
+| Quick draft (heuristic) | Places the hardest sessions first, retries with random restarts, then improves the result by moving and swapping sessions. Runs only from a *quick draft* / *partial* button. | T03, T18 |
+| Can't be built | Ranked causes with fix links into step 2 or 4, and an opt-in partial timetable. | T17, T18 |
+| Couldn't finish | Timeout, server error or unreachable: the timetable stays; try again with more time or make a quick draft. | T18 |
+| Offline banner | Polls the server every 5 s; while it is down the main button makes a quick draft. | T18 |
+| Unplaced reasons | Lists each session that could not be placed, grouped by the cause that blocked it. | T03, T07, T18 |
+| Validator badge | Re-checks every result for clashes: ready, or partial with the count not placed. | T02, T07, T18 |
 
 ### Step 4: View and export
 
