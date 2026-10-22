@@ -1,5 +1,5 @@
 # T17 — Room load checks + explaining causes
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** A · **Prereqs:** T15 · **Branch:** t17-causes
 
 ## Goal

@@ -21,7 +21,7 @@ Changing any setting clears the current timetable and its locks, because placeme
 - **Edit tables.** Tabs for Courses, Sections, Teachers, Rooms and Departments, with add, edit and delete.
 - **Rooms.** A room is a classroom or a lab. A room with no department is shared by everyone; a room with a department serves only that department. A lab course can require one specific lab.
 - **Lab batches.** A section can split into batches. Each batch gets its own lab sessions, batches can be in different labs at the same time, and each batch can have its own lab teacher.
-- **Data checks.** The summary shows counts, load bars for the busiest sections, and two kinds of problems. Missing references, a session with no eligible room, or a lab longer than any run of consecutive teaching periods block **Next**. A section or teacher booked for more periods than the week has gives a warning.
+- **Data checks.** The summary shows counts, load bars for the busiest sections, and two kinds of problems. Missing references, a session with no eligible room, or a lab longer than any run of consecutive teaching periods block **Next**. A section or teacher booked for more periods than the week has gives a warning, and so does a room pool booked beyond its periods: a lab that courses require, the classrooms or labs one department may use (its own plus shared ones), or all rooms of a type.
 
 ## ③ Generate
 

@@ -1,6 +1,6 @@
 import { eligibleRooms, teachingPeriods } from "@/domain/eligibility";
 import { expandSessions } from "@/domain/sessions";
-import type { Id, Settings } from "@/domain/types";
+import type { Id, Room, Session, Settings } from "@/domain/types";
 import type { CollegeData } from "./excel";
 
 export interface Load {
@@ -10,6 +10,19 @@ export interface Load {
   available: number; // teaching periods per week, minus one lunch period per day
 }
 
+/**
+ * Periods a pool of rooms must host vs the periods it has (rooms × days × teaching periods; rooms need no lunch).
+ * - labRoom: one lab that some courses require (`labRoomId`).
+ * - department: the rooms of one type a department's sections may use (its own plus shared ones).
+ * - college: every room of one type, for all sections together.
+ */
+export interface RoomLoad extends Load {
+  scope: "labRoom" | "department" | "college";
+  roomType: Room["type"];
+  rooms: number;
+  departmentId?: Id; // scope "department"
+}
+
 export interface DataReport {
   /** Problems that make generating impossible or meaningless. Block "Next". */
   errors: string[];
@@ -17,6 +30,10 @@ export interface DataReport {
   warnings: string[];
   sections: Load[];
   teachers: Load[];
+  /** Only pools some session needs and that have at least one room (no room at all is an error above). */
+  rooms: RoomLoad[];
+  /** One lunch period a day is held back from section and teacher `available`. */
+  lunchReserved: boolean;
 }
 
 /** Check the college data against itself and the week settings. Pure; runs on every render. */
@@ -108,6 +125,8 @@ export function checkData(data: CollegeData, settings: Settings): DataReport {
     available,
   }));
 
+  const rooms = roomLoads(data, settings, sessions);
+
   for (const l of sections) {
     if (l.required > l.available) warnings.push(`Section "${l.name}" needs ${l.required} periods a week but only ${l.available} are free.`);
   }
@@ -115,5 +134,56 @@ export function checkData(data: CollegeData, settings: Settings): DataReport {
     if (l.required > l.available) warnings.push(`${l.name} teaches ${l.required} periods a week but only ${l.available} are free.`);
   }
 
-  return { errors, warnings, sections, teachers };
+  for (const l of rooms) {
+    if (l.required > l.available) warnings.push(roomWarning(l));
+  }
+
+  return { errors, warnings, sections, teachers, rooms, lunchReserved: lunchPerDay > 0 };
+}
+
+/** "lab" → "labs", "classroom" → "classroom" for n = 1. */
+export function roomTypeLabel(type: Room["type"], n: number): string {
+  return n === 1 ? type : `${type}s`;
+}
+
+function roomWarning(l: RoomLoad): string {
+  const need = `${l.required} ${l.roomType} periods a week`;
+  const pool = `${l.rooms} ${roomTypeLabel(l.roomType, l.rooms)}`;
+  const have = `${l.rooms === 1 ? "has" : "have"} only ${l.available}`;
+  switch (l.scope) {
+    case "labRoom":
+      return `Lab "${l.name}" is required for ${l.required} periods a week but has only ${l.available}.`;
+    case "department":
+      return `${l.name} sections need ${need} but the ${pool} they may use ${have}.`;
+    case "college":
+      return `All sections together need ${need} but the ${pool} ${have}.`;
+  }
+}
+
+/** Lower bounds on room use: required lab rooms, then per room type each department's pool and the whole college. */
+function roomLoads(data: CollegeData, settings: Settings, sessions: Session[]): RoomLoad[] {
+  const slots = settings.days.length * teachingPeriods(settings).length;
+  const deptOf = new Map(data.sections.map((s) => [s.id, s.departmentId]));
+  const periods = (keep: (s: Session) => boolean) => sessions.filter(keep).reduce((n, s) => n + s.length, 0);
+  const loads: RoomLoad[] = [];
+
+  for (const r of data.rooms) {
+    const required = r.type === "lab" ? periods((s) => s.fixedRoomId === r.id) : 0;
+    if (required > 0) loads.push({ scope: "labRoom", id: r.id, name: r.name, roomType: "lab", rooms: 1, required, available: slots });
+  }
+  for (const roomType of ["classroom", "lab"] as const) {
+    const all = data.rooms.filter((r) => r.type === roomType).length;
+    const allRequired = periods((s) => s.roomType === roomType);
+    for (const d of data.departments) {
+      const n = data.rooms.filter((r) => r.type === roomType && (r.departmentId === null || r.departmentId === d.id)).length;
+      const required = periods((s) => s.roomType === roomType && deptOf.get(s.sectionId) === d.id);
+      // Same rooms and same sessions as the college row (e.g. one department): say it once, there.
+      if (required === 0 || n === 0 || (n === all && required === allRequired)) continue;
+      loads.push({ scope: "department", id: `${d.id}:${roomType}`, name: d.name, departmentId: d.id, roomType, rooms: n, required, available: n * slots });
+    }
+    if (allRequired > 0 && all > 0) {
+      loads.push({ scope: "college", id: `all:${roomType}`, name: `All ${roomType}s`, roomType, rooms: all, required: allRequired, available: all * slots });
+    }
+  }
+  return loads;
 }

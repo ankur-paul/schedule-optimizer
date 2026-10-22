@@ -104,4 +104,65 @@ describe("checkData", () => {
       "Anita teaches 8 periods a week but only 7 are free.",
     ]);
   });
+
+  describe("room loads (5 days × 8 teaching periods = 40 per room)", () => {
+    // 7 labs/week × 2 batches × 3 periods = 42 lab periods; the section and its teachers stay under 35.
+    const labHeavy = (over: Partial<Course> = {}) => course({ lecturesPerWeek: 1, labSessionsPerWeek: 7, labLength: 3, ...over });
+    const twoDepts = (rooms: CollegeData["rooms"]): CollegeData => ({
+      ...tiny(),
+      departments: [{ id: "cse", name: "CSE" }, { id: "ece", name: "ECE" }],
+      rooms,
+      sections: [...tiny().sections, { id: "s2", name: "ECE A", departmentId: "ece", batches: 1 }],
+      courses: [labHeavy(), course({ id: "c2", sectionId: "s2", subject: "Circuits", teacherId: "t2", labSessionsPerWeek: 1, labLength: 2, batchTeacherIds: null })],
+    });
+    const cr = { id: "r1", name: "Room 1", type: "classroom", departmentId: null } as const;
+
+    it("under capacity: rows but no warnings; one department's pool is the college pool, so it is listed once", () => {
+      const r = checkData(tiny(), settings);
+      expect(r.warnings).toEqual([]);
+      expect(r.rooms).toEqual([
+        { scope: "college", id: "all:classroom", name: "All classrooms", roomType: "classroom", rooms: 1, required: 3, available: 40 },
+        { scope: "college", id: "all:lab", name: "All labs", roomType: "lab", rooms: 1, required: 4, available: 40 },
+      ]);
+      expect(r.lunchReserved).toBe(true);
+    });
+
+    it("a required lab room over capacity warns even when other labs are free", () => {
+      const d = { ...tiny(), rooms: [...tiny().rooms, { id: "lab2", name: "Lab 2", type: "lab", departmentId: null } as const], courses: [labHeavy({ labRoomId: "lab" })] };
+      const r = checkData(d, settings);
+      expect(r.rooms.find((l) => l.scope === "labRoom")).toEqual({ scope: "labRoom", id: "lab", name: "Lab", roomType: "lab", rooms: 1, required: 42, available: 40 });
+      expect(r.warnings).toEqual(['Lab "Lab" is required for 42 periods a week but has only 40.']);
+    });
+
+    it("a department's own pool can be over while the college total is fine", () => {
+      const r = checkData(twoDepts([cr, { id: "l1", name: "CSE Lab", type: "lab", departmentId: "cse" }, { id: "l2", name: "ECE Lab", type: "lab", departmentId: "ece" }]), settings);
+      expect(r.rooms.filter((l) => l.roomType === "lab").map((l) => [l.id, l.required, l.available])).toEqual([
+        ["cse:lab", 42, 40],
+        ["ece:lab", 2, 40],
+        ["all:lab", 44, 80],
+      ]);
+      expect(r.warnings).toEqual(["CSE sections need 42 lab periods a week but the 1 lab they may use has only 40."]);
+    });
+
+    it("shared rooms count towards every department", () => {
+      const r = checkData(twoDepts([cr, { id: "l1", name: "CSE Lab", type: "lab", departmentId: "cse" }, { id: "l2", name: "Central Lab", type: "lab", departmentId: null }]), settings);
+      expect(r.rooms.filter((l) => l.roomType === "lab").map((l) => [l.id, l.rooms, l.available])).toEqual([
+        ["cse:lab", 2, 80],
+        ["ece:lab", 1, 40],
+        ["all:lab", 2, 80],
+      ]);
+      expect(r.warnings).toEqual([]);
+    });
+
+    it("the whole college over capacity for a room type", () => {
+      const d = { ...tiny(), rooms: [cr, { id: "lab", name: "Lab", type: "lab", departmentId: null } as const], courses: [labHeavy()] };
+      expect(checkData(d, settings).warnings).toEqual(["All sections together need 42 lab periods a week but the 1 lab has only 40."]);
+    });
+
+    it("a pool with no rooms is left to the no-eligible-room error", () => {
+      const r = checkData({ ...tiny(), rooms: [cr] }, settings);
+      expect(r.rooms.map((l) => l.id)).toEqual(["all:classroom"]);
+      expect(r.warnings).toEqual([]);
+    });
+  });
 });
