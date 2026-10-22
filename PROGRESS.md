@@ -35,6 +35,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T15] Solve contract widened: `Diagnosis` (`noSlot` / `badLock` / `locks` / `locksLikely`) in `SolveResult.diagnosis` and an optional `UnplacedCause` on each unplaced session, in `web/src/domain/types.ts` and `server/models.py`; no engine fills them yet. `/solve` now omits unset optional fields (`message`, `diagnosis`, `cause`) instead of sending `null` (`cd server && uv run pytest tests/test_models.py`)
 - [T17] Room load warnings in step ②: a required lab room, each department's classroom/lab pool (own + shared rooms) and the whole college per room type, vs rooms × days × teaching periods; `DataReport.rooms` lists them (step ② → Courses: point several lab courses at the same lab room)
 - [T17] Courses tab teacher filter next to the section filter, matching lecture and batch lab teachers (`filterCourses`); step ②'s tab and filters live in a non-persisted store (`features/data/dataView.ts`, `useDataView().open(link)`) so other steps can deep-link (step ② → Courses → Filter by teacher)
+- [T17] `features/generate/causes.ts`: `explainInfeasible(input, diagnosis, report)` turns the server diagnosis plus section/teacher/room loads into ranked causes with fix text and step ②/④ links (proven first, then loads by overrun, then suspected locks); `topCauses` for "+N more", `preflightWarnings` and `GENERAL_SUGGESTIONS` for T18. No UI yet (T18) (`cd web && npx vitest run src/features/generate/causes.test.ts`)
 
 ## Known issues / cuts
 
@@ -48,3 +49,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T05] A browser that already saved the app state keeps its old (sample) week setup until *Start over*.
 - [T04] CP-SAT bugs found by the new tests (strict xfail, details in `docs/cpsat-test-report.md`): a `feasible` (non-optimal) result reports an inflated score (the UI re-scores, so only `/solve` callers see it); a break-period lunch candidate makes H8 stricter than the validator; duplicate course ids give a misleading "infeasible".
 - [chore] The ticket board sees local branches and worktrees only (not other machines' unpushed work); an uncommitted ticket edit is dated by its file time, so a stale `git checkout` can briefly outrank a newer commit elsewhere.
+- [T17] Infeasibility causes aren't shown anywhere until T18 builds step ③'s *can't be built* card. Room load checks are lower bounds: a pool can be under capacity and still impossible (e.g. two sections need the same lab at the only times both are free).
