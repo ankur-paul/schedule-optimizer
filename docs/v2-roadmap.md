@@ -6,7 +6,7 @@ online. Ideas were collected on 22 Oct 2026.
 Each idea is big enough to need its own pass, the same way v1 was built:
 
 1. **Discuss** it and save the notes in `docs/discussions/YYYY-MM-DD-<topic>.md`.
-2. **Plan**: update `PLAN.md` where a v1 decision changes. Several will: §1 says "no database, no auth" and
+2. **Plan**: update `PLAN.md` where a v1 decision changes. Several will, since §1 says "no database, no auth" and
    "teachers/students get read-only views (no login)".
 3. **Ticket** it as T19 onward in `tickets/`, then build.
 
@@ -27,16 +27,16 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 
 Why this order:
 
-- **Auth and roles together.** A role means nothing without knowing who is logged in, and the auth provider choice
-  (for example a hosted one with a database attached) shapes how data is stored in step 3.
+- **Auth and roles together.** Roles need a logged-in user. The auth provider also affects step 3: a hosted one
+  such as Supabase comes with a database.
 - **Consent before storage.** Data must not leave the browser until the user has read and accepted how it is
   stored and used (India's DPDP Act 2023 applies to teacher names and similar personal data).
 - **Help before the agent.** The help pages can double as the agent's knowledge base for answering questions.
 - **The agent after storage.** For the agent to change data and timetables safely it needs to know who is asking,
   what they may change (roles), and a server-side copy of the data it can edit and undo.
 - **Payments after the agent works.** There is nothing to charge for until then.
-- **Walkthrough after the UI is done.** It tours the finished UI (login, consent, agent); built earlier, it would
-  be redone.
+- **Walkthrough after the UI is done.** It tours the finished UI (login, consent, agent). If we build it earlier,
+  we redo it.
 - **Deploy at the end** (decided 22 Oct), once the app is built. To keep that step small, every pass follows the
   checklist below.
 
@@ -48,8 +48,8 @@ The deploy should come down to public URLs, env vars and a Dockerfile. So while 
 
 - No hard-coded URLs, origins, keys or secrets: read them from env vars (`VITE_*` on the web, `os.environ` on the
   server). Secrets never go in the web bundle.
-- Server code keeps no state in memory between requests (sessions, chat history, rate limits go in the database).
-  The solver may run on AWS Lambda.
+- Server code keeps no state in memory between requests (sessions, chat history, rate limits go in the database),
+  because the server may run on AWS Lambda, which starts and stops copies of it as it likes.
 - Prefer hosted services (auth, database) that are already online in development, over local-only stand-ins.
 - Anything that needs a public URL (Razorpay webhooks, OAuth redirect URLs) is listed in the deploy section below
   and tested locally through a tunnel.
@@ -57,20 +57,20 @@ The deploy should come down to public URLs, env vars and a Dockerfile. So while 
 
 ## 1. Authentication and roles
 
-Original list: #1 and #4. An **admin** creates and manages an institute's timetable.
+Original list: #1 and #4. An admin creates and manages an institute's timetable.
 
 Open questions:
 - Which roles beyond admin: editor (can change data), viewer (teachers/students reading timetables)? Do viewers log
   in at all, or keep the v1 no-login read-only views via a share link?
-- Is the unit an **institute** with several members, or one account per person?
+- Is the unit an institute with several members, or one account per person?
 - Login methods: Google, email + password, email magic link?
 - Build it or use a hosted provider (Supabase Auth, Firebase Auth, Clerk, Cognito)?
 - Does the app still work logged out, as v1 does today?
 
 ## 2. Privacy policy and consent
 
-Original list: #9. A policy page and an accept step saying what is stored, where, for how long, and that it is used only to
-generate timetables.
+Original list: #9. A policy page and an accept step saying what is stored, where, for how long, and that it is used
+only to generate timetables.
 
 Open questions:
 - When is it shown: at sign-up, or the first time data is about to be uploaded?
@@ -80,7 +80,8 @@ Open questions:
 
 ## 3. Store institute data online
 
-Original list: #3. Institute details and data (teachers, rooms, courses, timetables) saved online once the user approves.
+Original list: #3. Institute details and data (teachers, rooms, courses, timetables) saved online once the user
+approves.
 
 Open questions:
 - Which database, and does it come with the auth choice?
@@ -91,8 +92,8 @@ Open questions:
 
 ## 4. Help page
 
-Original list: #10. A help page with tutorials, linked from the hard-to-understand parts of the app (the ⓘ tooltips are a
-natural place for "Learn more" links).
+Original list: #10. A help page with tutorials, linked from the hard-to-understand parts of the app. The ⓘ tooltips
+could carry the "Learn more" links.
 
 Open questions:
 - Which sections need it most? Candidates: Excel import, batches and labs, locks, the "can't be built" causes, soft
@@ -102,10 +103,10 @@ Open questions:
 
 ## 5. AI agent
 
-Original list: #2. Answers questions about the app and the user's data, and can make changes to the data and timetables.
+Original list: #2. Answers questions about the app and the user's data, and changes the data and timetables.
 
 Open questions:
-- Which model and provider; the API key stays on the server.
+- Which model and provider? The API key stays on the server.
 - Which actions does it get as tools (add a teacher, move a class, lock a cell, regenerate)? Does every change need
   the user to confirm it first, and can it be undone?
 - What roles may use it, and may it act on everything that role can?
@@ -134,13 +135,12 @@ Open questions:
 
 ## 8. Deploy the solver and the web app
 
-Original list: #6 and #7. Full discussion so far: [`discussions/2026-10-22-deployment.md`](discussions/2026-10-22-deployment.md)
-(AWS Lambda for the solver, Vercel Hobby for the web app, the code changes needed before any deploy). Done last,
-  once the app is built.
+Original list: #6 and #7. Full discussion so far, covering AWS Lambda for the solver, Vercel Hobby for the web app
+and the code changes needed before any deploy: [`discussions/2026-10-22-deployment.md`](discussions/2026-10-22-deployment.md).
 
 Open questions:
-- Cloudflare Pages or Vercel for the web app? Vercel Hobby is **non-commercial only**, which clashes with the paid agent
-  (section 6). Cloudflare Pages' free plan allows commercial use.
+- Cloudflare Pages or Vercel for the web app? Vercel Hobby is for non-commercial use only, which clashes with the paid
+  agent (section 6). Cloudflare Pages' free plan allows commercial use.
 - Where do the new APIs (auth, data, agent) run: the same Lambda as the solver, a separate function, or a hosted
   backend service?
 - Did the Lambda memory limit increase go through?
