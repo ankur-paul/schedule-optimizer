@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from ortools.sat.python import cp_model
 
-from models import Placement, Room, Score, ScoreBreakdown, Session, SolveInput, SolveResult
+from models import Diagnosis, Placement, Room, Score, ScoreBreakdown, Session, SolveInput, SolveResult
 from sessions import expand_sessions
 
 W_SUBJECT_REPEAT = 10
@@ -13,6 +13,7 @@ W_TEACHER_OVERLOAD = 5
 W_SECTION_GAPS = 2
 W_BATCH_IDLE = 3
 MAX_CONSECUTIVE = 3
+PROBE_TIME_LIMIT_SEC = 5.0  # locks probe, on top of the main time limit (the web client's SOLVE_GRACE_MS covers it)
 
 
 def valid_starts(inp: SolveInput, length: int) -> list[int]:
@@ -66,12 +67,125 @@ def solve(inp: SolveInput) -> SolveResult:
     if duplicates:
         return result(status="error", message="Each course needs its own id; used more than once: " + ", ".join(duplicates[:5]))
 
+    # Proven before solving: sessions with no slot at all, locks that are not valid placements.
+    diagnosis = no_slot_diagnosis(inp, sessions) + bad_lock_diagnosis(inp, sessions)
+    if diagnosis:
+        return result(status="infeasible", message=describe(diagnosis), diagnosis=diagnosis)
+
+    m, x = build_model(inp, sessions)
+    solver = new_solver(inp, float(inp.options.time_limit_sec or 30))
+    status = solver.solve(m)
+
+    if status == cp_model.INFEASIBLE:
+        diagnosis = locks_probe(inp, sessions) if inp.locks else []
+        return result(status="infeasible", message=describe(diagnosis), diagnosis=diagnosis)
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        return result(
+            status="error",
+            message=f"CP-SAT found no solution in {solver.parameters.max_time_in_seconds:g}s "
+            f"({solver.status_name(status)}).",
+        )
+
+    placements = [
+        Placement(session_id=sid, day=d, period=p, room_id=r)
+        for (sid, d, p, r), v in x.items()
+        if solver.value(v)
+    ]
+    order = {s.id: i for i, s in enumerate(sessions)}
+    placements.sort(key=lambda pl: order[pl.session_id])
+
+    # Scored from the placements, not read back from the penalty variables: those are only bounded from below, so
+    # in a solution found before the search finishes they can be higher than the placements deserve.
+    return result(
+        status="optimal" if status == cp_model.OPTIMAL else "feasible",
+        placements=placements,
+        score=score_placements(inp, {s.id: s for s in sessions}, placements),
+    )
+
+
+def new_solver(inp: SolveInput, time_limit_sec: float) -> cp_model.CpSolver:
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit_sec
+    solver.parameters.num_workers = 8
+    if inp.options.seed is not None:
+        solver.parameters.random_seed = inp.options.seed
+    solver.parameters.cp_model_probing_level = 0  # probing costs ~5s of presolve on the sample for no gain
+    return solver
+
+
+def no_slot_diagnosis(inp: SolveInput, sessions: list[Session]) -> list[Diagnosis]:
+    """Sessions with no (day, start, room) at all. A session with neither a room nor a start is in both entries."""
+    no_room = [s.id for s in sessions if not eligible_rooms(inp, s)]
+    no_start = [s.id for s in sessions if not inp.settings.days or not valid_starts(inp, s.length)]
+    return [
+        Diagnosis(kind="noSlot", ids=ids, detail=detail)
+        for detail, ids in (("noRoom", no_room), ("noStart", no_start))
+        if ids
+    ]
+
+
+def bad_lock_diagnosis(inp: SolveInput, sessions: list[Session]) -> list[Diagnosis]:
+    """Locks that are not valid placements: unknown session, day out of range, bad start or ineligible room."""
+    by_id = {s.id: s for s in sessions}
+    bad: list[str] = []
+    for lock in inp.locks:
+        s = by_id.get(lock.session_id)
+        ok = (
+            s is not None
+            and 0 <= lock.day < len(inp.settings.days)
+            and lock.period in valid_starts(inp, s.length)
+            and any(r.id == lock.room_id for r in eligible_rooms(inp, s))
+        )
+        if not ok and lock.session_id not in bad:
+            bad.append(lock.session_id)
+    return [Diagnosis(kind="badLock", ids=bad)] if bad else []
+
+
+def locks_probe(inp: SolveInput, sessions: list[Session]) -> list[Diagnosis]:
+    """After an infeasible solve with locks: solve again without them, feasibility only, to see if they are the cause."""
+    m, _ = build_model(inp, sessions, use_locks=False, objective=False)
+    status = new_solver(inp, PROBE_TIME_LIMIT_SEC).solve(m)
+    if status == cp_model.INFEASIBLE:
+        return []  # infeasible without the locks too, so they are not the cause
+    locked = list(dict.fromkeys(lock.session_id for lock in inp.locks))
+    kind = "locks" if status in (cp_model.OPTIMAL, cp_model.FEASIBLE) else "locksLikely"
+    return [Diagnosis(kind=kind, ids=locked)]
+
+
+def describe(diagnosis: list[Diagnosis]) -> str:
+    """Human fallback for `message`: counts only, the UI names the sessions from `diagnosis`."""
+    parts = []
+    for d in diagnosis:
+        n = len(d.ids)
+        if d.kind == "noSlot" and d.detail == "noRoom":
+            parts.append(f"{n} session(s) cannot be placed anywhere: no eligible room.")
+        elif d.kind == "noSlot":
+            parts.append(f"{n} session(s) cannot be placed anywhere: not enough consecutive teaching periods.")
+        elif d.kind == "badLock":
+            parts.append(f"{n} locked cell(s) are not valid placements (unknown session, bad slot or ineligible room).")
+        elif d.kind == "locks":
+            parts.append(f"The {n} locked session(s) make it impossible; without them a timetable exists.")
+        else:
+            parts.append(f"The {n} locked session(s) probably make it impossible (the check without them ran out of time).")
+    return " ".join(parts) or (
+        "No clash-free timetable exists for this data (check teacher/section/room loads, lunch periods and locks)."
+    )
+
+
+def build_model(
+    inp: SolveInput, sessions: list[Session], use_locks: bool = True, objective: bool = True
+) -> tuple[cp_model.CpModel, dict[tuple[str, int, int, str], cp_model.IntVar]]:
+    """CP-SAT model for H1–H8 (plus S1–S4 when `objective`); returns it with the x[session, day, start, room] vars.
+
+    Assumes every session has a slot and every lock is valid (see no_slot_diagnosis / bad_lock_diagnosis).
+    """
     settings = inp.settings
     days = range(len(settings.days))
     teaching = [p.id for p in settings.periods if p.kind == "teaching"]
     lunch = h8_lunch_periods(inp)
     sections = {s.id: s for s in inp.sections}
     by_id = {s.id: s for s in sessions}
+    locks = inp.locks if use_locks else []
 
     m = cp_model.CpModel()
 
@@ -81,14 +195,9 @@ def solve(inp: SolveInput) -> SolveResult:
     y_day: dict[tuple[str, int], list] = defaultdict(list)  # (session, d) -> y vars
     occ: dict[tuple[str, int, int], list] = defaultdict(list)  # (session, d, t) -> y vars covering t
     room_occ: dict[tuple[str, int, int], list] = defaultdict(list)  # (room, d, t) -> x vars covering t
-    no_slot: list[str] = []
     for s in sessions:
         starts = valid_starts(inp, s.length)
         rooms = eligible_rooms(inp, s)
-        if not starts or not rooms:
-            why = "no eligible room" if not rooms else f"no {s.length} consecutive teaching periods"
-            no_slot.append(f"{s.id} ({why})")
-            continue
         for d in days:
             for p in starts:
                 xs = []
@@ -105,13 +214,6 @@ def solve(inp: SolveInput) -> SolveResult:
                 for k in range(s.length):
                     occ[s.id, d, p + k].append(yv)
 
-    if no_slot:
-        return result(
-            status="infeasible",
-            message=f"{len(no_slot)} session(s) cannot be placed anywhere: " + ", ".join(no_slot[:5])
-            + ("…" if len(no_slot) > 5 else ""),
-        )
-
     # --- H5: every session placed exactly once.
     starts_of: dict[str, list] = defaultdict(list)
     for (sid, _d, _p), v in y.items():
@@ -121,7 +223,7 @@ def solve(inp: SolveInput) -> SolveResult:
 
     # Symmetry breaking: interchangeable sessions (e.g. L1..L3 of a course) take slots in increasing order.
     # Skipped for groups with a locked session, since the lock may pin a later copy to an early slot.
-    locked = {lock.session_id for lock in inp.locks}
+    locked = {lock.session_id for lock in locks}
     n_periods = len(settings.periods)
     groups: dict[tuple, list[str]] = defaultdict(list)
     for s in sessions:
@@ -135,19 +237,8 @@ def solve(inp: SolveInput) -> SolveResult:
             m.add(a < b)
 
     # --- Locks.
-    bad_locks = []
-    for lock in inp.locks:
-        v = x.get((lock.session_id, lock.day, lock.period, lock.room_id))
-        if v is None:
-            bad_locks.append(lock.session_id)
-        else:
-            m.add(v == 1)
-    if bad_locks:
-        return result(
-            status="infeasible",
-            message="Locked cell(s) are not valid placements (unknown session, bad slot or ineligible room): "
-            + ", ".join(bad_locks[:5]),
-        )
+    for lock in locks:
+        m.add(x[lock.session_id, lock.day, lock.period, lock.room_id] == 1)
 
     def occ_vars(sids: list[str], d: int, t: int) -> list:
         return [v for sid in sids for v in occ.get((sid, d, t), [])]
@@ -177,6 +268,8 @@ def solve(inp: SolveInput) -> SolveResult:
                 at_most(busy[t], 1)
             if lunch:
                 at_most([v for t in lunch for v in busy[t]], len(lunch) - 1)
+            if not objective:
+                continue
             for run in runs:
                 for i in range(len(run) - MAX_CONSECUTIVE):
                     window = [v for t in run[i : i + MAX_CONSECUTIVE + 1] for v in busy[t]]
@@ -210,7 +303,7 @@ def solve(inp: SolveInput) -> SolveResult:
                 m.add(b_t <= sum(covering))
                 busy[t] = b_t
 
-                if batches > 1:
+                if objective and batches > 1:
                     batch_vars = [v for b in per_batch.values() for sid in b for v in occ.get((sid, d, t), [])]
                     if batch_vars:
                         lab_active = m.new_bool_var("")
@@ -222,6 +315,8 @@ def solve(inp: SolveInput) -> SolveResult:
                             idle_terms.append(idle)
             if lunch:
                 m.add(sum(busy[t] for t in lunch) <= len(lunch) - 1)
+            if not objective:
+                continue
 
             # S3: gap at t if idle with a class before and after (lunch candidates don't count).
             before, after = {}, {}
@@ -245,6 +340,9 @@ def solve(inp: SolveInput) -> SolveResult:
                 m.add(gap >= before[t] + after[t] - busy[t] - 1)
                 gap_terms.append(gap)
 
+    if not objective:
+        return m, x
+
     # --- S1: more than one lecture of a course on the same day.
     repeat_terms = []
     lectures_of: dict[str, list[str]] = defaultdict(list)
@@ -265,43 +363,7 @@ def solve(inp: SolveInput) -> SolveResult:
         + W_SECTION_GAPS * sum(gap_terms)
         + W_BATCH_IDLE * sum(idle_terms)
     )
-
-    solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = float(inp.options.time_limit_sec or 30)
-    solver.parameters.num_workers = 8
-    if inp.options.seed is not None:
-        solver.parameters.random_seed = inp.options.seed
-    solver.parameters.cp_model_probing_level = 0  # probing costs ~5s of presolve on the sample for no gain
-    status = solver.solve(m)
-
-    if status == cp_model.INFEASIBLE:
-        return result(
-            status="infeasible",
-            message="No clash-free timetable exists for this data (check teacher/section/room loads, "
-            "lunch periods and locks).",
-        )
-    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        return result(
-            status="error",
-            message=f"CP-SAT found no solution in {solver.parameters.max_time_in_seconds:g}s "
-            f"({solver.status_name(status)}).",
-        )
-
-    placements = [
-        Placement(session_id=sid, day=d, period=p, room_id=r)
-        for (sid, d, p, r), v in x.items()
-        if solver.value(v)
-    ]
-    order = {sid: i for i, sid in enumerate(by_id)}
-    placements.sort(key=lambda pl: order[pl.session_id])
-
-    # Scored from the placements, not read back from the penalty variables: those are only bounded from below, so
-    # in a solution found before the search finishes they can be higher than the placements deserve.
-    return result(
-        status="optimal" if status == cp_model.OPTIMAL else "feasible",
-        placements=placements,
-        score=score_placements(inp, by_id, placements),
-    )
+    return m, x
 
 
 def duplicate_ids(ids: list[str]) -> list[str]:

@@ -30,6 +30,23 @@ def test_solve_infeasible_is_200():
     assert res.json()["status"] == "infeasible"
 
 
+def test_infeasible_response_has_camelcase_diagnosis():
+    lock = {"sessionId": "c1:L1", "day": 0, "period": 0, "roomId": "nowhere"}
+    body = tiny(rooms=[], courses=[course("c1", lectures=1), course("c2", lectures=1)], locks=[lock]).model_dump()
+    data = client.post("/solve", json=body).json()
+    assert data["status"] == "infeasible"
+    assert data["diagnosis"] == [
+        {"kind": "noSlot", "ids": ["c1:L1", "c2:L1"], "detail": "noRoom"},
+        {"kind": "badLock", "ids": ["c1:L1"]},  # no detail key: None fields are dropped
+    ]
+
+
+def test_infeasible_with_no_cause_found_sends_an_empty_diagnosis():
+    body = tiny(periods="T", courses=[course("c1", lectures=2)]).model_dump()
+    data = client.post("/solve", json=body).json()
+    assert data["status"] == "infeasible" and data["diagnosis"] == []
+
+
 def test_solve_rejects_malformed_body():
     assert client.post("/solve", json={"settings": {}}).status_code == 422
 

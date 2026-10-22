@@ -10,8 +10,11 @@ export type EngineMode = "auto" | "cpsat" | "heuristic";
 
 export const SOLVER_URL: string = import.meta.env?.VITE_SOLVER_URL ?? "http://localhost:8000";
 export const HEALTH_TIMEOUT_MS = 1000;
-/** Extra time on top of the CP-SAT limit for model building and the network round trip. */
-export const SOLVE_GRACE_MS = 5000;
+/**
+ * Extra time on top of the CP-SAT limit: model building, the network round trip, and the server's locks probe (up to
+ * 5 s more when the data with locks is infeasible). Always 10 s, locks or not, so the timeout is one number to explain.
+ */
+export const SOLVE_GRACE_MS = 10000;
 /** The heuristic levels off within a few seconds and runs until its limit, so don't give it the full CP-SAT budget. */
 export const HEURISTIC_MAX_MS = 5000;
 

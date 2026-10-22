@@ -1,5 +1,5 @@
 # T16 — Server infeasibility causes + locks probe
-**Status:** TODO
+**Status:** DONE
 **Lane:** B · **Prereqs:** T15 · **Branch:** t16-server-causes
 
 ## Goal
@@ -24,6 +24,9 @@ redesign (T15 → T16 / T17 → T18; PLAN.md §1 "Engines" / "Infeasible input")
   rather than duplicating constraints.
 - The probe's 5 s is on top of the main time limit; the client's request timeout (`SOLVE_GRACE_MS`) must cover it.
   Raise the grace to 10 s in `solveClient.ts` when locks are sent (or always; note which in the ticket).
+  **Done: always 10 s** (`SOLVE_GRACE_MS`), so the timeout message has one number whether or not locks were sent.
+- Done as built: `noSlot` and `badLock` are checked together before solving, so one result can carry both. A session
+  with neither a room nor a start is listed under both `noRoom` and `noStart`; zero days counts as `noStart`.
 - Sessions are named by id here; the client (T17) turns ids into "Data Structures lab, CSE-A B2" etc.
 
 ## Tests
@@ -34,5 +37,5 @@ redesign (T15 → T16 / T17 → T18; PLAN.md §1 "Engines" / "Infeasible input")
 - `test_api.py`: infeasible response JSON has camelCase `diagnosis`.
 
 ## Done when
-- [ ] Server fills `diagnosis` for every `infeasible` path; tests above green
-- [ ] Committed: `T16: structured infeasibility causes + locks probe`
+- [x] Server fills `diagnosis` for every `infeasible` path; tests above green
+- [x] Committed: `T16: structured infeasibility causes + locks probe`

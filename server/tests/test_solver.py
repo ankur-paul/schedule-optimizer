@@ -97,7 +97,8 @@ def test_session_without_eligible_room_reports_which():
     other_dept_room = {**CLASSROOM, "departmentId": "d2"}
     res = solve(tiny(rooms=[other_dept_room], courses=[course("c1", lectures=1)]))
     assert res.status == "infeasible"
-    assert "c1:L1" in res.message and "no eligible room" in res.message
+    assert "no eligible room" in res.message
+    assert [d.model_dump() for d in res.diagnosis] == [{"kind": "noSlot", "ids": ["c1:L1"], "detail": "noRoom"}]
 
 
 def test_lab_longer_than_any_run_is_infeasible():
@@ -213,7 +214,8 @@ def test_invalid_lock_is_infeasible():
     ):
         res = solve(tiny(periods="TBT", courses=[course("c1", lectures=1)], locks=[lock]))
         assert res.status == "infeasible", lock
-        assert "Locked" in res.message
+        assert "not valid placements" in res.message
+        assert [(d.kind, d.ids) for d in res.diagnosis] == [("badLock", [lock["sessionId"]])]
 
 
 def test_clashing_locks_are_infeasible():
