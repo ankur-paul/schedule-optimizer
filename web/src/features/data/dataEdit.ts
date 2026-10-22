@@ -51,3 +51,18 @@ export function setBatchTeacher(course: Course, batches: number, b: number, teac
 export function labRoomsFor(rooms: Room[], section: Section | undefined): Room[] {
   return rooms.filter((r) => r.type === "lab" && (r.departmentId === null || r.departmentId === section?.departmentId));
 }
+
+/** "" = no filter on that field. */
+export interface CourseFilter {
+  sectionId: Id;
+  teacherId: Id;
+}
+
+/** Courses of the filtered section and/or taught by the filtered teacher, as lecture teacher or any batch's lab teacher. */
+export function filterCourses(courses: Course[], filter: CourseFilter): Course[] {
+  return courses.filter(
+    (c) =>
+      (!filter.sectionId || c.sectionId === filter.sectionId) &&
+      (!filter.teacherId || c.teacherId === filter.teacherId || !!c.batchTeacherIds?.includes(filter.teacherId)),
+  );
+}

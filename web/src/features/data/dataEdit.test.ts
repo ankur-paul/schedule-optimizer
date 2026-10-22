@@ -3,7 +3,7 @@ import { sampleCollege } from "@/domain/sampleCollege";
 import { useAppStore } from "@/store/useAppStore";
 import type { Course } from "@/domain/types";
 import type { CollegeData } from "./excel";
-import { labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
+import { filterCourses, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
 
 const data = (): CollegeData => ({
   departments: [
@@ -70,6 +70,30 @@ describe("data edit helpers", () => {
     const d = data();
     expect(labRoomsFor(d.rooms, d.sections[0]).map((r) => r.id)).toEqual(["lab-cse", "lab-shared"]);
     expect(labRoomsFor(d.rooms, undefined).map((r) => r.id)).toEqual(["lab-shared"]);
+  });
+});
+
+describe("filterCourses", () => {
+  const ids = (f: Partial<{ sectionId: string; teacherId: string }>) =>
+    filterCourses(data().courses, { sectionId: "", teacherId: "", ...f }).map((c) => c.id);
+
+  it("no filter keeps every course", () => {
+    expect(ids({})).toEqual(["c1", "c2"]);
+  });
+
+  it("by section", () => {
+    expect(ids({ sectionId: "s2" })).toEqual(["c2"]);
+  });
+
+  it("by teacher matches the lecture teacher and batch lab teachers", () => {
+    expect(ids({ teacherId: "t1" })).toEqual(["c1", "c2"]);
+    expect(ids({ teacherId: "t2" })).toEqual(["c1"]); // only takes batch 2's lab
+    expect(ids({ teacherId: "nobody" })).toEqual([]);
+  });
+
+  it("section and teacher together", () => {
+    expect(ids({ sectionId: "s2", teacherId: "t2" })).toEqual([]);
+    expect(ids({ sectionId: "s1", teacherId: "t2" })).toEqual(["c1"]);
   });
 });
 

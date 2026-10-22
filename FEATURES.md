@@ -18,10 +18,10 @@ Changing any setting clears the current timetable and its locks, because placeme
 - **Sample college.** One click loads 3 departments, 9 sections, 25 teachers and the courses behind 210 sessions.
 - **Excel template and import.** Download a workbook with one sheet per table (Departments, Teachers, Rooms, Sections, Courses), fill it in, and upload it. A CSV per sheet works too. An import with any error is rejected as a whole and lists the problems by row, e.g. `Courses row 7: teacher "Sharma" not found`. A valid import asks before it replaces the current data.
 - **Export.** Download the current data as `.xlsx` in the same template format.
-- **Edit tables.** Tabs for Courses, Sections, Teachers, Rooms and Departments, with add, edit and delete.
+- **Edit tables.** Tabs for Courses, Sections, Teachers, Rooms and Departments, with add, edit and delete. Courses can be filtered by section and by teacher (a teacher's courses include those where they only take one batch's lab); the filters reset on reload.
 - **Rooms.** A room is a classroom or a lab. A room with no department is shared by everyone; a room with a department serves only that department. A lab course can require one specific lab.
 - **Lab batches.** A section can split into batches. Each batch gets its own lab sessions, batches can be in different labs at the same time, and each batch can have its own lab teacher.
-- **Data checks.** The summary shows counts, load bars for the busiest sections, and two kinds of problems. Missing references, a session with no eligible room, or a lab longer than any run of consecutive teaching periods block **Next**. A section or teacher booked for more periods than the week has gives a warning.
+- **Data checks.** The summary shows counts, load bars for the busiest sections, and two kinds of problems. Missing references, a session with no eligible room, or a lab longer than any run of consecutive teaching periods block **Next**. A section or teacher booked for more periods than the week has gives a warning, and so does a room pool booked beyond its periods: a lab that courses require, the classrooms or labs one department may use (its own plus shared ones), or all rooms of a type.
 
 ## ③ Generate
 

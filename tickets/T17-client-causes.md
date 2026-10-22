@@ -1,5 +1,5 @@
 # T17 — Room load checks + explaining causes
-**Status:** TODO
+**Status:** DONE
 **Lane:** A · **Prereqs:** T15 · **Branch:** t17-causes
 
 ## Goal
@@ -30,8 +30,11 @@ another teacher [Edit courses]". Part of the exact-first redesign (T15 → T16 /
 - Step ② **teacher filter** on the Courses tab (next to the section filter), so a teacher cause can link to
   "Courses taught by Prof. Verma". Filter state must be settable from outside the tab (T18 deep-links into it):
   keep it in the store (not persisted) or pass it in; pick one and note it.
+  **Picked:** a separate non-persisted zustand store, `features/data/dataView.ts` (`useDataView`), holding step ②'s
+  tab and both Courses filters. T18 opens a fix link with `setStep(1)` + `useDataView.getState().open(link)`.
 - Pre-flight: export `preflightWarnings(report)` (section, teacher and room warnings) for T18's
-  "Before you start" panel.
+  "Before you start" panel. **Done as:** it returns `Cause[]` (text + fix + link, largest overrun first), the same
+  load causes `explainInfeasible` ranks, so the panel can link to fixes too.
 
 ## Tests
 - `dataChecks.test.ts`: required lab room over capacity; department pool over while the college total is fine;
@@ -41,6 +44,6 @@ another teacher [Edit courses]". Part of the exact-first redesign (T15 → T16 /
 - `dataEdit` teacher filter: filters by lecture teacher and batch teachers.
 
 ## Done when
-- [ ] Room load warnings show in step ② (click through with the sample + one over-booked lab room)
-- [ ] `causes.ts` fully tested; teacher filter works in step ②
-- [ ] Committed: `T17: room load checks, ranked infeasibility causes, teacher filter`
+- [x] Room load warnings show in step ② (click through with the sample + one over-booked lab room)
+- [x] `causes.ts` fully tested; teacher filter works in step ②
+- [x] Committed: `T17: room load checks, ranked infeasibility causes, teacher filter`
