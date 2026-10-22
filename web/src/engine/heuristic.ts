@@ -2,7 +2,7 @@ import { eligibleRooms, validStarts } from "@/domain/eligibility";
 import { sessionLabel } from "@/domain/grid";
 import { score, WEIGHTS } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
-import type { Id, Placement, Session, SolveInput, SolveResult } from "@/domain/types";
+import type { Id, Placement, Session, SolveInput, SolveResult, UnplacedCause } from "@/domain/types";
 
 export interface HeuristicOptions { timeLimitMs: number; seed?: number }
 
@@ -43,7 +43,7 @@ function rng(seed: number): () => number {
   };
 }
 
-type Blocker = "teacher" | "section" | "room" | "lunch";
+type Blocker = Extract<UnplacedCause, "teacher" | "section" | "room" | "lunch">;
 const UNPLACED = -1;
 
 /** Mutable occupancy state over flat typed arrays; slot = day * P + period. Exported for tests. */
@@ -461,7 +461,7 @@ export class Solver {
     const unplaced: SolveResult["unplaced"] = [];
     this.sessions.forEach((s, i) => {
       if (this.locked[i]) return;
-      if (this.day[i] === UNPLACED) unplaced.push({ sessionId: s.id, reason: this.whyUnplaced(i) });
+      if (this.day[i] === UNPLACED) unplaced.push({ sessionId: s.id, ...this.whyUnplaced(i) });
       else placements.push({ sessionId: s.id, day: this.day[i], period: this.start[i], roomId: this.input.rooms[this.room[i]].id });
     });
     return {
@@ -476,16 +476,17 @@ export class Solver {
   }
 
   /** Explain why i has no feasible option: tally what blocks each (day, start) and report the most common. */
-  private whyUnplaced(i: number): string {
+  private whyUnplaced(i: number): { reason: string; cause: UnplacedCause } {
     const s = this.sessions[i];
     const label = sessionLabel(this.input, s);
     const roomDesc = s.fixedRoomId
       ? (this.input.rooms.find((r) => r.id === s.fixedRoomId)?.name ?? s.fixedRoomId)
       : `an eligible ${s.roomType}`;
     if (this.rooms[i].length === 0) {
-      return `${label}: no ${s.roomType} room it may use (${s.fixedRoomId ? `required room ${roomDesc} missing or not allowed` : "none shared or owned by its department"})`;
+      const why = s.fixedRoomId ? `required room ${roomDesc} missing or not allowed` : "none shared or owned by its department";
+      return { reason: `${label}: no ${s.roomType} room it may use (${why})`, cause: "noRoom" };
     }
-    if (this.starts[i].length === 0) return `${label}: no day has ${s.length} consecutive teaching periods`;
+    if (this.starts[i].length === 0) return { reason: `${label}: no day has ${s.length} consecutive teaching periods`, cause: "noStart" };
     const tally: Record<Blocker, number> = { teacher: 0, section: 0, room: 0, lunch: 0 };
     for (let d = 0; d < this.D; d++) {
       for (const st of this.starts[i]) {
@@ -497,12 +498,12 @@ export class Solver {
     const teacher = this.teacherNames[this.sTeacher[i]];
     const section = this.sectionNames[this.sSection[i]];
     const slots = s.length > 1 ? `${s.length} consecutive periods` : "period";
-    const cause = {
+    const mostly = {
       teacher: `teacher ${teacher} is busy`,
       section: `section ${section} is busy`,
       room: `${roomDesc} is taken`,
       lunch: `it would take the last free lunch period`,
     }[top];
-    return `${label}: no ${slots} where teacher ${teacher}, ${section} and ${roomDesc} are all free (mostly: ${cause})`;
+    return { reason: `${label}: no ${slots} where teacher ${teacher}, ${section} and ${roomDesc} are all free (mostly: ${mostly})`, cause: top };
   }
 }

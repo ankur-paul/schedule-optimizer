@@ -1,5 +1,5 @@
 # T18 — Exact-first Generate UI
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main · **Prereqs:** T16, T17 · **Branch:** t18-exact-first
 
 ## Goal
