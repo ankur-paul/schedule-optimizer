@@ -1,16 +1,15 @@
-import type { SolveInput, SolveResult } from "@/domain/types";
+import type { SolveInput, SolveResult, UnplacedCause } from "@/domain/types";
 import type { ValidationResult } from "@/domain/validator";
-import type { EngineMode } from "@/engine/solveClient";
+import type { SolveFailure } from "@/engine/solveClient";
 import type { FooterNote } from "@/features/footer";
 import type { AppData } from "@/store/useAppStore";
 
-export const ENGINE_OPTIONS: { value: EngineMode; title: string; description: string }[] = [
-  { value: "auto", title: "Auto (recommended)", description: "Exact solver when the server is running, otherwise the in-browser engine." },
-  { value: "cpsat", title: "Exact – CP-SAT", description: "Best possible timetable. Needs the Python solver server." },
-  { value: "heuristic", title: "Fast – in-browser", description: "Good timetable in a few seconds. Works offline." },
-];
+export const TIME_LIMIT = { min: 5, max: 120, step: 5, default: 20 } as const;
 
-export const TIME_LIMIT = { min: 5, max: 60, step: 5, default: 20 } as const;
+/** "Try longer" / "Try again with": double the limit, up to the max; null when already at the max. */
+export function nextTimeLimit(t: number): number | null {
+  return t >= TIME_LIMIT.max ? null : Math.min(2 * t, TIME_LIMIT.max);
+}
 
 /** What the engines get: the college data, the current locks, and run options. */
 export function buildSolveInput(data: AppData, options: SolveInput["options"]): SolveInput {
@@ -30,29 +29,144 @@ export function generateBlockers(data: Pick<AppData, "courses" | "rooms" | "teac
   return out;
 }
 
-export function engineLabel(result: Pick<SolveResult, "engine" | "status">): string {
-  const name = result.engine === "cpsat" ? "CP-SAT" : "in-browser heuristic";
-  return `${name} (${result.status})`;
+/** "Exact solver" or "Quick draft": the words a coordinator reads (CP-SAT only appears in ⓘ tooltips). */
+export function engineLabel(result: Pick<SolveResult, "engine">): string {
+  return result.engine === "cpsat" ? "Exact solver" : "Quick draft";
 }
 
-/** The verification badge text, e.g. "✓ Verified: 0 clashes · engine: CP-SAT (optimal)". */
-export function badgeText(result: Pick<SolveResult, "engine" | "status">, validation: ValidationResult): string {
+/** The verification badge, e.g. "✓ Timetable ready · 0 clashes (independently checked)". */
+export function badgeText(result: Pick<SolveResult, "unplaced">, validation: ValidationResult): string {
   const n = validation.violations.length;
-  const head = n === 0 ? "✓ Verified: 0 clashes" : `✗ ${n} rule violation${n === 1 ? "" : "s"} found`;
-  return `${head} · engine: ${engineLabel(result)}`;
+  if (n > 0) return `✗ ${n} rule violation${n === 1 ? "" : "s"} found`;
+  const u = result.unplaced.length;
+  if (u > 0) return `Partial: ${classes(u)} not placed · 0 clashes among placed classes`;
+  return "✓ Timetable ready · 0 clashes (independently checked)";
 }
 
-/** False for an engine error that produced nothing; such a result must not replace the stored one. */
-export function hasTimetable(result: Pick<SolveResult, "status" | "placements">): boolean {
-  return !(result.status === "error" && result.placements.length === 0);
+export const classes = (n: number) => (n === 1 ? "1 class" : `${n} classes`);
+
+/** Why the stored timetable is a quick draft: the solver was offline, proved it impossible, or couldn't finish. */
+export type DraftReason = "offline" | "impossible" | "couldntFinish";
+
+/** The last run, beyond the stored result (not persisted; see `useRunOutcome`). */
+export interface RunOutcome {
+  /** The last Generate's failure and the input it ran on. Kept after a partial timetable for "Back to the reasons". */
+  failed?: { failure: SolveFailure; input: SolveInput };
+  /** True: step ③ shows the failure card; false: the stored result. */
+  showFailure: boolean;
+  /** Set when the stored result is a quick draft made in this session. */
+  draft?: DraftReason;
+  /** The exact solver's time limit for the stored result, for "best found in 20 s". */
+  limitSec?: number;
 }
 
-/** What the last run said, beyond the stored result: why it fell back, or why nothing was produced. */
-/** How a run ended, for the UI. `cancelled`: the user stopped it and the previous result is untouched. */
-export interface Notice { fallbackReason?: string; error?: string; cancelled?: boolean }
+type CouldntFinishKind = Exclude<SolveFailure["kind"], "infeasible">;
 
-export function outcomeNotice(result: Pick<SolveResult, "status" | "placements" | "message">, fallbackReason?: string): Notice {
-  return hasTimetable(result) ? { fallbackReason } : { error: result.message ?? "The engine failed." };
+/** What step ③ shows below the Generate card. */
+export type OutcomeView =
+  | { state: "idle" }
+  | { state: "running"; draft: boolean }
+  | { state: "ready"; quality: "optimal" | "feasible" | "draft"; limitSec: number; tryLonger: number | null }
+  | { state: "impossible"; hasTimetable: boolean }
+  | { state: "couldntFinish"; kind: CouldntFinishKind; limitSec: number; retryWith: number | null; hasTimetable: boolean }
+  | { state: "partial"; unplaced: number; total: number; from: DraftReason | null; backToReasons: boolean };
+
+/** Step ③: the outcome card, whether the solver is offline (banner), and what the main button does. */
+export type GenerateView = OutcomeView & { offline: boolean; button: "generate" | "draft" };
+
+export interface GenerateViewInput {
+  /** `checking` counts as online: the button shouldn't flip to "quick draft" while /health is in flight. */
+  server: "checking" | "online" | "offline";
+  running: "exact" | "draft" | null;
+  outcome: RunOutcome;
+  result: Pick<SolveResult, "engine" | "status" | "placements" | "unplaced"> | null;
+  /** The current time limit setting. */
+  timeLimitSec: number;
+}
+
+/** Pick step ③'s state. A failure shows until the next run, over any older timetable, which stays stored. */
+export function generateView({ server, running, outcome, result, timeLimitSec }: GenerateViewInput): GenerateView {
+  const offline = server === "offline";
+  const base = { offline, button: offline ? ("draft" as const) : ("generate" as const) };
+  if (running) return { ...base, state: "running", draft: running === "draft" };
+  const { failed } = outcome;
+  if (failed && (outcome.showFailure || !result)) {
+    const hasTimetable = result !== null;
+    const { kind } = failed.failure;
+    if (kind === "infeasible") return { ...base, state: "impossible", hasTimetable };
+    const limitSec = failed.input.options.timeLimitSec;
+    const retryWith = kind === "timeout" ? nextTimeLimit(limitSec) : null;
+    return { ...base, state: "couldntFinish", kind, limitSec, retryWith, hasTimetable };
+  }
+  if (!result) return { ...base, state: "idle" };
+  if (result.unplaced.length > 0) {
+    return {
+      ...base,
+      state: "partial",
+      unplaced: result.unplaced.length,
+      total: result.placements.length + result.unplaced.length,
+      from: outcome.draft ?? null,
+      backToReasons: failed?.failure.kind === "infeasible",
+    };
+  }
+  const limitSec = outcome.limitSec ?? timeLimitSec;
+  if (result.engine !== "cpsat") return { ...base, state: "ready", quality: "draft", limitSec, tryLonger: null };
+  const quality = result.status === "optimal" ? "optimal" : "feasible";
+  return { ...base, state: "ready", quality, limitSec, tryLonger: quality === "feasible" ? nextTimeLimit(limitSec) : null };
+}
+
+/** How a partial timetable was made, for the amber card. */
+export function partialHow(from: DraftReason | null): string {
+  switch (from) {
+    case "impossible":
+      return "Made as a quick draft in your browser, because the full timetable can't be built.";
+    case "couldntFinish":
+      return "Made as a quick draft in your browser, because the exact solver couldn't finish.";
+    case "offline":
+      return "Made as a quick draft in your browser, because the exact solver was offline.";
+    case null:
+      return "Made as a quick draft in your browser.";
+  }
+}
+
+/** Headline and explanation for the "Couldn't finish" card. */
+export function couldntFinishText(kind: CouldntFinishKind, limitSec: number): { title: string; body: string } {
+  switch (kind) {
+    case "timeout":
+      return { title: "No timetable found in time", body: `The exact solver didn't find a timetable within ${limitSec} s. More time may be enough.` };
+    case "unreachable":
+      return { title: "Couldn't reach the exact solver", body: "The solver service didn't answer. It may have stopped." };
+    case "serverError":
+      return { title: "The exact solver failed", body: "Something went wrong on the solver service." };
+  }
+}
+
+const CAUSE_GROUPS: Record<UnplacedCause | "other", string> = {
+  noRoom: "No room they may use",
+  noStart: "Lab longer than any run of teaching periods",
+  teacher: "Teacher already busy",
+  section: "Section already busy",
+  room: "No free room at those times",
+  lunch: "Would take the last free lunch period",
+  other: "Other reasons",
+};
+
+/** Unplaced classes grouped by cause, biggest group first, for the partial card. */
+export function unplacedGroups<U extends { cause?: UnplacedCause }>(unplaced: U[]): { cause: UnplacedCause | "other"; label: string; items: U[] }[] {
+  const groups = new Map<UnplacedCause | "other", U[]>();
+  for (const u of unplaced) {
+    const key = u.cause ?? "other";
+    groups.set(key, [...(groups.get(key) ?? []), u]);
+  }
+  return [...groups]
+    .map(([cause, items]) => ({ cause, label: CAUSE_GROUPS[cause], items }))
+    .sort((a, b) => b.items.length - a.items.length);
+}
+
+/** Step ④'s toast when Regenerate failed; the timetable is kept. */
+export function regenerateFailedText(failure: SolveFailure, locks: number): string {
+  if (failure.kind === "infeasible") return locks > 0 ? "Can't be built with these locks." : "This timetable can't be built.";
+  return failure.kind === "timeout" ? "Couldn't finish in time." : "Couldn't reach the exact solver.";
 }
 
 /** One-line toast after Regenerate in step ④, e.g. "New timetable: 210 sessions placed · score 18". */

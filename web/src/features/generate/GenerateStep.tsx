@@ -1,139 +1,150 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, CircleX, Loader2, Lock, RefreshCw, Sparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SCORE_ROWS, scoreCount } from "@/domain/stats";
+import type { SolveResult } from "@/domain/types";
 import { validate } from "@/domain/validator";
-import { checkServer } from "@/engine/solveClient";
+import { useCollegeData } from "@/features/data/collegeData";
+import { checkData } from "@/features/data/dataChecks";
+import { useDataView } from "@/features/data/dataView";
 import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
-import { badgeText, ENGINE_OPTIONS, generateBlockers, TIME_LIMIT, type Notice } from "./generate";
-import { cancelledToast, useGenerate } from "./useGenerate";
+import { explainInfeasible, GENERAL_SUGGESTIONS, preflightWarnings, topCauses, type Cause, type CauseLink } from "./causes";
+import {
+  badgeText,
+  couldntFinishText,
+  generateBlockers,
+  generateView,
+  partialHow,
+  TIME_LIMIT,
+  unplacedGroups,
+  type DraftReason,
+  type GenerateView,
+} from "./generate";
+import { cancelledToast, showFailure, useGenerate, useRunKind, useRunOutcome, type RunEnd } from "./useGenerate";
+import { useServerStatus, type ServerState } from "./useServer";
 
-type ServerState = "checking" | "online" | "offline";
+const SERVER_COMMAND = "cd server && uv run uvicorn main:app --port 8000";
 
 export function GenerateStep() {
-  const [server, setServer] = useState<ServerState>("checking");
-  const [notice, setNotice] = useState<Notice>({});
+  const { server, recheck } = useServerStatus();
+  const runKind = useRunKind();
+  const outcome = useRunOutcome();
+  const result = useAppStore((s) => s.result);
+  const timeLimitSec = useAppStore((s) => s.timeLimitSec);
+  const view = generateView({ server, running: runKind, outcome, result, timeLimitSec });
+  const run = useGenerate();
   const [finishedRuns, setFinishedRuns] = useState(0);
-  const outcome = useRef<HTMLDivElement>(null);
+  const outcomeRef = useRef<HTMLDivElement>(null);
 
-  const pollServer = () => checkServer().then((up) => setServer(up ? "online" : "offline"));
-  const refreshServer = () => {
-    setServer("checking");
-    pollServer();
-  };
+  // A finished run's card is below the fold on most screens: bring it into view.
   useEffect(() => {
-    pollServer();
-  }, []);
-  // A finished run's result (or error) is below the fold on most screens: bring it into view.
-  useEffect(() => {
-    if (finishedRuns > 0) outcome.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (finishedRuns > 0) outcomeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [finishedRuns]);
+
+  const after = (end: RunEnd) => {
+    if (!end) return;
+    if (end.kind === "cancelled") cancelledToast();
+    else setFinishedRuns((n) => n + 1);
+  };
+  const actions: Actions = {
+    generate: (limit?: number) => run.generate(limit).then(after),
+    draft: (reason: DraftReason) => run.draft(reason).then(after),
+    cancel: run.cancel,
+  };
 
   return (
     <div className="grid gap-6">
-      <EngineCard server={server} onRefresh={refreshServer} onDone={(next) => {
-        setNotice(next);
-        setFinishedRuns((n) => n + 1);
-        refreshServer();
-      }} />
-      <div ref={outcome} className="grid gap-6">
-        {notice.error && <ErrorCard message={notice.error} />}
-        <ResultCard fallbackReason={notice.error ? undefined : notice.fallbackReason} />
+      <GenerateCard view={view} server={server} onRecheck={recheck} actions={actions} elapsed={run.elapsed} />
+      <div ref={outcomeRef} className="grid scroll-mt-4 gap-6">
+        {view.state === "impossible" && <ImpossibleCard view={view} actions={actions} />}
+        {view.state === "couldntFinish" && <CouldntFinishCard view={view} actions={actions} />}
+        {result && (view.state === "ready" || view.state === "partial") && <ResultCard view={view} result={result} actions={actions} />}
       </div>
     </div>
   );
 }
 
-function EngineCard({ server, onRefresh, onDone }: {
+interface Actions {
+  generate: (timeLimitSec?: number) => void;
+  draft: (reason: DraftReason) => void;
+  cancel: () => void;
+}
+
+function GenerateCard({ view, server, onRecheck, actions, elapsed }: {
+  view: GenerateView;
   server: ServerState;
-  onRefresh: () => void;
-  onDone: (notice: Notice) => void;
+  onRecheck: () => void;
+  actions: Actions;
+  elapsed: number;
 }) {
   const data = useAppStore();
-  const { engineMode, setEngineMode, timeLimitSec, setTimeLimitSec, loadSample, locks, setLocks } = data;
-  const { running, elapsed, run: runEngine, cancel } = useGenerate();
+  const { timeLimitSec, setTimeLimitSec, loadSample, locks, setLocks } = data;
+  const college = useCollegeData();
   const blockers = generateBlockers(data);
-
-  const run = async () => {
-    const notice = await runEngine();
-    if (notice?.cancelled) cancelledToast();
-    else if (notice) onDone(notice);
-  };
+  const running = view.state === "running";
+  const warnings = useMemo(() => {
+    try {
+      return preflightWarnings(checkData(college, data.settings));
+    } catch {
+      return []; // broken data; step ② reports it
+    }
+  }, [college, data.settings]);
+  const draftMain = view.button === "draft";
+  const label = draftMain
+    ? "Make a quick draft"
+    : data.result || locks.length > 0
+      ? regenerateLabel(locks.length)
+      : "Generate timetable";
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
-          Engine
+          Exact solver
           <InfoTip>
-            CP-SAT is an exact optimiser running in the Python server. The in-browser engine is a fast heuristic. Auto tries
-            CP-SAT and falls back if the server is off or finds no solution.
+            The exact solver (CP-SAT, from Google OR-Tools, on the Python server) finds the best timetable or proves that
+            none exists. A quick draft is a fast in-browser heuristic; it only runs when you ask for one.
           </InfoTip>
         </CardTitle>
-        <CardDescription>Both engines obey every hard rule; CP-SAT usually finds a better score.</CardDescription>
+        <CardDescription>Every hard rule is obeyed. It stops early once it has proved the best timetable.</CardDescription>
         <CardAction>
-          <ServerDot state={server} onRefresh={onRefresh} />
+          <ServerDot state={server} onRecheck={onRecheck} />
         </CardAction>
       </CardHeader>
-      <CardContent className="grid gap-6">
-        <div role="radiogroup" aria-label="Engine" className="grid gap-3 sm:grid-cols-3">
-          {ENGINE_OPTIONS.map((o) => {
-            const on = engineMode === o.value;
-            return (
-              <label
-                key={o.value}
-                className={cn(
-                  "flex cursor-pointer gap-3 rounded-lg border p-3 text-sm transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-                  on ? "border-primary bg-primary/5" : "hover:bg-muted",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="engine"
-                  className="mt-0.5 size-4 accent-primary"
-                  checked={on}
-                  disabled={running}
-                  onChange={() => setEngineMode(o.value)}
-                />
-                <span>
-                  <span className="block font-medium">{o.title}</span>
-                  <span className="text-muted-foreground">{o.description}</span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
+      <CardContent className="grid gap-5">
+        {view.offline && (
+          <div role="status" className="flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            <CloudOff className="mt-0.5 size-4 shrink-0" />
+            <div className="grid gap-1">
+              <p className="font-medium">Exact solver is offline. A quick draft will be made in your browser instead; it may score worse.</p>
+              {import.meta.env.DEV ? (
+                <p>
+                  Start it with <code className="rounded bg-amber-100 px-1 py-0.5 font-mono text-xs">{SERVER_COMMAND}</code>; this
+                  page notices within 5 s.
+                </p>
+              ) : (
+                <p>The solver service is unavailable.</p>
+              )}
+            </div>
+          </div>
+        )}
 
-        <div className="grid max-w-md gap-2">
-          <label htmlFor="time-limit" className="flex items-center gap-1.5 text-sm font-medium">
-            Time limit: <span className="tabular-nums">{timeLimitSec} s</span>
-            <InfoTip>
-              How long CP-SAT may search. Longer can give a better score; it stops early once it proves the best one.
-              The in-browser engine uses at most 5 s.
-            </InfoTip>
-          </label>
-          <input
-            id="time-limit"
-            type="range"
-            min={TIME_LIMIT.min}
-            max={TIME_LIMIT.max}
-            step={TIME_LIMIT.step}
-            value={timeLimitSec}
-            disabled={running}
-            onChange={(e) => setTimeLimitSec(Number(e.target.value))}
-            className="accent-primary"
-          />
-        </div>
+        {warnings.length > 0 && view.state !== "impossible" && !running && <BeforeYouStart warnings={warnings} />}
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Primary until there is a timetable; after that the footer's Next is the main way on. */}
-          <Button size="lg" variant={data.result ? "outline" : "default"} disabled={running || blockers.length > 0} onClick={run}>
-            {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
-            {running ? "Generating…" : data.result || locks.length > 0 ? regenerateLabel(locks.length) : "Generate timetable"}
+          <Button
+            size="lg"
+            variant={data.result ? "outline" : "default"}
+            disabled={running || blockers.length > 0}
+            onClick={() => (draftMain ? actions.draft("offline") : actions.generate())}
+          >
+            {running ? <Loader2 className="animate-spin" /> : draftMain ? <Wand2 /> : <Sparkles />}
+            {running ? (view.draft ? "Making a quick draft…" : "Generating…") : label}
           </Button>
           {locks.length > 0 && !running && (
             <Button variant="ghost" size="sm" onClick={() => setLocks([])}>
@@ -141,13 +152,13 @@ function EngineCard({ server, onRefresh, onDone }: {
             </Button>
           )}
           {running && (
-            <Button variant="outline" size="lg" onClick={cancel}>
+            <Button variant="outline" size="lg" onClick={actions.cancel}>
               <X /> Cancel
             </Button>
           )}
           {running && (
             <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
-              {elapsed} s elapsed{engineMode !== "heuristic" && ` · up to ${timeLimitSec} s`}
+              {view.draft ? `${elapsed} s` : `${elapsed} s of up to ${timeLimitSec} s`}
             </span>
           )}
           {!running && blockers.length > 0 && (
@@ -161,17 +172,43 @@ function EngineCard({ server, onRefresh, onDone }: {
             </span>
           )}
         </div>
+
+        <details className="text-sm">
+          <summary className="w-fit cursor-pointer text-muted-foreground select-none hover:text-foreground">
+            Advanced: time limit ({timeLimitSec} s)
+          </summary>
+          <div className="mt-3 grid max-w-md gap-2">
+            <label htmlFor="time-limit" className="flex items-center gap-1.5 font-medium">
+              Time limit: <span className="tabular-nums">{timeLimitSec} s</span>
+              <InfoTip>
+                How long the exact solver may search. Longer can give a better score; it stops early once it proves the best
+                one. A quick draft uses at most 5 s.
+              </InfoTip>
+            </label>
+            <input
+              id="time-limit"
+              type="range"
+              min={TIME_LIMIT.min}
+              max={TIME_LIMIT.max}
+              step={TIME_LIMIT.step}
+              value={timeLimitSec}
+              disabled={running}
+              onChange={(e) => setTimeLimitSec(Number(e.target.value))}
+              className="accent-primary"
+            />
+          </div>
+        </details>
       </CardContent>
     </Card>
   );
 }
 
-function ServerDot({ state, onRefresh }: { state: ServerState; onRefresh: () => void }) {
+function ServerDot({ state, onRecheck }: { state: ServerState; onRecheck: () => void }) {
   const text = { checking: "checking…", online: "online", offline: "offline" }[state];
   return (
     <button
       type="button"
-      onClick={onRefresh}
+      onClick={onRecheck}
       title="Check again"
       className="flex items-center gap-2 rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
     >
@@ -183,24 +220,114 @@ function ServerDot({ state, onRefresh }: { state: ServerState; onRefresh: () => 
           state === "checking" && "animate-pulse bg-muted-foreground",
         )}
       />
-      Solver server: {text}
+      Exact solver: {text}
       <RefreshCw className="size-3" />
     </button>
   );
 }
 
-function ErrorCard({ message }: { message: string }) {
-  const hasPrevious = useAppStore((s) => s.result !== null);
+/** Load warnings from step ②, shown before a run. They never block: the solver gets the final say. */
+function BeforeYouStart({ warnings }: { warnings: Cause[] }) {
+  const { shown, more } = topCauses(warnings, 3);
   return (
-    <Card className="border-destructive/40">
-      <CardContent className="flex items-start gap-3 text-sm">
-        <CircleX className="mt-0.5 size-5 shrink-0 text-destructive" />
-        <div>
-          <p className="font-medium">No timetable was produced.</p>
-          <p className="text-muted-foreground">{message}</p>
-          <p className="mt-1 text-muted-foreground">
-            Try the Auto or Fast engine, or start the solver server.
-            {hasPrevious && " The previous result below is unchanged."}
+    <div className="rounded-lg border p-3 text-sm">
+      <p className="flex items-center gap-1.5 font-medium">
+        <AlertTriangle className="size-4 text-amber-500" /> Before you start
+      </p>
+      <p className="mt-0.5 text-muted-foreground">This data probably can't fit in the week. You can still try.</p>
+      <ul className="mt-2 grid gap-2">
+        {shown.map((c, i) => (
+          <CauseItem key={i} cause={c} />
+        ))}
+      </ul>
+      {more > 0 && <p className="mt-1 text-muted-foreground">+{more} more in step ②'s data checks</p>}
+    </div>
+  );
+}
+
+/** Go where a fix link points: step ② on the right tab and filters, or step ④ to clear the locks. */
+function openLink(link: CauseLink) {
+  const { setStep } = useAppStore.getState();
+  if (link.step === 2) {
+    useDataView.getState().open({ tab: link.tab, sectionId: link.sectionId, teacherId: link.teacherId });
+    setStep(1);
+  } else setStep(3);
+}
+
+function CauseItem({ cause }: { cause: Cause }) {
+  return (
+    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+      <span className="min-w-0 flex-1 basis-72">{cause.text}</span>
+      <Button variant="outline" size="sm" onClick={() => openLink(cause.link)}>
+        {cause.fix} →
+      </Button>
+    </li>
+  );
+}
+
+function ImpossibleCard({ view, actions }: { view: Extract<GenerateView, { state: "impossible" }>; actions: Actions }) {
+  const failed = useRunOutcome().failed!;
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [showAll, setShowAll] = useState(false);
+  const causes = useMemo(() => {
+    const { input, failure } = failed;
+    try {
+      return explainInfeasible(input, failure.diagnosis, checkData(input, input.settings));
+    } catch {
+      return [];
+    }
+  }, [failed]);
+  const { shown, more } = topCauses(causes);
+  useEffect(() => heading.current?.focus(), [failed]);
+
+  return (
+    <Card role="alert" className="border-destructive/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-destructive">
+          <CircleX className="size-5" />
+          <h3 ref={heading} tabIndex={-1} className="outline-none">
+            This timetable can't be built
+          </h3>
+        </CardTitle>
+        <CardDescription>
+          The exact solver proved that no timetable fits every rule with this data. Nothing was changed
+          {view.hasTimetable ? "; your previous timetable is kept." : "."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 text-sm">
+        {causes.length > 0 ? (
+          <div>
+            <p className="mb-2 font-medium">Why, most likely first</p>
+            <ul className="grid gap-2">
+              {(showAll ? causes : shown).map((c, i) => (
+                <CauseItem key={i} cause={c} />
+              ))}
+            </ul>
+            {more > 0 && (
+              <Button variant="link" size="sm" className="mt-1 px-0" onClick={() => setShowAll((s) => !s)}>
+                {showAll ? "Show fewer" : `+${more} more`}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div>
+            <p className="font-medium">No single cause found: the rules conflict in combination.</p>
+            <p className="mt-1 text-muted-foreground">Things that usually help:</p>
+            <ul className="mt-1 list-disc pl-5 text-muted-foreground">
+              {GENERAL_SUGGESTIONS.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div className="grid gap-1 border-t pt-4">
+          <div>
+            <Button variant="outline" onClick={() => actions.draft("impossible")}>
+              <Wand2 /> Make a partial timetable
+            </Button>
+          </div>
+          <p className="text-muted-foreground">
+            Places as many classes as fit and lists the rest.{view.hasTimetable && " Replaces your current timetable."}
           </p>
         </div>
       </CardContent>
@@ -208,34 +335,97 @@ function ErrorCard({ message }: { message: string }) {
   );
 }
 
-function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
-  const result = useAppStore((s) => s.result);
+function CouldntFinishCard({ view, actions }: { view: Extract<GenerateView, { state: "couldntFinish" }>; actions: Actions }) {
+  const message = useRunOutcome().failed?.failure.message;
+  const { title, body } = couldntFinishText(view.kind, view.limitSec);
+  const retry =
+    view.kind === "timeout" ? (
+      view.retryWith !== null && (
+        <Button disabled={view.offline} onClick={() => actions.generate(view.retryWith!)}>
+          <RefreshCw /> Try again with {view.retryWith} s
+        </Button>
+      )
+    ) : (
+      <Button disabled={view.offline} onClick={() => actions.generate()}>
+        <RefreshCw /> Try again
+      </Button>
+    );
+  return (
+    <Card role="alert">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Info className="size-5 text-muted-foreground" />
+          {title}
+          {/* The server's own words can name CP-SAT, so they stay in the tooltip. */}
+          {message && <InfoTip>Details: {message}</InfoTip>}
+        </CardTitle>
+        <CardDescription>
+          {body} {view.hasTimetable ? "Your previous timetable is unchanged." : "No timetable was made."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="text-sm">
+        <div className="flex flex-wrap gap-2">
+          {retry}
+          <Button variant="outline" onClick={() => actions.draft("couldntFinish")}>
+            <Wand2 /> Make a quick draft instead
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ResultCard({ view, result, actions }: {
+  view: Extract<GenerateView, { state: "ready" | "partial" }>;
+  result: SolveResult;
+  actions: Actions;
+}) {
   const { settings, departments, teachers, rooms, sections, courses, locks } = useAppStore();
   // Re-check against the current data: the store may hold a result from before a data edit.
   const validation = useMemo(() => {
-    if (!result) return null;
     const input = { settings, departments, teachers, rooms, sections, courses, locks, options: { timeLimitSec: 0 } };
-    return validate(input, result.placements);
+    try {
+      return validate(input, result.placements);
+    } catch {
+      return null; // broken data; step ② reports it
+    }
   }, [result, settings, departments, teachers, rooms, sections, courses, locks]);
-  if (!result || !validation) return null;
+  if (!validation) return null;
 
   const clean = validation.violations.length === 0;
+  const partial = view.state === "partial";
   return (
-    <Card>
+    <Card className={cn(partial ? "border-amber-300" : clean && "border-emerald-300")}>
       <CardHeader>
-        <CardTitle>Result</CardTitle>
-        <CardDescription>
-          {result.placements.length} sessions placed in {(result.timeMs / 1000).toFixed(1)} s.
-        </CardDescription>
+        <CardTitle className={cn("flex items-center gap-2", partial ? "text-amber-900" : clean && "text-emerald-800")}>
+          {partial ? (
+            <AlertTriangle className="size-5 text-amber-500" />
+          ) : clean ? (
+            <CircleCheck className="size-5 text-emerald-600" />
+          ) : (
+            <CircleX className="size-5 text-destructive" />
+          )}
+          {partial ? `Partial: ${view.unplaced} of ${view.total} classes not placed` : "Timetable ready"}
+        </CardTitle>
+        <CardDescription>{view.state === "partial" ? partialHow(view.from) : readyLine(view, result)}</CardDescription>
+        {view.state === "ready" && view.tryLonger !== null && (
+          <CardAction>
+            <Button variant="outline" disabled={view.offline} onClick={() => actions.generate(view.tryLonger!)}>
+              Try longer: {view.tryLonger} s
+            </Button>
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="grid gap-5">
         <div
           role="status"
           className={cn(
             "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium",
-            clean
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-destructive/30 bg-destructive/10 text-destructive",
+            !clean
+              ? "border-destructive/30 bg-destructive/10 text-destructive"
+              : partial
+                ? "border-amber-200 bg-amber-50 text-amber-900"
+                : "border-emerald-200 bg-emerald-50 text-emerald-800",
           )}
         >
           {badgeText(result, validation)}
@@ -253,50 +443,79 @@ function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
           </ul>
         )}
 
-        {fallbackReason && (
-          <p className="flex items-start gap-2 text-sm text-muted-foreground">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
-            {fallbackReason}
-          </p>
-        )}
-
-        {result.unplaced.length > 0 && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-            <p className="font-medium text-amber-900">
-              {result.unplaced.length} session{result.unplaced.length === 1 ? "" : "s"} could not be placed
-            </p>
-            <ul className="mt-2 grid max-h-60 gap-1 overflow-auto text-amber-900/80">
-              {result.unplaced.map((u) => (
-                <li key={u.sessionId}>{u.reason}</li>
-              ))}
-            </ul>
+        {partial && <UnplacedList result={result} />}
+        {view.state === "partial" && view.backToReasons && (
+          <div>
+            <Button variant="ghost" size="sm" onClick={() => showFailure(true)}>
+              <ArrowLeft /> Back to the reasons
+            </Button>
           </div>
         )}
 
-        <div>
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-            Score: <span className="tabular-nums">{result.score.total}</span>
-            <span className="font-normal text-muted-foreground">(lower is better, 0 is perfect)</span>
-          </p>
-          <div className="grid gap-2 sm:grid-cols-4">
-            {SCORE_ROWS.map((row) => {
-              const points = result.score.breakdown[row.key];
-              return (
-                <div key={row.key} className="rounded-lg border p-3">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {row.label}
-                    <InfoTip>{row.tip}</InfoTip>
-                  </div>
-                  <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
-                    {points} <span className="text-sm font-normal text-muted-foreground">pts</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, points)}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <ScoreGrid result={result} />
       </CardContent>
     </Card>
+  );
+}
+
+function readyLine(view: Extract<GenerateView, { state: "ready" }>, result: SolveResult): string {
+  const time = `${(result.timeMs / 1000).toFixed(1)} s`;
+  switch (view.quality) {
+    case "optimal":
+      return `The best possible timetable, found by the exact solver in ${time}.`;
+    case "feasible":
+      return `The best timetable found in ${view.limitSec} s. A longer search may find a better score.`;
+    case "draft":
+      return `${result.placements.length} classes placed in ${time}.`;
+  }
+}
+
+function UnplacedList({ result }: { result: SolveResult }) {
+  const groups = unplacedGroups(result.unplaced);
+  return (
+    <div className="grid gap-1 text-sm">
+      <p className="font-medium">Not placed, by reason</p>
+      {groups.map((g, i) => (
+        <details key={g.cause} open={i === 0} className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2">
+          <summary className="cursor-pointer font-medium text-amber-900 select-none">
+            {g.label} <span className="font-normal tabular-nums">({g.items.length})</span>
+          </summary>
+          <ul className="mt-1 grid max-h-60 gap-1 overflow-auto text-amber-900/80">
+            {g.items.map((u) => (
+              <li key={u.sessionId}>{u.reason}</li>
+            ))}
+          </ul>
+        </details>
+      ))}
+      <p className="text-muted-foreground">In step ④ you can drag them onto free slots yourself.</p>
+    </div>
+  );
+}
+
+function ScoreGrid({ result }: { result: SolveResult }) {
+  return (
+    <div>
+      <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+        Score: <span className="tabular-nums">{result.score.total}</span>
+        <span className="font-normal text-muted-foreground">(lower is better, 0 is perfect)</span>
+      </p>
+      <div className="grid gap-2 sm:grid-cols-4">
+        {SCORE_ROWS.map((row) => {
+          const points = result.score.breakdown[row.key];
+          return (
+            <div key={row.key} className="rounded-lg border p-3">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {row.label}
+                <InfoTip>{row.tip}</InfoTip>
+              </div>
+              <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
+                {points} <span className="text-sm font-normal text-muted-foreground">pts</span>
+              </div>
+              <div className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, points)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
