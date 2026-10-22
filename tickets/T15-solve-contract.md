@@ -1,5 +1,5 @@
 # T15 — Solve contract: diagnosis + unplaced cause
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T04 · **Branch:** t15-contract
 
 ## Goal
@@ -19,5 +19,5 @@ can run in parallel against it. Part of the exact-first redesign (T15 → T16 / 
 - `npx tsc -b` and both suites green.
 
 ## Done when
-- [ ] Types and models match PLAN.md §3
-- [ ] Committed: `T15: diagnosis and unplaced cause in the solve contract`
+- [x] Types and models match PLAN.md §3
+- [x] Committed: `T15: diagnosis and unplaced cause in the solve contract`
