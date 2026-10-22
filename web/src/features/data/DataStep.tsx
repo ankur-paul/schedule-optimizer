@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { AlertTriangle, Building2, CheckCircle2, Download, FileSpreadsheet, Upload, XCircle } from "lucide-react";
+import { AlertTriangle, Building2, CheckCircle2, Download, FileDown, FileSpreadsheet, Upload, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -70,8 +70,8 @@ export function DataStep() {
               <Download /> Template
             </Button>
             {hasData && (
-              <Button variant="ghost" onClick={() => downloadWorkbook(toWorkbook(data), "timetable-data.xlsx")}>
-                Export current data
+              <Button variant="outline" onClick={() => downloadWorkbook(toWorkbook(data), "timetable-data.xlsx")}>
+                <FileDown /> Export current data
               </Button>
             )}
           </div>

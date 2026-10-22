@@ -10,6 +10,7 @@ import {
   layoutWeek,
   placementsFor,
   sessionDetails,
+  cellLabel,
   stepEntity,
   timeRange,
   unplacedFor,
@@ -72,6 +73,13 @@ describe("filterGroups / stepEntity", () => {
   it("filters by name, case-insensitively", () => {
     const out = filterGroups(groups, "  cse a ");
     expect(out.flatMap((g) => g.items.map((e) => e.name))).toEqual(["CSE A"]);
+  });
+
+  it("matches an unlabelled group (the data step's \"All sections\" row) by its item names only", () => {
+    const withAll = [{ label: "", items: [{ id: "", name: "All sections" }] }, ...groups];
+    expect(filterGroups(withAll, "all").flatMap((g) => g.items.map((e) => e.name))).toEqual(["All sections"]);
+    expect(filterGroups(withAll, "cse a").flatMap((g) => g.items.map((e) => e.name))).toEqual(["CSE A"]);
+    expect(filterGroups(withAll, "")[0].items[0].name).toBe("All sections");
   });
 
   it("keeps a whole group when its department name matches", () => {
@@ -217,6 +225,15 @@ describe("layoutWeek / timeRange / sessionDetails", () => {
       periods: "P3–P4",
       time: "11:00–12:40",
     });
+  });
+
+  it("reads a whole card out for screen readers, saying when it is locked", () => {
+    const s = expandSessions(data).find((x) => x.id === "cse-a-ds:P1:B2")!;
+    const details = sessionDetails(data, { session: s, placement: { sessionId: s.id, day: 1, period: 3, roomId: "lab-cse1" } });
+    expect(cellLabel(details, false)).toBe("Data Structures lab (B2), CSE A, Prof. Rahul Verma, CSE Lab 1, Tue P3–P4, 11:00–12:40");
+    expect(cellLabel({ ...details, kind: "lecture", batch: null }, true)).toBe(
+      "Data Structures, CSE A, Prof. Rahul Verma, CSE Lab 1, Tue P3–P4, 11:00–12:40, locked",
+    );
   });
 
   it("falls back to ids for unknown references", () => {

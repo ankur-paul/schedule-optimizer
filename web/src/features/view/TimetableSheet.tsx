@@ -14,12 +14,13 @@ interface Props {
   colors: Map<string, number>;
   onSelect: (entry: PlacedSession) => void;
   locked?: ReadonlySet<Id>;
+  onToggleLock?: (entry: PlacedSession) => void;
   dnd?: GridDnd;
   className?: string;
 }
 
 /** Title + week grid for one section/teacher/room. Prints as one A4 landscape page. */
-export function TimetableSheet({ data, kind, title, subtitle, heading, entries, colors, onSelect, locked, dnd, className }: Props) {
+export function TimetableSheet({ data, kind, title, subtitle, heading, entries, colors, onSelect, locked, onToggleLock, dnd, className }: Props) {
   return (
     <section className={cn("grid gap-3 break-inside-avoid print:gap-2", className)}>
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
@@ -34,7 +35,7 @@ export function TimetableSheet({ data, kind, title, subtitle, heading, entries, 
           {entries.length} {entries.length === 1 ? "class" : "classes"} a week
         </p>
       </div>
-      <TimetableGrid data={data} kind={kind} week={layoutWeek(data.settings, entries)} colors={colors} onSelect={onSelect} locked={locked} dnd={dnd} />
+      <TimetableGrid data={data} kind={kind} week={layoutWeek(data.settings, entries)} colors={colors} onSelect={onSelect} locked={locked} onToggleLock={onToggleLock} dnd={dnd} />
     </section>
   );
 }

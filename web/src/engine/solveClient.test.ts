@@ -3,6 +3,7 @@ import { score } from "@/domain/score";
 import { tinyCollege, tinyValid, tinyWith } from "@/domain/tinyCollege";
 import type { SolveInput, SolveResult } from "@/domain/types";
 import { solveHeuristic, type HeuristicOptions } from "./heuristic";
+import { runHeuristic } from "./runHeuristic";
 import { checkServer, generate, HEURISTIC_MAX_MS, verify, type GenerateDeps } from "./solveClient";
 
 const ZERO = { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } };
@@ -34,7 +35,7 @@ const offline = () =>
   });
 
 function deps(fetch: GenerateDeps["fetch"]) {
-  const runHeuristic = vi.fn(async (input: SolveInput, o: HeuristicOptions) =>
+  const runHeuristic = vi.fn(async (input: SolveInput, o: HeuristicOptions, _signal?: AbortSignal) =>
     solveHeuristic(input, { ...o, timeLimitMs: Math.min(o.timeLimitMs, 150) }),
   );
   return { fetch: fetch as typeof globalThis.fetch, runHeuristic, solverUrl: "http://solver.test" };
@@ -141,6 +142,60 @@ describe("generate: manual engines", () => {
     const out = await generate(tinyCollege, "cpsat", deps(server({ solve: () => json(cpsat({ status: "infeasible", placements: [] })) })));
     expect(out.result.engine).toBe("heuristic");
     expect(out.result.message).toMatch(/^CP-SAT: no clash-free/);
+  });
+});
+
+describe("generate: cancel", () => {
+  /** A /solve that only settles when its request is aborted, like a long CP-SAT run cut short. */
+  const hangingSolve = () =>
+    vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      if (String(url).endsWith("/health")) return json({ ok: true });
+      return new Promise<Response>((_, reject) => init!.signal!.addEventListener("abort", () => reject(init!.signal!.reason)));
+    });
+
+  it("rejects straight away when already cancelled, without calling any engine", async () => {
+    const d = { ...deps(server({})), signal: AbortSignal.abort() };
+    await expect(generate(tinyCollege, "auto", d)).rejects.toMatchObject({ name: "AbortError" });
+    expect(d.fetch).not.toHaveBeenCalled();
+    expect(d.runHeuristic).not.toHaveBeenCalled();
+  });
+
+  it("aborts a running CP-SAT request and does not fall back to the heuristic", async () => {
+    const controller = new AbortController();
+    const d = { ...deps(hangingSolve()), signal: controller.signal };
+    const run = generate(tinyCollege, "auto", d);
+    setTimeout(() => controller.abort(), 10);
+    await expect(run).rejects.toMatchObject({ name: "AbortError" });
+    expect(d.runHeuristic).not.toHaveBeenCalled();
+  });
+
+  it("passes the signal to the heuristic", async () => {
+    const controller = new AbortController();
+    const d = { ...deps(offline()), signal: controller.signal };
+    await generate(tinyCollege, "heuristic", d);
+    expect(d.runHeuristic.mock.calls[0][2]).toBe(controller.signal);
+  });
+
+  it("stops before the heuristic when cancelled during the health check", async () => {
+    const controller = new AbortController();
+    const fetch = vi.fn(async () => {
+      controller.abort();
+      throw new TypeError("Failed to fetch");
+    });
+    const d = { ...deps(fetch), signal: controller.signal };
+    await expect(generate(tinyCollege, "auto", d)).rejects.toMatchObject({ name: "AbortError" });
+    expect(d.runHeuristic).not.toHaveBeenCalled();
+  });
+});
+
+describe("runHeuristic", () => {
+  it("rejects with the signal's reason when already cancelled", async () => {
+    await expect(runHeuristic(tinyCollege, { timeLimitMs: 50, seed: 1 }, AbortSignal.abort())).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("runs normally with a live signal", async () => {
+    const out = await runHeuristic(tinyCollege, { timeLimitMs: 50, seed: 1 }, new AbortController().signal);
+    expect(out.engine).toBe("heuristic");
   });
 });
 

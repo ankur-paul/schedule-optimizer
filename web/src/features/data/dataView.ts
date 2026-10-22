@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import type { Id } from "@/domain/types";
-import type { CourseFilter } from "./dataEdit";
-
-export type DataTab = "courses" | "sections" | "teachers" | "rooms" | "departments";
+import type { CourseFilter, DataTab } from "./dataEdit";
 
 /** Where to land in step ②, e.g. a fix link: "Courses taught by Prof. Verma". */
 export interface DataLink {
@@ -12,7 +10,8 @@ export interface DataLink {
 }
 
 interface DataViewState {
-  tab: DataTab;
+  /** null until a tab is picked or a link opens one; step ② then opens on `defaultDataTab(data)`. */
+  tab: DataTab | null;
   filter: CourseFilter;
   setTab: (tab: DataTab) => void;
   setFilter: (patch: Partial<CourseFilter>) => void;
@@ -27,7 +26,7 @@ const noFilter: CourseFilter = { sectionId: "", teacherId: "" };
  * reload, but other steps (T18 fix links) must be able to set them.
  */
 export const useDataView = create<DataViewState>()((set) => ({
-  tab: "courses",
+  tab: null,
   filter: noFilter,
   setTab: (tab) => set({ tab }),
   setFilter: (patch) => set((s) => ({ filter: { ...s.filter, ...patch } })),

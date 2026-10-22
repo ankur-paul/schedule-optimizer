@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { sampleCollege } from "@/domain/sampleCollege";
 import type { Placement } from "@/domain/types";
 import type { AppData } from "@/store/useAppStore";
-import { badgeText, buildSolveInput, engineLabel, generateBlockers, hasTimetable, newSeed, outcomeNotice, regenerateSummary } from "./generate";
+import { badgeText, buildSolveInput, engineLabel, generateBlockers, generateFooterNote, hasTimetable, newSeed, outcomeNotice, regenerateSummary } from "./generate";
 
 const lock: Placement = { sessionId: "cse-a-ds:L1", day: 0, period: 0, roomId: "cr-cse-a" };
 const data: AppData = {
@@ -109,5 +109,16 @@ describe("regenerateSummary", () => {
     expect(regenerateSummary({ placements: [lock], unplaced: [{ sessionId: "x", reason: "r" }], score })).toBe(
       "New timetable: 1 session placed · 1 unplaced · score 18",
     );
+  });
+});
+
+describe("generateFooterNote", () => {
+  it("hints (not errors) that Next waits for a timetable", () => {
+    expect(generateFooterNote(null)).toEqual({ text: "Generate a timetable to continue.", tone: "hint" });
+  });
+
+  it("says nothing once there is a result", () => {
+    const result = { engine: "heuristic" as const, status: "feasible" as const, placements: [lock], unplaced: [], score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } }, timeMs: 1 };
+    expect(generateFooterNote(result)).toBeNull();
   });
 });

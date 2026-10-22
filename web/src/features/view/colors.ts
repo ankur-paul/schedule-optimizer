@@ -22,10 +22,18 @@ export function hashString(s: string): number {
   return h >>> 0;
 }
 
+/** Distance between two palette colours around the hue wheel, 0–180°. */
+export function hueDistance(a: number, b: number): number {
+  const d = Math.abs(HUES[a] - HUES[b]) % 360;
+  return Math.min(d, 360 - d);
+}
+
 /**
- * Palette index per subject. Each subject starts at its hashed colour; if another subject of the same
- * section already has it, the next free colour is used, so one section's subjects differ while it has
- * ≤ 12 subjects. Subjects are coloured in name order, so the result depends only on the data.
+ * Palette index per subject (a subject keeps one colour in every section). Subjects are coloured in
+ * name order; each takes the colour that no subject sharing a section with it already has and that is
+ * farthest around the hue wheel from theirs, so a section's subjects differ as much as the palette
+ * allows (no pink next to rose). Ties go to the subject's hashed colour, then the next ones after it,
+ * so the result depends only on the data. Past 12 subjects in a section, colours repeat.
  */
 export function buildSubjectColors(courses: Pick<Course, "sectionId" | "subject">[]): Map<string, number> {
   const neighbours = new Map<string, Set<string>>();
@@ -43,17 +51,20 @@ export function buildSubjectColors(courses: Pick<Course, "sectionId" | "subject"
 
   const colors = new Map<string, number>();
   for (const subject of [...neighbours.keys()].sort()) {
-    const taken = new Set([...neighbours.get(subject)!].map((n) => colors.get(n)));
+    const near = [...neighbours.get(subject)!].map((n) => colors.get(n)).filter((i) => i !== undefined);
     const start = hashString(subject) % PALETTE.length;
-    let index = start;
+    let best = start;
+    let bestGap = -1;
     for (let k = 0; k < PALETTE.length; k++) {
       const candidate = (start + k) % PALETTE.length;
-      if (!taken.has(candidate)) {
-        index = candidate;
-        break;
+      // A colour a neighbour already has scores -1, so it is only used once the palette runs out.
+      const gap = near.includes(candidate) ? -1 : Math.min(180, ...near.map((n) => hueDistance(candidate, n)));
+      if (gap > bestGap) {
+        best = candidate;
+        bestGap = gap;
       }
     }
-    colors.set(subject, index);
+    colors.set(subject, best);
   }
   return colors;
 }

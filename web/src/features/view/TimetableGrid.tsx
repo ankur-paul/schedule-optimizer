@@ -1,10 +1,10 @@
 import { Fragment } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { Lock, LockOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Id, Settings } from "@/domain/types";
 import { subjectColor } from "./colors";
-import { sessionDetails, type Block, type DayLayout, type PlacedSession, type ViewData, type ViewKind } from "./layout";
+import { cellLabel, sessionDetails, type Block, type DayLayout, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 import { dragId, formatDelta, slotId, type MoveTarget } from "./moves";
 
 /** Drag-and-drop on the grid (needs a surrounding `DndContext`): cards drag, every teaching slot is a drop target. */
@@ -25,11 +25,13 @@ interface Props {
   onSelect: (entry: PlacedSession) => void;
   /** Session ids to mark as locked (🔒 + thicker border). */
   locked?: ReadonlySet<Id>;
+  /** Lock or unlock a class from its card's 🔒 button. Without it the grid shows no lock buttons (print sheets). */
+  onToggleLock?: (entry: PlacedSession) => void;
   dnd?: GridDnd;
 }
 
 /** Week grid: rows = days, columns = periods. Labs span columns; parallel batch sessions stack inside a day. */
-export function TimetableGrid({ data, kind, week, colors, onSelect, locked, dnd }: Props) {
+export function TimetableGrid({ data, kind, week, colors, onSelect, locked, onToggleLock, dnd }: Props) {
   const { settings } = data;
   const columns = ["5rem", ...settings.periods.map((p) => (p.kind === "break" ? "2rem" : "minmax(7.5rem, 1fr)"))];
   // Fill the card, but scroll sideways (inside the card only) once columns would get narrower than their minimum.
@@ -81,6 +83,7 @@ export function TimetableGrid({ data, kind, week, colors, onSelect, locked, dnd 
                 block,
                 colors,
                 onSelect,
+                onToggleLock,
                 locked: locked?.has(block.session.id) ?? false,
                 gridRow: `${firstRow[d] + block.lane} / span ${block.laneSpan}`,
                 gridColumn: `${block.start + 2} / span ${block.span}`,
@@ -98,8 +101,8 @@ export function TimetableGrid({ data, kind, week, colors, onSelect, locked, dnd 
           p.kind === "break" ? (
             <div
               key={p.id}
-              aria-hidden
-              className="flex items-center justify-center border-r border-b text-[10px] font-medium tracking-widest text-muted-foreground uppercase [writing-mode:vertical-rl]"
+              title={`${p.label} ${p.start}–${p.end}`}
+              className="flex items-center justify-center border-r border-b text-[11px] font-medium tracking-widest text-muted-foreground uppercase [writing-mode:vertical-rl]"
               style={{
                 gridRow: `2 / ${row}`,
                 gridColumn: i + 2,
@@ -126,11 +129,15 @@ function PeriodHeader({ settings, index }: { settings: Settings; index: number }
         p.kind === "break" && "px-0",
       )}
       style={{ gridRow: 1, gridColumn: index + 2 }}
-      title={lunch ? "Lunch candidate: every section and teacher gets at least one of these periods free each day" : undefined}
+      title={
+        p.kind === "break"
+          ? `${p.label} ${p.start}–${p.end}`
+          : lunch
+            ? "Lunch candidate: every section and teacher gets at least one of these periods free each day"
+            : undefined
+      }
     >
-      {p.kind === "break" ? (
-        <span className="text-[10px] text-muted-foreground">{p.start}</span>
-      ) : (
+      {p.kind === "break" ? null : (
         <>
           <span className="font-semibold">
             {p.label}
@@ -155,6 +162,7 @@ interface CellProps {
   block: Block;
   colors: Map<string, number>;
   onSelect: (entry: PlacedSession) => void;
+  onToggleLock?: (entry: PlacedSession) => void;
   locked: boolean;
   gridRow: string;
   gridColumn: string;
@@ -166,7 +174,7 @@ interface DragBindings {
   attributes: ReturnType<typeof useDraggable>["attributes"];
   /** This card is the one being dragged (its copy follows the pointer). */
   isDragging: boolean;
-  /** Some card is being dragged: no hover tooltips. */
+  /** Some card is being dragged: no lock buttons. */
   dragActive: boolean;
 }
 
@@ -203,58 +211,69 @@ function DraggableCell({ dragActive, ...props }: CellProps & { dragActive: boole
   return <Cell {...props} drag={{ setNodeRef, listeners, attributes, isDragging, dragActive }} />;
 }
 
-function Cell({ data, kind, block, colors, onSelect, locked, gridRow, gridColumn, drag }: CellProps & { drag?: DragBindings }) {
+function Cell({ data, kind, block, colors, onSelect, onToggleLock, locked, gridRow, gridColumn, drag }: CellProps & { drag?: DragBindings }) {
   const info = sessionDetails(data, block);
   const color = subjectColor(colors, info.subject);
+  const label = cellLabel(info, locked);
 
   return (
-    <Tooltip disabled={drag?.dragActive}>
-      <TooltipTrigger
+    <div className="group relative z-10 m-0.5 flex min-w-0" style={{ gridRow, gridColumn }}>
+      <button
+        type="button"
         ref={drag?.setNodeRef}
         {...drag?.listeners}
         {...drag?.attributes}
         onClick={() => onSelect(block)}
         className={cn(
-          "relative z-10 m-0.5 flex min-w-0 cursor-pointer flex-col items-start gap-0.5 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+          "flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-0.5 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
           locked && "border-[3px] px-[6px] py-[4px]",
           drag && "cursor-grab touch-none active:cursor-grabbing",
           drag?.isDragging && "opacity-40",
         )}
-        aria-label={locked ? `${info.subject} (locked)` : undefined}
-        style={{ gridRow, gridColumn, backgroundColor: color.bg, borderColor: color.border, color: color.fg }}
+        aria-label={label}
+        style={{ backgroundColor: color.bg, borderColor: color.border, color: color.fg }}
       >
-        <CellCardBody data={data} kind={kind} block={block} locked={locked} />
-      </TooltipTrigger>
-      <TooltipContent className="block">
-        <div className="font-semibold">
-          {info.subject} {info.kind === "lab" ? "(lab)" : ""} {locked ? "· locked" : ""}
-        </div>
-        <div>
-          {info.section}
-          {info.batch ? ` · batch ${info.batch}` : ""}
-        </div>
-        <div>{info.teacher}</div>
-        <div>{info.room}</div>
-        <div className="opacity-80">
-          {info.day} {info.periods} · {info.time}
-        </div>
-      </TooltipContent>
-    </Tooltip>
+        <CellCardBody data={data} kind={kind} block={block} locked={locked} lockSpace={onToggleLock !== undefined} />
+      </button>
+      {onToggleLock && !drag?.dragActive && (
+        <button
+          type="button"
+          onClick={() => onToggleLock(block)}
+          aria-label={locked ? `Unlock ${info.subject}` : `Lock ${info.subject} here`}
+          title={locked ? "Locked: kept in place when you regenerate. Click to unlock." : "Lock here: keep this class in place when you regenerate"}
+          aria-pressed={locked}
+          className={cn(
+            "absolute top-1 right-1 flex size-6 items-center justify-center rounded-md transition-opacity hover:bg-current/15 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none print:hidden",
+            locked ? "bg-current/10" : "opacity-0 group-hover:opacity-100",
+          )}
+          style={{ color: color.fg }}
+        >
+          {locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5 opacity-70" />}
+        </button>
+      )}
+    </div>
   );
 }
 
 /** What a card shows: subject + chips, then whatever the current view doesn't already tell you. */
-export function CellCardBody({ data, kind, block, locked }: { data: ViewData; kind: ViewKind; block: PlacedSession; locked: boolean }) {
+export function CellCardBody({ data, kind, block, locked, lockSpace = false }: {
+  data: ViewData;
+  kind: ViewKind;
+  block: PlacedSession;
+  locked: boolean;
+  /** The card has its own lock button in the corner: leave room for it instead of drawing 🔒 here. */
+  lockSpace?: boolean;
+}) {
   const info = sessionDetails(data, block);
   const lines =
     kind === "section" ? [info.teacher, info.room] : kind === "teacher" ? [info.section, info.room] : [info.section, info.teacher];
   return (
     <>
-      <span className="flex w-full items-start gap-1">
+      <span className={cn("flex w-full items-start gap-1", lockSpace && "pr-5 print:pr-0")}>
         <span className="line-clamp-2 leading-tight font-semibold">{info.subject}</span>
         {info.kind === "lab" && <Chip>Lab</Chip>}
         {info.batch && <Chip strong>{info.batch}</Chip>}
-        {locked && (
+        {locked && !lockSpace && (
           <span className="ml-auto shrink-0 leading-tight" title="Locked: kept in place when you regenerate">
             🔒
           </span>
@@ -273,7 +292,7 @@ function Chip({ children, strong }: { children: React.ReactNode; strong?: boolea
   return (
     <span
       className={cn(
-        "shrink-0 rounded px-1 text-[10px] leading-4 font-semibold",
+        "shrink-0 rounded px-1 text-[11px] leading-4 font-semibold",
         strong ? "bg-current/15" : "border border-current/30 font-medium",
       )}
     >

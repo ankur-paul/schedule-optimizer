@@ -1,23 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, CircleX, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, CircleX, Loader2, Lock, RefreshCw, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WEIGHTS } from "@/domain/score";
-import type { ScoreBreakdown } from "@/domain/types";
+import { SCORE_ROWS, scoreCount } from "@/domain/stats";
 import { validate } from "@/domain/validator";
 import { checkServer } from "@/engine/solveClient";
 import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { badgeText, ENGINE_OPTIONS, generateBlockers, TIME_LIMIT, type Notice } from "./generate";
-import { useGenerate } from "./useGenerate";
+import { cancelledToast, useGenerate } from "./useGenerate";
 
 type ServerState = "checking" | "online" | "offline";
 
 export function GenerateStep() {
   const [server, setServer] = useState<ServerState>("checking");
   const [notice, setNotice] = useState<Notice>({});
+  const [finishedRuns, setFinishedRuns] = useState(0);
+  const outcome = useRef<HTMLDivElement>(null);
 
   const pollServer = () => checkServer().then((up) => setServer(up ? "online" : "offline"));
   const refreshServer = () => {
@@ -27,15 +28,22 @@ export function GenerateStep() {
   useEffect(() => {
     pollServer();
   }, []);
+  // A finished run's result (or error) is below the fold on most screens: bring it into view.
+  useEffect(() => {
+    if (finishedRuns > 0) outcome.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [finishedRuns]);
 
   return (
     <div className="grid gap-6">
       <EngineCard server={server} onRefresh={refreshServer} onDone={(next) => {
         setNotice(next);
+        setFinishedRuns((n) => n + 1);
         refreshServer();
       }} />
-      {notice.error && <ErrorCard message={notice.error} />}
-      <ResultCard fallbackReason={notice.error ? undefined : notice.fallbackReason} />
+      <div ref={outcome} className="grid gap-6">
+        {notice.error && <ErrorCard message={notice.error} />}
+        <ResultCard fallbackReason={notice.error ? undefined : notice.fallbackReason} />
+      </div>
     </div>
   );
 }
@@ -47,12 +55,13 @@ function EngineCard({ server, onRefresh, onDone }: {
 }) {
   const data = useAppStore();
   const { engineMode, setEngineMode, timeLimitSec, setTimeLimitSec, loadSample, locks, setLocks } = data;
-  const { running, elapsed, run: runEngine } = useGenerate();
+  const { running, elapsed, run: runEngine, cancel } = useGenerate();
   const blockers = generateBlockers(data);
 
   const run = async () => {
     const notice = await runEngine();
-    if (notice) onDone(notice);
+    if (notice?.cancelled) cancelledToast();
+    else if (notice) onDone(notice);
   };
 
   return (
@@ -121,13 +130,19 @@ function EngineCard({ server, onRefresh, onDone }: {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button size="lg" disabled={running || blockers.length > 0} onClick={run}>
+          {/* Primary until there is a timetable; after that the footer's Next is the main way on. */}
+          <Button size="lg" variant={data.result ? "outline" : "default"} disabled={running || blockers.length > 0} onClick={run}>
             {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {running ? "Generating…" : data.result || locks.length > 0 ? regenerateLabel(locks.length) : "Generate timetable"}
           </Button>
           {locks.length > 0 && !running && (
             <Button variant="ghost" size="sm" onClick={() => setLocks([])}>
               <Lock /> Clear all locks
+            </Button>
+          )}
+          {running && (
+            <Button variant="outline" size="lg" onClick={cancel}>
+              <X /> Cancel
             </Button>
           )}
           {running && (
@@ -174,13 +189,6 @@ function ServerDot({ state, onRefresh }: { state: ServerState; onRefresh: () => 
   );
 }
 
-const SCORE_ROWS: { key: keyof ScoreBreakdown; label: string; rule: string }[] = [
-  { key: "subjectRepeat", label: "Subject repeats", rule: `Same subject twice in a day · ${WEIGHTS.subjectRepeat} per extra lecture` },
-  { key: "teacherOverload", label: "Teacher overload", rule: `More than 3 periods in a row · ${WEIGHTS.teacherOverload} per extra period` },
-  { key: "sectionGaps", label: "Section gaps", rule: `Idle periods between classes (lunch excluded) · ${WEIGHTS.sectionGaps} each` },
-  { key: "batchIdle", label: "Batch idle", rule: `One batch idle while another is in a lab · ${WEIGHTS.batchIdle} each` },
-];
-
 function ErrorCard({ message }: { message: string }) {
   const hasPrevious = useAppStore((s) => s.result !== null);
   return (
@@ -202,7 +210,6 @@ function ErrorCard({ message }: { message: string }) {
 
 function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
   const result = useAppStore((s) => s.result);
-  const setStep = useAppStore((s) => s.setStep);
   const { settings, departments, teachers, rooms, sections, courses, locks } = useAppStore();
   // Re-check against the current data: the store may hold a result from before a data edit.
   const validation = useMemo(() => {
@@ -220,11 +227,6 @@ function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
         <CardDescription>
           {result.placements.length} sessions placed in {(result.timeMs / 1000).toFixed(1)} s.
         </CardDescription>
-        <CardAction>
-          <Button onClick={() => setStep(3)}>
-            View timetable <ArrowRight />
-          </Button>
-        </CardAction>
       </CardHeader>
       <CardContent className="grid gap-5">
         <div
@@ -277,15 +279,21 @@ function ResultCard({ fallbackReason }: { fallbackReason?: string }) {
             <span className="font-normal text-muted-foreground">(lower is better, 0 is perfect)</span>
           </p>
           <div className="grid gap-2 sm:grid-cols-4">
-            {SCORE_ROWS.map((row) => (
-              <div key={row.key} className="rounded-lg border p-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  {row.label}
-                  <InfoTip>{row.rule}</InfoTip>
+            {SCORE_ROWS.map((row) => {
+              const points = result.score.breakdown[row.key];
+              return (
+                <div key={row.key} className="rounded-lg border p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {row.label}
+                    <InfoTip>{row.tip}</InfoTip>
+                  </div>
+                  <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
+                    {points} <span className="text-sm font-normal text-muted-foreground">pts</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, points)}</div>
                 </div>
-                <div className="text-xl font-semibold tabular-nums">{result.score.breakdown[row.key]}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </CardContent>

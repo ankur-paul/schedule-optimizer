@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { ArrowLeft, ArrowRight, CalendarDays, Check, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,10 @@ import { DataStep } from '@/features/data/DataStep'
 import { useCollegeData } from '@/features/data/collegeData'
 import { checkData } from '@/features/data/dataChecks'
 import { SetupStep } from '@/features/setup/SetupStep'
-import { settingsErrors } from '@/features/setup/periods'
+import type { FooterNote } from '@/features/footer'
+import { generateFooterNote } from '@/features/generate/generate'
+import { useGenerating } from '@/features/generate/useGenerate'
+import { settingsErrors, setupFooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
 import { useAppStore, type Step } from '@/store/useAppStore'
 
@@ -23,11 +27,28 @@ function App() {
   const step = useAppStore((s) => s.step)
   const setStep = useAppStore((s) => s.setStep)
   const settings = useAppStore((s) => s.settings)
+  const result = useAppStore((s) => s.result)
+  const generating = useGenerating()
   const reset = useAppStore((s) => s.reset)
   const data = useCollegeData()
 
-  // Steps ① and ② block moving on until their input is usable.
-  const blockers = step === 0 ? settingsErrors(settings) : step === 1 ? checkData(data, settings).errors : []
+  // Each step starts at its top, not wherever the previous step was scrolled to.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [step])
+
+  // Steps ① and ② block moving on until their input is usable; step ③ until there is a timetable.
+  const dataErrors = step === 1 ? checkData(data, settings).errors : []
+  const canContinue =
+    step === 0 ? settingsErrors(settings).length === 0 : step === 1 ? dataErrors.length === 0 : step === 2 ? result !== null && !generating : true
+  const note: FooterNote | null =
+    step === 0
+      ? setupFooterNote(settings)
+      : step === 1
+        ? dataErrors[0] ? { text: dataErrors[0], tone: 'error' } : null
+        : step === 2
+          ? generateFooterNote(result)
+          : null
   const current = STEPS[step]
 
   return (
@@ -72,9 +93,16 @@ function App() {
             <Button variant="outline" disabled={step === 0} onClick={() => setStep((step - 1) as Step)}>
               <ArrowLeft /> Back
             </Button>
-            <div className="flex-1 text-right text-sm text-destructive">{blockers[0]}</div>
+            <div
+              className={cn(
+                'flex-1 text-right text-sm',
+                note?.tone === 'hint' ? 'text-muted-foreground' : 'text-destructive',
+              )}
+            >
+              {note?.text}
+            </div>
             {step < 3 && (
-              <Button disabled={blockers.length > 0} onClick={() => setStep((step + 1) as Step)}>
+              <Button disabled={!canContinue} onClick={() => setStep((step + 1) as Step)}>
                 Next: {STEPS[step + 1].title} <ArrowRight />
               </Button>
             )}
@@ -89,19 +117,19 @@ function App() {
 function Stepper({ step, onSelect }: { step: Step; onSelect: (step: Step) => void }) {
   return (
     <nav aria-label="Steps" className="mx-auto max-w-6xl px-6 pb-3">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      <ol className="flex items-center gap-2">
         {STEPS.map((s, i) => {
           const state = i < step ? 'done' : i === step ? 'current' : 'todo'
           return (
             <li key={s.title} className="flex items-center gap-2">
-              {i > 0 && <span className="h-px w-6 bg-border sm:w-10" aria-hidden />}
+              {i > 0 && <span className="h-px w-4 bg-border sm:w-10" aria-hidden />}
               <button
                 type="button"
                 onClick={() => onSelect(i as Step)}
                 aria-current={state === 'current' ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
-                  state === 'current' ? 'font-medium text-foreground' : 'text-muted-foreground',
+                  'flex items-center gap-2 rounded-full py-1 pl-1 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+                  state === 'current' ? 'pr-3 font-medium text-foreground' : 'pr-1 text-muted-foreground sm:pr-3',
                 )}
               >
                 <span
@@ -113,7 +141,8 @@ function Stepper({ step, onSelect }: { step: Step; onSelect: (step: Step) => voi
                 >
                   {state === 'done' ? <Check className="size-3.5" /> : i + 1}
                 </span>
-                {s.title}
+                {/* Narrow screens: numbers only, plus the current step's name. */}
+                <span className={cn(state !== 'current' && 'sr-only sm:not-sr-only')}>{s.title}</span>
               </button>
             </li>
           )

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw, X } from "lucide-react";
+import { Popover } from "@base-ui/react/popover";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
@@ -10,7 +11,7 @@ import { expandSessions } from "@/domain/sessions";
 import type { Id } from "@/domain/types";
 import { validate } from "@/domain/validator";
 import { badgeText, regenerateSummary } from "@/features/generate/generate";
-import { useGenerate } from "@/features/generate/useGenerate";
+import { cancelledToast, useGenerate } from "@/features/generate/useGenerate";
 import { isLocked, regenerateLabel, toggleLock } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSubjectColors } from "./colors";
@@ -19,7 +20,7 @@ import { DraggableUnplaced, MoveDnd } from "./MoveDnd";
 import { placementsCsv } from "./exportCsv";
 import { entityGroups, entitySubtitle, placementsFor, stepEntity, unplacedFor, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 import { SessionDialog } from "./SessionDialog";
-import { StatsPanel } from "./StatsPanel";
+import { ScoreStrip, StatsPanel } from "./StatsPanel";
 import { TimetableSheet } from "./TimetableSheet";
 
 const KINDS: { kind: ViewKind; label: string }[] = [
@@ -41,7 +42,7 @@ export function ViewStep() {
   const locks = useAppStore((s) => s.locks);
   const setLocks = useAppStore((s) => s.setLocks);
   const lockedIds = useMemo(() => new Set(locks.map((l) => l.sessionId)), [locks]);
-  const { running, elapsed, run } = useGenerate();
+  const { running, elapsed, run, cancel } = useGenerate();
   const data: ViewData = useMemo(
     () => ({ settings, departments, teachers, rooms, sections, courses }),
     [settings, departments, teachers, rooms, sections, courses],
@@ -95,7 +96,8 @@ export function ViewStep() {
   const regenerate = async () => {
     const notice = await run();
     if (!notice) return;
-    if (notice.error) toast.error(`No timetable was produced: ${notice.error} The previous one is unchanged.`);
+    if (notice.cancelled) cancelledToast();
+    else if (notice.error) toast.error(`No timetable was produced: ${notice.error} The previous one is unchanged.`);
     else {
       const next = useAppStore.getState().result;
       if (next) toast.success(regenerateSummary(next), { description: notice.fallbackReason });
@@ -143,39 +145,32 @@ export function ViewStep() {
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
-          <Button onClick={regenerate} disabled={running} title="Re-solve everything except locked cells, with the engine chosen in step ③">
+          <Button variant="outline" onClick={regenerate} disabled={running} title="Re-solve everything except locked cells, with the engine chosen in step ③">
             {running ? <Loader2 className="animate-spin" /> : <RefreshCw />}
             {running ? `Regenerating… ${elapsed} s` : regenerateLabel(locks.length)}
           </Button>
+          {running && (
+            <Button variant="ghost" onClick={cancel}>
+              <X /> Cancel
+            </Button>
+          )}
           {locks.length > 0 && (
             <Button variant="ghost" disabled={running} onClick={() => setLocks([])}>
               <LockOpen /> Clear all locks
             </Button>
           )}
-          <Button variant="outline" disabled={!currentId} onClick={() => window.print()}>
-            <Printer /> Print this timetable
-          </Button>
-          <Button variant="outline" disabled={sections.length === 0} onClick={() => setPrintAll(true)}>
-            <Printer /> Print all sections
-          </Button>
           <Button variant="ghost" onClick={downloadCsv}>
             <Download /> CSV
           </Button>
+          <PrintMenu
+            heading={printHeading}
+            onHeadingChange={setPrintHeading}
+            canPrintThis={currentId !== null}
+            canPrintAll={sections.length > 0}
+            onPrintThis={() => window.print()}
+            onPrintAll={() => setPrintAll(true)}
+          />
         </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 print:hidden">
-        <label htmlFor="print-heading" className="text-sm text-muted-foreground">
-          Heading on printouts
-        </label>
-        <InfoTip>Printed under each timetable title, e.g. your college name and semester. Use your browser's “Save as PDF” to export.</InfoTip>
-        <Input
-          id="print-heading"
-          value={printHeading}
-          onChange={(e) => setPrintHeading(e.target.value)}
-          placeholder="College name · Semester 5, 2026"
-          className="h-8 max-w-sm flex-1"
-        />
       </div>
 
       {validation && (
@@ -199,6 +194,7 @@ export function ViewStep() {
           </span>
         </div>
       )}
+      {validation && <ScoreStrip data={data} placements={result.placements} />}
 
       {currentId ? (
         <MoveDnd data={data} sessions={sessions} colors={colors} locked={lockedIds}>
@@ -214,6 +210,7 @@ export function ViewStep() {
                 colors={colors}
                 onSelect={setOpen}
                 locked={lockedIds}
+                onToggleLock={(entry) => setLocks(toggleLock(locks, entry.placement))}
                 dnd={kind === "section" ? dnd : undefined}
                 className={cn(printAll && "print:hidden")}
               />
@@ -312,5 +309,58 @@ function EmptyState() {
         <Button onClick={() => setStep(2)}>Go to Generate</Button>
       </CardContent>
     </Card>
+  );
+}
+
+/** The one main action on this step: print (or save as PDF), with the printout heading kept next to it. */
+function PrintMenu({ heading, onHeadingChange, canPrintThis, canPrintAll, onPrintThis, onPrintAll }: {
+  heading: string;
+  onHeadingChange: (heading: string) => void;
+  canPrintThis: boolean;
+  canPrintAll: boolean;
+  onPrintThis: () => void;
+  onPrintAll: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const headingInput = useRef<HTMLInputElement>(null);
+  // Close first so the popover isn't in the way while the browser's print dialog is up.
+  const then = (print: () => void) => () => {
+    setOpen(false);
+    setTimeout(print, 50);
+  };
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger render={<Button />}>
+        <Printer /> Print <ChevronDown />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner sideOffset={4} align="end" className="isolate z-50">
+          <Popover.Popup initialFocus={headingInput} className="grid w-80 gap-3 rounded-lg bg-popover p-3 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none">
+            <div className="grid gap-1.5">
+              <label htmlFor="print-heading" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                Heading on printouts
+                <InfoTip>Printed under each timetable title, e.g. your college name and semester. Use your browser's “Save as PDF” to export.</InfoTip>
+              </label>
+              <Input
+                ref={headingInput}
+                id="print-heading"
+                value={heading}
+                onChange={(e) => onHeadingChange(e.target.value)}
+                placeholder="College name · Semester 5, 2026"
+                className="h-8"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" disabled={!canPrintThis} onClick={then(onPrintThis)}>
+                This timetable
+              </Button>
+              <Button variant="outline" disabled={!canPrintAll} onClick={then(onPrintAll)}>
+                All sections
+              </Button>
+            </div>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

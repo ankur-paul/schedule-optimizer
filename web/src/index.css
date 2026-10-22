@@ -126,6 +126,8 @@
     }
   html {
     @apply font-sans;
+    /* Keep the scrollbar's space reserved so pages don't shift sideways between steps. */
+    scrollbar-gutter: stable;
     }
 }
 /* Printing (T11): A4 landscape, keep subject colours. Screen-only chrome uses Tailwind `print:hidden`. */

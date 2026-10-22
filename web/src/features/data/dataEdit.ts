@@ -47,6 +47,17 @@ export function setBatchTeacher(course: Course, batches: number, b: number, teac
   return ids.every((id) => id === course.teacherId) ? null : ids;
 }
 
+/**
+ * One-line summary for the Batch teachers cell: only the batches that differ from the course
+ * teacher, e.g. "B2: Prof. Rahul Verma". null when every batch uses the course teacher.
+ */
+export function batchTeacherSummary(course: Course, batches: number, teacherName: (id: Id) => string): string | null {
+  const overrides = Array.from({ length: batches }, (_, i) => course.batchTeacherIds?.[i] ?? course.teacherId)
+    .map((id, i) => ({ id, b: i + 1 }))
+    .filter(({ id }) => id !== course.teacherId);
+  return overrides.length ? overrides.map(({ id, b }) => `B${b}: ${teacherName(id)}`).join(" · ") : null;
+}
+
 /** Lab rooms a section may be pinned to: shared or owned by its department. */
 export function labRoomsFor(rooms: Room[], section: Section | undefined): Room[] {
   return rooms.filter((r) => r.type === "lab" && (r.departmentId === null || r.departmentId === section?.departmentId));
@@ -65,4 +76,13 @@ export function filterCourses(courses: Course[], filter: CourseFilter): Course[]
       (!filter.sectionId || c.sectionId === filter.sectionId) &&
       (!filter.teacherId || c.teacherId === filter.teacherId || !!c.batchTeacherIds?.includes(filter.teacherId)),
   );
+}
+
+/** Data tabs in the order the data depends on: courses need sections, teachers and rooms. */
+export const DATA_TABS = ["departments", "rooms", "teachers", "sections", "courses"] as const;
+export type DataTab = (typeof DATA_TABS)[number];
+
+/** Open on Courses once there are some (the table people edit most), otherwise at the start. */
+export function defaultDataTab(data: Pick<CollegeData, "courses">): DataTab {
+  return data.courses.length > 0 ? "courses" : "departments";
 }

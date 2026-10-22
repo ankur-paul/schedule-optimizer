@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { useDataView } from "./dataView";
 
 describe("useDataView", () => {
-  beforeEach(() => useDataView.getState().open({ tab: "courses" }));
+  beforeEach(() => useDataView.setState(useDataView.getInitialState()));
 
-  it("starts on Courses with no filter", () => {
-    expect(useDataView.getState()).toMatchObject({ tab: "courses", filter: { sectionId: "", teacherId: "" } });
+  it("starts with no tab picked (step ② picks one from the data) and no filter", () => {
+    expect(useDataView.getState()).toMatchObject({ tab: null, filter: { sectionId: "", teacherId: "" } });
   });
 
   it("setFilter changes one filter and keeps the other", () => {

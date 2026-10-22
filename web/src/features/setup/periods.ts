@@ -1,4 +1,5 @@
 import type { Period, Settings } from "@/domain/types";
+import type { FooterNote } from "@/features/footer";
 
 export const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -109,4 +110,14 @@ export function settingsErrors(settings: Settings): string[] {
   if (periodErrors(settings.periods).size > 0) errors.push("Fix the highlighted periods.");
   if (settings.lunchCandidates.length === 0) errors.push("Pick at least one lunch candidate period.");
   return errors;
+}
+
+/**
+ * What step ① says next to its disabled Next button. A fresh setup with no periods yet gets a
+ * neutral hint instead of a red error: nothing is wrong, the user just hasn't started.
+ */
+export function setupFooterNote(settings: Settings): FooterNote | null {
+  if (settings.periods.length === 0) return { text: "Create periods to continue.", tone: "hint" };
+  const [first] = settingsErrors(settings);
+  return first ? { text: first, tone: "error" } : null;
 }

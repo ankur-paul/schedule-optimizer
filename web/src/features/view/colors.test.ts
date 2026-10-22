@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleCollege } from "@/domain/sampleCollege";
-import { buildSubjectColors, hashString, PALETTE, subjectColor } from "./colors";
+import { buildSubjectColors, hashString, hueDistance, PALETTE, subjectColor } from "./colors";
 
 describe("subject colours", () => {
   it("hash is stable and non-negative", () => {
@@ -15,6 +15,33 @@ describe("subject colours", () => {
       const subjects = [...new Set(sampleCollege.courses.filter((c) => c.sectionId === section.id).map((c) => c.subject))];
       const used = subjects.map((s) => colors.get(s));
       expect(new Set(used).size).toBe(subjects.length);
+    }
+  });
+
+  it("keeps a section's subjects far apart on the hue wheel in the sample college", () => {
+    const colors = buildSubjectColors(sampleCollege.courses);
+    for (const section of sampleCollege.sections) {
+      const used = [...new Set(sampleCollege.courses.filter((c) => c.sectionId === section.id).map((c) => colors.get(c.subject)!))];
+      for (const a of used) for (const b of used) if (a !== b) expect(hueDistance(a, b)).toBeGreaterThanOrEqual(40);
+    }
+  });
+
+  it("gives a second subject the hue farthest from the first", () => {
+    const colors = buildSubjectColors([
+      { sectionId: "s", subject: "Art" },
+      { sectionId: "s", subject: "Biology" },
+    ]);
+    const farthest = Math.max(...PALETTE.map((_, i) => hueDistance(colors.get("Art")!, i)));
+    expect(hueDistance(colors.get("Art")!, colors.get("Biology")!)).toBe(farthest);
+  });
+
+  it("measures hue distance the short way round the wheel", () => {
+    for (let a = 0; a < PALETTE.length; a++) {
+      expect(hueDistance(a, a)).toBe(0);
+      for (let b = 0; b < PALETTE.length; b++) {
+        expect(hueDistance(a, b)).toBe(hueDistance(b, a));
+        expect(hueDistance(a, b)).toBeLessThanOrEqual(180);
+      }
     }
   });
 

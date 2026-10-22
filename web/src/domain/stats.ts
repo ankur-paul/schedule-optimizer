@@ -4,33 +4,47 @@ import type { Id, Placement, ScoreBreakdown, SolveInput } from "./types";
 
 export type StatsData = CollegeData & Pick<SolveInput, "departments">;
 
-/** Plain-English rows for the score card, in PLAN.md §2 order (S1–S4). */
-export const SCORE_ROWS: { key: keyof ScoreBreakdown; rule: string; label: string; tip: string }[] = [
+/**
+ * Plain-English rows for the score (steps ③ and ④ both use these), in PLAN.md §2 order (S1–S4).
+ * `unit` names what one penalty counts, singular and plural.
+ */
+export const SCORE_ROWS: { key: keyof ScoreBreakdown; rule: string; label: string; tip: string; unit: [string, string] }[] = [
   {
     key: "subjectRepeat",
     rule: "S1",
+    unit: ["extra lecture", "extra lectures"],
     label: "Same subject twice in a day",
     tip: `${WEIGHTS.subjectRepeat} points for each extra lecture of a course on the same day.`,
   },
   {
     key: "teacherOverload",
     rule: "S2",
+    unit: ["extra period", "extra periods"],
     label: "Teachers with long runs",
     tip: `${WEIGHTS.teacherOverload} points for each period a teacher teaches beyond 3 in a row (a break ends the run).`,
   },
   {
     key: "sectionGaps",
     rule: "S3",
+    unit: ["free period", "free periods"],
     label: "Free periods between classes",
     tip: `${WEIGHTS.sectionGaps} points per idle period between a section's first and last class of the day. Lunch periods don't count.`,
   },
   {
     key: "batchIdle",
     rule: "S4",
+    unit: ["batch-period", "batch-periods"],
     label: "Batches waiting during labs",
     tip: `${WEIGHTS.batchIdle} points per period where one batch of a split section is in a lab and another batch has nothing.`,
   },
 ];
+
+/** What a breakdown entry counts, from its points: batchIdle 18 → "6 batch-periods". */
+export function scoreCount(key: keyof ScoreBreakdown, points: number): string {
+  const n = points / WEIGHTS[key];
+  const [one, many] = SCORE_ROWS.find((r) => r.key === key)!.unit;
+  return `${n} ${n === 1 ? one : many}`;
+}
 
 export interface TeacherLoad {
   teacherId: Id;
@@ -66,6 +80,19 @@ export function sortLoads(loads: TeacherLoad[], key: LoadSortKey, dir: "asc" | "
     const primary = key === "total" ? a.total - b.total : a[key].localeCompare(b[key]);
     return primary !== 0 ? sign * primary : byName(a, b);
   });
+}
+
+/** Teacher load rows shown before "Show all". */
+export const LOAD_PREVIEW = 10;
+
+/** The first `limit` rows unless expanded; a list only one row longer is shown whole (no "Show all 11"). */
+export function previewRows<T>(rows: T[], expanded: boolean, limit = LOAD_PREVIEW): T[] {
+  return expanded || rows.length <= limit + 1 ? rows : rows.slice(0, limit);
+}
+
+/** Short day labels for the per-day bars: "Mon" → "Mo", so Tue/Thu and Sat/Sun stay distinct. */
+export function dayInitials(days: string[]): string[] {
+  return days.map((d) => d.slice(0, 2));
 }
 
 /** Highest and lowest weekly load; null when there are no teachers. */

@@ -10,6 +10,7 @@ import {
   parseGeneratorForm,
   periodErrors,
   settingsErrors,
+  setupFooterNote,
   toMinutes,
   toggleDay,
   withPeriods,
@@ -148,6 +149,34 @@ describe("setup helper edge cases", () => {
   it("needs a teaching period, not just breaks", () => {
     const s = { days: ["Mon"], periods: [p(0, "Break", "10:00", "10:20", "break")], lunchCandidates: [] };
     expect(settingsErrors(s)).toEqual(["Add at least one teaching period.", "Pick at least one lunch candidate period."]);
+  });
+});
+
+describe("setupFooterNote", () => {
+  it("gives a neutral hint, not an error, while there are no periods at all", () => {
+    const fresh = { days: ["Mon", "Tue"], periods: [], lunchCandidates: [] };
+    expect(setupFooterNote(fresh)).toEqual({ text: "Create periods to continue.", tone: "hint" });
+  });
+
+  it("still hints when the days are missing too, since periods are the first thing to do", () => {
+    expect(setupFooterNote({ days: [], periods: [], lunchCandidates: [] })?.tone).toBe("hint");
+  });
+
+  it("shows the first real problem as an error once periods exist", () => {
+    const onlyBreak = {
+      days: ["Mon"],
+      periods: [{ id: 0, label: "Break", start: "10:00", end: "10:20", kind: "break" as const }],
+      lunchCandidates: [],
+    };
+    expect(setupFooterNote(onlyBreak)).toEqual({ text: "Add at least one teaching period.", tone: "error" });
+    expect(setupFooterNote({ ...settings, lunchCandidates: [] })).toEqual({
+      text: "Pick at least one lunch candidate period.",
+      tone: "error",
+    });
+  });
+
+  it("says nothing when the settings are valid", () => {
+    expect(setupFooterNote(settings)).toBeNull();
   });
 });
 

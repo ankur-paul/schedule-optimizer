@@ -3,7 +3,7 @@ import { sampleCollege } from "@/domain/sampleCollege";
 import { useAppStore } from "@/store/useAppStore";
 import type { Course } from "@/domain/types";
 import type { CollegeData } from "./excel";
-import { filterCourses, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
+import { DATA_TABS, batchTeacherSummary, defaultDataTab, filterCourses, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
 
 const data = (): CollegeData => ({
   departments: [
@@ -110,5 +110,40 @@ describe("store setData", () => {
     expect(after.result).toBeNull();
     expect(after.settings).toEqual(sampleCollege.settings);
     after.reset();
+  });
+});
+
+describe("data tabs", () => {
+  it("lists tables in dependency order, courses last", () => {
+    expect(DATA_TABS).toEqual(["departments", "rooms", "teachers", "sections", "courses"]);
+  });
+
+  it("opens on Courses when there are courses, otherwise on Departments", () => {
+    expect(defaultDataTab(data())).toBe("courses");
+    expect(defaultDataTab({ courses: [] })).toBe("departments");
+    expect(defaultDataTab(sampleCollege)).toBe("courses");
+  });
+});
+
+describe("batchTeacherSummary", () => {
+  const names: Record<string, string> = { t1: "Anita", t2: "Ravi", t3: "Meera" };
+  const name = (id: string) => names[id] ?? id;
+  const course = (batchTeacherIds: string[] | null): Course => ({
+    id: "c", sectionId: "s", subject: "DS", teacherId: "t1", lecturesPerWeek: 3,
+    labSessionsPerWeek: 1, labLength: 2, labRoomId: null, batchTeacherIds,
+  });
+
+  it("is null when every batch uses the course teacher", () => {
+    expect(batchTeacherSummary(course(null), 2, name)).toBeNull();
+    expect(batchTeacherSummary(course(["t1", "t1"]), 2, name)).toBeNull();
+  });
+
+  it("lists only the batches that differ, by batch number", () => {
+    expect(batchTeacherSummary(course(["t1", "t2"]), 2, name)).toBe("B2: Ravi");
+    expect(batchTeacherSummary(course(["t2", "t1", "t3"]), 3, name)).toBe("B1: Ravi · B3: Meera");
+  });
+
+  it("treats batches missing from a short list as the course teacher", () => {
+    expect(batchTeacherSummary(course(["t2"]), 3, name)).toBe("B1: Ravi");
   });
 });
