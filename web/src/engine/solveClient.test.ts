@@ -88,7 +88,7 @@ describe("generate: auto", () => {
     const d = deps(server({ solve: () => { throw new DOMException("timed out", "TimeoutError"); } }));
     const out = await generate(tinyCollege, "auto", d);
     expect(out.result.engine).toBe("heuristic");
-    expect(out.fallbackReason).toMatch(/did not answer within 10 s/);
+    expect(out.fallbackReason).toMatch(/did not answer within 15 s/);
   });
 
   it("falls back when CP-SAT finds no solution in time", async () => {

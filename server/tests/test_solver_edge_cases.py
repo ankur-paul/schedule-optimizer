@@ -54,13 +54,17 @@ def solved(inp: SolveInput, status: tuple[str, ...] = ("optimal",)):
     return res
 
 
-def infeasible(inp: SolveInput, message_has: str | None = None):
+def infeasible(inp: SolveInput, message_has: str | None = None, diagnosis: list[tuple] | None = None):
+    """Solve and check it is infeasible; `diagnosis` lists the expected (kind, ids, detail) entries in order."""
     res = solve(inp)
     assert res.status == "infeasible", f"expected infeasible, got {res.status}"
     assert res.placements == []
     assert res.message
+    assert res.diagnosis is not None, "every infeasible result carries a diagnosis, [] when no cause was found"
     if message_has:
         assert message_has in res.message, res.message
+    if diagnosis is not None:
+        assert [(d.kind, d.ids, d.detail) for d in res.diagnosis] == diagnosis
     return res
 
 
@@ -77,24 +81,28 @@ class TestInputShape:
         assert res.placements == []
 
     def test_zero_days_with_sessions_is_infeasible(self):
-        infeasible(tiny(days=0, courses=[course("c1", lectures=1)]))
+        infeasible(tiny(days=0, courses=[course("c1", lectures=1)]), diagnosis=[("noSlot", ["c1:L1"], "noStart")])
 
     def test_zero_days_and_no_sessions_is_optimal(self):
         assert solve(tiny(days=0)).status == "optimal"
 
     def test_only_break_periods_says_why(self):
-        infeasible(tiny(periods="BB", courses=[course("c1", lectures=1)]), "no 1 consecutive teaching periods")
+        infeasible(tiny(periods="BB", courses=[course("c1", lectures=1)]), "not enough consecutive teaching periods",
+                   diagnosis=[("noSlot", ["c1:L1"], "noStart")])
 
     def test_no_periods_at_all(self):
-        infeasible(tiny(periods="", courses=[course("c1", lectures=1)]), "cannot be placed anywhere")
+        infeasible(tiny(periods="", courses=[course("c1", lectures=1)]), "cannot be placed anywhere",
+                   diagnosis=[("noSlot", ["c1:L1"], "noStart")])
 
     def test_no_rooms_at_all(self):
-        infeasible(tiny(rooms=[], courses=[course("c1", lectures=1)]), "no eligible room")
+        infeasible(tiny(rooms=[], courses=[course("c1", lectures=1)]), "no eligible room",
+                   diagnosis=[("noSlot", ["c1:L1"], "noRoom")])
 
-    def test_no_slot_message_lists_at_most_five_sessions(self):
-        res = infeasible(tiny(rooms=[], courses=[course("c1", lectures=7)]))
+    def test_no_slot_lists_every_session_and_the_message_only_counts(self):
+        res = infeasible(tiny(rooms=[], courses=[course("c1", lectures=7)]),
+                         diagnosis=[("noSlot", [f"c1:L{i}" for i in range(1, 8)], "noRoom")])
         assert res.message.startswith("7 session(s) cannot be placed anywhere")
-        assert res.message.count("c1:L") == 5 and res.message.endswith("…")
+        assert "c1:L" not in res.message
 
     def test_unknown_section_is_an_error_not_a_crash(self):
         res = solve(tiny(courses=[course("c1", lectures=1, section="ghost")]))
@@ -132,7 +140,7 @@ class TestInputShape:
         assert res.status == "optimal" and res.placements == []
 
     def test_zero_lab_length_is_reported_as_unplaceable(self):
-        infeasible(tiny(rooms=[LAB], courses=[course("c1", labs=1, lab_length=0)]), "no 0 consecutive teaching periods")
+        infeasible(tiny(rooms=[LAB], courses=[course("c1", labs=1, lab_length=0)]), diagnosis=[("noSlot", ["c1:P1"], "noStart")])
 
     def test_duplicate_course_ids_are_reported_as_such(self):
         # Two courses share id c1, so both expand to session c1:L1; their solver variables would collide.
@@ -192,7 +200,7 @@ class TestPeriodsAndLabs:
         assert placed(res)["c1:P1"].room_id == "lab1"
 
     def test_lecture_with_only_labs_available_is_unplaceable(self):
-        infeasible(tiny(rooms=[LAB], courses=[course("c1", lectures=1)]), "c1:L1 (no eligible room)")
+        infeasible(tiny(rooms=[LAB], courses=[course("c1", lectures=1)]), diagnosis=[("noSlot", ["c1:L1"], "noRoom")])
 
 
 # --- Rooms (H3, H4) -----------------------------------------------------------------------------------------------
@@ -386,24 +394,24 @@ class TestLocks:
         solved(tiny(days=3, periods="TT", courses=[course("c1", lectures=3)], locks=locks))
 
     def test_lock_with_unknown_day(self):
-        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 5, 0)]), "Locked")
+        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 5, 0)]), diagnosis=[("badLock", ["c1:L1"], None)])
 
     def test_lock_with_negative_period(self):
-        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, -1)]), "Locked")
+        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, -1)]), diagnosis=[("badLock", ["c1:L1"], None)])
 
     def test_lock_in_wrong_room_type(self):
-        infeasible(tiny(rooms=[ROOM, LAB], courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 0, "lab1")]), "Locked")
+        infeasible(tiny(rooms=[ROOM, LAB], courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 0, "lab1")]), diagnosis=[("badLock", ["c1:L1"], None)])
 
     def test_lock_in_another_departments_room(self):
         inp = tiny(rooms=[ROOM, room("foreign", dept="d2")], courses=[course("c1", lectures=1)],
                    locks=[lock("c1:L1", 0, 0, "foreign")])
-        infeasible(inp, "Locked")
+        infeasible(inp, "not valid placements", diagnosis=[("badLock", ["c1:L1"], None)])
 
     def test_lock_of_lab_that_would_cross_a_break(self):
         # The lab can start at P0 (P0–P1), but a lock at P1 would run it into the break.
         inp = tiny(periods="TTBT", rooms=[LAB], courses=[course("c1", labs=1, lab_length=2)],
                    locks=[lock("c1:P1", 0, 1, "lab1")])
-        infeasible(inp, "Locked")
+        infeasible(inp, diagnosis=[("badLock", ["c1:P1"], None)])
 
     def test_lock_of_lab_mid_run_start(self):
         # A 2-period lab may start at P1 of a 3-period run; locking it there is valid.
@@ -415,17 +423,19 @@ class TestLocks:
         assert placed(solved(inp))["c1:L1"].period == 2
 
     def test_two_different_locks_for_one_session_are_infeasible(self):
-        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 0), lock("c1:L1", 0, 1)]))
+        infeasible(tiny(courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 0), lock("c1:L1", 0, 1)]),
+                   diagnosis=[("locks", ["c1:L1"], None)])
 
     def test_lock_that_starves_another_session_is_infeasible(self):
-        # One room, one period: locking a's lecture there leaves nowhere for b.
-        inp = tiny(periods="T", sections=[section("s1"), section("s2")],
+        # One room, two periods: locking a's lecture in P0 is fine, but locking b's there too leaves a without a slot.
+        inp = tiny(periods="TT", sections=[section("s1"), section("s2")],
                    courses=[course("a", lectures=1, section="s1"), course("b", lectures=1, section="s2", teacher="t2")],
-                   locks=[lock("a:L1", 0, 0)])
-        infeasible(inp)
+                   locks=[lock("a:L1", 0, 0), lock("b:L1", 0, 0)])
+        infeasible(inp, diagnosis=[("locks", ["a:L1", "b:L1"], None)])
 
     def test_lock_breaking_lunch_is_infeasible(self):
-        infeasible(tiny(lunch=[1], courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 1)]))
+        infeasible(tiny(lunch=[1], courses=[course("c1", lectures=1)], locks=[lock("c1:L1", 0, 1)]),
+                   diagnosis=[("locks", ["c1:L1"], None)])
 
     def test_lock_that_forces_a_penalty_is_still_optimal(self):
         # Locks put both lectures of c1 on Monday: S1 = 10 is the best possible.
@@ -439,6 +449,99 @@ class TestLocks:
                    locks=[lock("c1:P1:B1", 0, 2, "lab2")])
         res = solved(inp)
         assert placed(res)["c1:P1:B2"].period == 2 and placed(res)["c1:P1:B2"].room_id == "lab1"
+
+
+# --- Infeasibility diagnosis --------------------------------------------------------------------------------------------
+
+
+class SolveSpy(cp_model.CpSolver):
+    """CpSolver that records each solve (time limit, has objective) and can fake the probe's status."""
+
+    calls: list[tuple[float, bool]] = []
+    probe_status = None  # set to a cp_model status to return it for solves without an objective
+
+    def solve(self, model, *args, **kwargs):
+        SolveSpy.calls.append((self.parameters.max_time_in_seconds, model.has_objective()))
+        if SolveSpy.probe_status is not None and not model.has_objective():
+            return SolveSpy.probe_status
+        return super().solve(model, *args, **kwargs)
+
+
+@pytest.fixture
+def spy(monkeypatch):
+    SolveSpy.calls, SolveSpy.probe_status = [], None
+    monkeypatch.setattr(solver_module.cp_model, "CpSolver", SolveSpy)
+    return SolveSpy
+
+
+def starved(locks: list[dict]) -> SolveInput:
+    """One room, one period, two sections: solvable alone; locking a:L1 or b:L1 is harmless, locking both clashes."""
+    return tiny(periods="TT", sections=[section("s1"), section("s2")],
+                courses=[course("a", lectures=1, section="s1"), course("b", lectures=1, section="s2", teacher="t2")],
+                locks=locks)
+
+
+class TestDiagnosis:
+    def test_no_room_and_no_start_each_list_every_session(self):
+        courses = [
+            course("a", labs=6, lab_length=1, labRoomId="ghost"),  # no room
+            course("b", labs=6, lab_length=3, teacher="t2"),  # no 3-period run
+            course("c", labs=1, lab_length=3, labRoomId="ghost"),  # neither
+        ]
+        res = infeasible(tiny(periods="TTBTT", rooms=[LAB], courses=courses))
+        by_detail = {d.detail: d.ids for d in res.diagnosis}
+        assert [d.kind for d in res.diagnosis] == ["noSlot", "noSlot"]
+        assert by_detail["noRoom"] == [f"a:P{i}" for i in range(1, 7)] + ["c:P1"]
+        assert by_detail["noStart"] == [f"b:P{i}" for i in range(1, 7)] + ["c:P1"]
+        assert "7 session(s)" in res.message and ":P" not in res.message
+
+    def test_bad_locks_are_listed_once_each_and_valid_locks_are_not(self):
+        locks = [lock("ghost:L1", 0, 0), lock("c1:L1", 0, 1, "nowhere"), lock("c1:L1", 0, 1, "nowhere"), lock("c1:L2", 0, 0)]
+        res = infeasible(tiny(days=2, courses=[course("c1", lectures=2)], locks=locks),
+                         diagnosis=[("badLock", ["ghost:L1", "c1:L1"], None)])
+        assert res.message.startswith("2 locked cell(s)")
+
+    def test_no_slot_and_bad_locks_are_reported_together(self):
+        inp = tiny(rooms=[ROOM], courses=[course("a", labs=1, lab_length=1), course("b", lectures=1, teacher="t2")],
+                   locks=[lock("b:L1", 0, 9)])
+        infeasible(inp, diagnosis=[("noSlot", ["a:P1"], "noRoom"), ("badLock", ["b:L1"], None)])
+
+    def test_lock_that_makes_a_solvable_college_infeasible_is_blamed(self, spy):
+        assert solve(starved([])).status == "optimal"
+        res = infeasible(starved([lock("a:L1", 0, 0), lock("b:L1", 0, 0)]),
+                         diagnosis=[("locks", ["a:L1", "b:L1"], None)])
+        assert "without them a timetable exists" in res.message and "a:L1" not in res.message
+        # Main solve with the objective, then the feasibility-only probe with its own short limit.
+        assert spy.calls[-2:] == [(5, True), (solver_module.PROBE_TIME_LIMIT_SEC, False)]
+
+    def test_infeasible_without_locks_has_an_empty_diagnosis_and_no_probe(self, spy):
+        res = infeasible(tiny(periods="TT", courses=[course("c1", lectures=3)]), diagnosis=[])
+        assert "No clash-free timetable exists" in res.message
+        assert len(spy.calls) == 1
+
+    def test_innocent_lock_is_not_blamed(self, spy):
+        # Three lectures never fit two periods, lock or not: the probe proves it and adds nothing.
+        res = infeasible(tiny(periods="TT", courses=[course("c1", lectures=3)], locks=[lock("c1:L1", 0, 0)]), diagnosis=[])
+        assert "No clash-free timetable exists" in res.message
+        assert len(spy.calls) == 2
+
+    def test_probe_that_runs_out_of_time_only_suspects_the_locks(self, spy):
+        spy.probe_status = cp_model.UNKNOWN
+        res = infeasible(starved([lock("a:L1", 0, 0), lock("b:L1", 0, 0)]), diagnosis=[("locksLikely", ["a:L1", "b:L1"], None)])
+        assert "probably" in res.message
+
+    def test_feasible_result_has_no_diagnosis(self):
+        assert solve(starved([lock("a:L1", 0, 0)])).diagnosis is None
+
+    def test_build_model_without_locks_or_objective(self):
+        inp = starved([lock("a:L1", 0, 0), lock("b:L1", 0, 0)])
+        sessions = expand_sessions(inp)
+        full, _ = solver_module.build_model(inp, sessions)
+        probe, x = solver_module.build_model(inp, sessions, use_locks=False, objective=False)
+        assert full.has_objective() and not probe.has_objective()
+        assert cp_model.CpSolver().solve(full) == cp_model.INFEASIBLE
+        assert cp_model.CpSolver().solve(probe) in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+        assert set(x) == {(sid, 0, p, "r1") for sid in ("a:L1", "b:L1") for p in (0, 1)}
 
 
 # --- Soft rules (S1–S4) and optimality ---------------------------------------------------------------------------------

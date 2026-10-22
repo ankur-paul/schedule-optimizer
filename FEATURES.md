@@ -30,7 +30,7 @@ Changing any setting clears the current timetable and its locks, because placeme
   - *Exact* uses the CP-SAT solver on the Python server (FastAPI + OR-Tools). It finds the best timetable or proves none exists. The sample college solves to the optimum (score 18) in about 10 s.
   - *Fast* runs a heuristic in a Web Worker, so the page stays responsive. It places the most constrained sessions first, restarts with different random seeds, then improves the result by moving and swapping sessions. On the sample it places all 210 sessions with score 18 in about 1.5 s.
 - **Time limit.** A slider from 5 to 60 s (default 20). A dot shows whether the solver server is online, and a timer counts the elapsed seconds.
-- **Automatic fallback.** In Auto mode, the heuristic takes over when the server is unreachable, times out, errors, or reports the input infeasible. For infeasible input it returns a partial timetable.
+- **Automatic fallback.** In Auto mode, the heuristic takes over when the server is unreachable, times out, errors, or reports the input infeasible. For infeasible input it returns a partial timetable. The reason names what the server found: sessions with no room or no long enough run of periods, invalid locks, or locks that make the timetable impossible (it re-checks without them for up to 5 s).
 - **Unplaced sessions.** Any session that could not be placed is listed with the reason, such as the teacher or room that blocked it.
 - **Verification badge.** A TypeScript validator re-checks every result against the hard rules, whichever engine produced it, and the badge reads e.g. `✓ Verified: 0 clashes · engine: CP-SAT (optimal)`. The score is also recomputed in the browser, so both engines are scored by the same code.
 
