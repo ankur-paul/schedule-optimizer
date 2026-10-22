@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
@@ -10,7 +9,8 @@ import type { Course, Department, Id, Room, Section, Teacher } from "@/domain/ty
 import { useAppStore } from "@/store/useAppStore";
 import { useCollegeData } from "./collegeData";
 import type { DataReport } from "./dataChecks";
-import { labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
+import { filterCourses, labRoomsFor, nextId, removeRoom, removeSection, setBatchTeacher, usageCount } from "./dataEdit";
+import { useDataView, type DataTab } from "./dataView";
 
 const selectClass =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
@@ -104,10 +104,12 @@ function DepartmentOptions({ departments, shared }: { departments: Department[];
 
 export function DataTables({ report }: { report: DataReport }) {
   const data = useCollegeData();
+  const tab = useDataView((s) => s.tab);
+  const setTab = useDataView((s) => s.setTab);
   return (
     <Card>
       <CardContent>
-        <Tabs defaultValue="courses">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as DataTab)}>
           <TabsList>
             <TabsTrigger value="courses">Courses ({data.courses.length})</TabsTrigger>
             <TabsTrigger value="sections">Sections ({data.sections.length})</TabsTrigger>
@@ -339,9 +341,10 @@ function CoursesTable() {
   const data = useCollegeData();
   const setCourses = useAppStore((s) => s.setCourses);
   const update = useUpdate<Course>(data.courses, setCourses);
-  const [sectionFilter, setSectionFilter] = useState("");
+  const filter = useDataView((s) => s.filter);
+  const setFilter = useDataView((s) => s.setFilter);
   const sectionById = new Map(data.sections.map((s) => [s.id, s]));
-  const shown = sectionFilter ? data.courses.filter((c) => c.sectionId === sectionFilter) : data.courses;
+  const shown = filterCourses(data.courses, filter);
 
   const teacherOptions = (
     <>
@@ -357,21 +360,30 @@ function CoursesTable() {
   );
 
   const add = () => {
-    const sectionId = sectionFilter || data.sections[0].id;
+    const sectionId = filter.sectionId || data.sections[0].id;
+    const teacherId = filter.teacherId || (data.teachers[0]?.id ?? "");
     setCourses([
       ...data.courses,
-      { id: nextId("course", data.courses), sectionId, subject: "", teacherId: data.teachers[0]?.id ?? "", lecturesPerWeek: 3, labSessionsPerWeek: 0, labLength: 2, labRoomId: null, batchTeacherIds: null },
+      { id: nextId("course", data.courses), sectionId, subject: "", teacherId, lecturesPerWeek: 3, labSessionsPerWeek: 0, labLength: 2, labRoomId: null, batchTeacherIds: null },
     ]);
   };
 
   return (
     <div className="grid gap-3">
       <div className="flex items-center gap-2">
-        <Select label="Filter by section" value={sectionFilter} onChange={setSectionFilter} className="w-56">
+        <Select label="Filter by section" value={filter.sectionId} onChange={(v) => setFilter({ sectionId: v })} className="w-56">
           <option value="">All sections</option>
           {data.sections.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
+            </option>
+          ))}
+        </Select>
+        <Select label="Filter by teacher" value={filter.teacherId} onChange={(v) => setFilter({ teacherId: v })} className="w-56">
+          <option value="">All teachers</option>
+          {data.teachers.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
             </option>
           ))}
         </Select>
