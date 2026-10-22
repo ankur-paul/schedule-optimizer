@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useAppStore } from "./useAppStore";
+import { migrateState, PERSIST_VERSION, useAppStore } from "./useAppStore";
 
 describe("initial state", () => {
   beforeEach(() => useAppStore.getState().reset());
@@ -27,5 +27,22 @@ describe("printHeading", () => {
     expect(useAppStore.getState().printHeading).toBe("My College");
     useAppStore.getState().reset();
     expect(useAppStore.getState().printHeading).toBe("");
+  });
+});
+
+describe("migrateState", () => {
+  it("drops engineMode from state saved before version 1, keeping the rest", () => {
+    const old = { engineMode: "auto", timeLimitSec: 30, printHeading: "X" };
+    expect(migrateState(old, 0)).toEqual({ timeLimitSec: 30, printHeading: "X" });
+    expect(old).toHaveProperty("engineMode"); // input not mutated
+  });
+
+  it("leaves current state alone", () => {
+    expect(migrateState({ timeLimitSec: 20 }, PERSIST_VERSION)).toEqual({ timeLimitSec: 20 });
+  });
+
+  it("has no engineMode in a fresh store", () => {
+    useAppStore.getState().reset();
+    expect(useAppStore.getState()).not.toHaveProperty("engineMode");
   });
 });

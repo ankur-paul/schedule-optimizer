@@ -67,7 +67,11 @@ describe("solveHeuristic", () => {
     // ECE-2B itself is overfull too, so which sessions drop out varies; some Maths lecture must.
     const maths = result.unplaced.find((u) => u.sessionId.startsWith("b-m:"));
     expect(maths?.reason).toMatch(/^ECE-2B Maths: no period where teacher S\. Rao, ECE-2B and an eligible classroom are all free/);
-    for (const u of result.unplaced) expect(u.reason).not.toBe("");
+    expect(maths?.cause).toMatch(/^(teacher|section)$/);
+    for (const u of result.unplaced) {
+      expect(u.reason).not.toBe("");
+      expect(["teacher", "section", "room", "lunch"]).toContain(u.cause);
+    }
     const check = validate(input, result.placements);
     expect(check.ok).toBe(true);
     expect(check.missing.sort()).toEqual(result.unplaced.map((u) => u.sessionId).sort());
@@ -76,13 +80,19 @@ describe("solveHeuristic", () => {
   it("explains a lab with no usable room", () => {
     const result = solveHeuristic(withCourse("b-ph", { labRoomId: "nope" }), { timeLimitMs: 100 });
     expect(result.unplaced).toEqual([
-      { sessionId: "b-ph:P1", reason: "ECE-2B Physics Lab: no lab room it may use (required room nope missing or not allowed)" },
+      {
+        sessionId: "b-ph:P1",
+        reason: "ECE-2B Physics Lab: no lab room it may use (required room nope missing or not allowed)",
+        cause: "noRoom",
+      },
     ]);
   });
 
   it("explains a lab longer than any run of teaching periods", () => {
     const result = solveHeuristic(withCourse("b-ph", { labLength: 5 }), { timeLimitMs: 100 });
-    expect(result.unplaced).toEqual([{ sessionId: "b-ph:P1", reason: "ECE-2B Physics Lab: no day has 5 consecutive teaching periods" }]);
+    expect(result.unplaced).toEqual([
+      { sessionId: "b-ph:P1", reason: "ECE-2B Physics Lab: no day has 5 consecutive teaching periods", cause: "noStart" },
+    ]);
   });
 
   it("returns status error on bad data instead of throwing", () => {

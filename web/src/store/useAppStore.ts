@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { sampleCollege } from "@/domain/sampleCollege";
 import type { Course, Department, Placement, Room, Section, Settings, SolveResult, Teacher } from "@/domain/types";
-import type { EngineMode } from "@/engine/solveClient";
 
 /** 0 = Setup week, 1 = Add data, 2 = Generate, 3 = View & export. */
 export type Step = 0 | 1 | 2 | 3;
@@ -17,8 +16,7 @@ export interface AppData {
   result: SolveResult | null;
   locks: Placement[];
   step: Step;
-  /** Step ③ choices, kept so Regenerate (T10) reuses them. */
-  engineMode: EngineMode;
+  /** Step ③'s exact solver time limit, kept so Regenerate (T10) reuses it. */
   timeLimitSec: number;
   /** Second line on printed timetables, e.g. "GNDEC Ludhiana · Semester 5, 2026". */
   printHeading: string;
@@ -35,7 +33,6 @@ export interface AppState extends AppData {
   setResult: (result: SolveResult | null) => void;
   setLocks: (locks: Placement[]) => void;
   setStep: (step: Step) => void;
-  setEngineMode: (engineMode: EngineMode) => void;
   setTimeLimitSec: (timeLimitSec: number) => void;
   setPrintHeading: (printHeading: string) => void;
   /** Replace all five data tables at once (import); drops the result and locks. */
@@ -56,7 +53,6 @@ const initialData = (): AppData => ({
   result: null,
   locks: [],
   step: 0,
-  engineMode: "auto",
   timeLimitSec: 20,
   printHeading: "",
 });
@@ -86,6 +82,16 @@ const safeStorage: StateStorage = {
   },
 };
 
+/** 1: `engineMode` removed (T18, exact solver only). */
+export const PERSIST_VERSION = 1;
+
+/** Upgrade state saved by an older version of the app. */
+export function migrateState(persisted: unknown, version: number): AppState {
+  const state = { ...(persisted as Record<string, unknown>) };
+  if (version < 1) delete state.engineMode;
+  return state as unknown as AppState;
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -99,7 +105,6 @@ export const useAppStore = create<AppState>()(
       setResult: (result) => set({ result }),
       setLocks: (locks) => set({ locks }),
       setStep: (step) => set({ step }),
-      setEngineMode: (engineMode) => set({ engineMode }),
       setTimeLimitSec: (timeLimitSec) => set({ timeLimitSec }),
       setPrintHeading: (printHeading) => set({ printHeading }),
       setData: ({ departments, teachers, rooms, sections, courses }) =>
@@ -121,6 +126,8 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "timetable-v1",
+      version: PERSIST_VERSION,
+      migrate: migrateState,
       storage: createJSONStorage(() => safeStorage),
     },
   ),

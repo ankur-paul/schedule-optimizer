@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, CircleX, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw, X } from "lucide-react";
 import { Popover } from "@base-ui/react/popover";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { expandSessions } from "@/domain/sessions";
 import type { Id } from "@/domain/types";
 import { validate } from "@/domain/validator";
-import { badgeText, regenerateSummary } from "@/features/generate/generate";
-import { cancelledToast, useGenerate } from "@/features/generate/useGenerate";
+import { badgeText, classes, regenerateFailedText, regenerateSummary } from "@/features/generate/generate";
+import { cancelledToast, showFailure, useGenerate, useRunOutcome } from "@/features/generate/useGenerate";
+import { useServerStatus } from "@/features/generate/useServer";
 import { isLocked, regenerateLabel, toggleLock } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSubjectColors } from "./colors";
@@ -42,7 +43,11 @@ export function ViewStep() {
   const locks = useAppStore((s) => s.locks);
   const setLocks = useAppStore((s) => s.setLocks);
   const lockedIds = useMemo(() => new Set(locks.map((l) => l.sessionId)), [locks]);
-  const { running, elapsed, run, cancel } = useGenerate();
+  const { running, elapsed, generate, draft, cancel } = useGenerate();
+  const { server } = useServerStatus();
+  const offline = server === "offline";
+  const failed = useRunOutcome().failed;
+  const setStep = useAppStore((s) => s.setStep);
   const data: ViewData = useMemo(
     () => ({ settings, departments, teachers, rooms, sections, courses }),
     [settings, departments, teachers, rooms, sections, courses],
@@ -93,16 +98,27 @@ export function ViewStep() {
   const missing = currentId ? unplacedFor(kind, currentId, result.unplaced, sessions) : [];
   const title = flat.find((e) => e.id === currentId)?.name ?? "";
 
+  // The exact solver, or a quick draft while it is offline (the button says so). A failure keeps the timetable.
   const regenerate = async () => {
-    const notice = await run();
-    if (!notice) return;
-    if (notice.cancelled) cancelledToast();
-    else if (notice.error) toast.error(`No timetable was produced: ${notice.error} The previous one is unchanged.`);
-    else {
+    const end = offline ? await draft("offline") : await generate();
+    if (!end) return;
+    if (end.kind === "cancelled") cancelledToast();
+    else if (end.kind === "failed") {
+      const seeWhy = () => {
+        showFailure(true);
+        setStep(2);
+      };
+      toast.error(regenerateFailedText(end.failure, locks.length), {
+        description: "Your timetable is unchanged.",
+        action: { label: "See why →", onClick: seeWhy },
+      });
+    } else {
       const next = useAppStore.getState().result;
-      if (next) toast.success(regenerateSummary(next), { description: notice.fallbackReason });
+      if (next) toast.success(regenerateSummary(next));
     }
   };
+  const unplacedCount = result.unplaced.length;
+  const total = result.placements.length + unplacedCount;
 
   const downloadCsv = () => {
     // BOM so Excel reads the file as UTF-8 (en dashes in times, non-ASCII names).
@@ -145,9 +161,14 @@ export function ViewStep() {
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
-          <Button variant="outline" onClick={regenerate} disabled={running} title="Re-solve everything except locked cells, with the engine chosen in step ③">
+          <Button
+            variant="outline"
+            onClick={regenerate}
+            disabled={running}
+            title={offline ? "The exact solver is offline: re-make everything except locked cells as a quick draft in your browser" : "Re-solve everything except locked cells with the exact solver"}
+          >
             {running ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-            {running ? `Regenerating… ${elapsed} s` : regenerateLabel(locks.length)}
+            {running ? `Regenerating… ${elapsed} s` : offline ? "Regenerate as quick draft" : regenerateLabel(locks.length)}
           </Button>
           {running && (
             <Button variant="ghost" onClick={cancel}>
@@ -167,11 +188,35 @@ export function ViewStep() {
             onHeadingChange={setPrintHeading}
             canPrintThis={currentId !== null}
             canPrintAll={sections.length > 0}
+            unplaced={unplacedCount}
             onPrintThis={() => window.print()}
             onPrintAll={() => setPrintAll(true)}
           />
         </div>
       </div>
+
+      {failed?.failure.kind === "infeasible" && locks.length > 0 && (
+        <div role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm print:hidden">
+          <CircleX className="size-4 shrink-0 text-destructive" />
+          <span className="flex-1">The last run couldn't build a timetable with your {locks.length === 1 ? "locked class" : `${locks.length} locked classes`}. This timetable is unchanged.</span>
+          <Button size="sm" disabled={running} onClick={() => setLocks([])}>
+            <LockOpen /> Clear all locks
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => { showFailure(true); setStep(2); }}>
+            See why →
+          </Button>
+        </div>
+      )}
+
+      {unplacedCount > 0 && (
+        <div role="status" className="flex gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 print:hidden">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <p>
+            <span className="font-medium">Partial: {unplacedCount} of {classes(total)} not placed.</span> Each section lists its
+            missing classes under the grid; drag one onto a green slot to place it, or regenerate.
+          </p>
+        </div>
+      )}
 
       {validation && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm print:hidden">
@@ -179,9 +224,11 @@ export function ViewStep() {
             role="status"
             className={cn(
               "rounded-md border px-2 py-0.5 font-medium",
-              validation.violations.length === 0
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border-destructive/30 bg-destructive/10 text-destructive",
+              validation.violations.length > 0
+                ? "border-destructive/30 bg-destructive/10 text-destructive"
+                : unplacedCount > 0
+                  ? "border-amber-200 bg-amber-50 text-amber-900"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-800",
             )}
           >
             {badgeText(result, validation)}
@@ -313,8 +360,10 @@ function EmptyState() {
 }
 
 /** The one main action on this step: print (or save as PDF), with the printout heading kept next to it. */
-function PrintMenu({ heading, onHeadingChange, canPrintThis, canPrintAll, onPrintThis, onPrintAll }: {
+function PrintMenu({ heading, onHeadingChange, canPrintThis, canPrintAll, unplaced, onPrintThis, onPrintAll }: {
   heading: string;
+  /** Classes not placed yet; they are missing from every printout. */
+  unplaced: number;
   onHeadingChange: (heading: string) => void;
   canPrintThis: boolean;
   canPrintAll: boolean;
@@ -350,6 +399,12 @@ function PrintMenu({ heading, onHeadingChange, canPrintThis, canPrintAll, onPrin
                 className="h-8"
               />
             </div>
+            {unplaced > 0 && (
+              <p className="flex gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+                <AlertTriangle className="mt-px size-3.5 shrink-0" />
+                {classes(unplaced)} not placed yet; they won't appear on printouts.
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" disabled={!canPrintThis} onClick={then(onPrintThis)}>
                 This timetable
