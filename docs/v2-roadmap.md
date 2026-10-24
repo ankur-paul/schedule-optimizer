@@ -18,10 +18,11 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 |---|---|---|---|
 | 1 | [Authentication and roles](#1-authentication-and-roles) | built: T19–T21 | — |
 | 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | built: T22–T24 | 1 |
-| 3 | [Store institute data online](#3-store-institute-data-online) | planned: T27–T31 | 1, 2 |
-| 4 | [Help page](#4-help-page) | planned: T32–T35 | — |
-| 5 | [AI agent](#5-ai-agent) | idea | 1, 3, 4 |
-| 6 | [Paid AI agent (Razorpay)](#6-paid-ai-agent-razorpay) | idea | 1, 5 |
+| 3 | [Store institute data online](#3-store-institute-data-online) | built: T27–T31 | 1, 2 |
+| 4 | [Help page](#4-help-page) | built: T32–T35 | — |
+| 5 | [AI agent](#5-ai-agent) | planned: T36–T40 | 1, 3, 4 |
+| 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | idea | 5 |
+| 6 | [Access by coupon](#6-access-by-coupon) | planned with #5: T36, T40 | 1, 5 |
 | 7 | [First-login walkthrough](#7-first-login-walkthrough) | idea | the rest of the UI |
 | 8 | [Deploy the solver and the web app](#8-deploy-the-solver-and-the-web-app) | discussed, not planned | everything above |
 
@@ -34,7 +35,8 @@ Why this order:
 - **Help before the agent.** The help pages can double as the agent's knowledge base for answering questions.
 - **The agent after storage.** For the agent to change data and timetables safely it needs to know who is asking,
   what they may change (roles), and a server-side copy of the data it can edit and undo.
-- **Payments after the agent works.** There is nothing to charge for until then.
+- **Payments after the agent works.** There is nothing to charge for until then. (24 Oct: payments became trial
+  coupons, built with the agent; see #6.)
 - **Walkthrough after the UI is done.** It tours the finished UI (login, consent, agent). If we build it earlier,
   we redo it.
 - **Deploy at the end** (decided 22 Oct), once the app is built. To keep that step small, every pass follows the
@@ -127,30 +129,52 @@ Tickets T32–T35.
 
 Original list: #2. Answers questions about the app and the user's data, and changes the data and timetables.
 
+Discussed 24 Oct: [`discussions/2026-10-24-ai-agent.md`](discussions/2026-10-24-ai-agent.md). Summary:
+- **Read-only first:** a side panel answers how-to questions and explains the user's own data (causes, unplaced
+  classes, the score, free periods). It changes nothing; write actions are #5b.
+- **Who:** signed-in members of an institute (any role) whose institute has access through a coupon (#6).
+- **How:** the browser drives the loop over its working copy; `POST /agent` on the FastAPI app makes one Claude
+  call per request. Six read-only tools run in the browser; teacher names become IDs before anything is sent.
+- **Model:** Claude Opus 5.5 at low effort, the full help text in a cached system prompt, no streaming. History
+  stays in the browser and is compacted every 20 questions; at most 8 tool rounds per question.
+- **Checks and cost:** the server confirms the user with Supabase Auth, then service-role-only database functions
+  check membership, consent, access and limits, and record usage rows (numbers only, never chat text).
+  `AGENT_MONTHLY_USD` (default $10) stops it for everyone; an Anthropic spend limit is the backstop.
+- **Privacy:** policy v3 names Anthropic (US); everyone accepts again.
+- **Deploy:** the same image runs as a second, small Lambda function for `/agent`.
+
+Tickets T36–T40.
+
+## 5b. AI agent: write actions
+
+Split from #5 on 24 Oct. The assistant changes data and timetables (add a teacher, move a class, lock, regenerate).
+
 Open questions:
-- Which model and provider? The API key stays on the server. The privacy policy must name it (new version, #2).
-- Which actions does it get as tools (add a teacher, move a class, lock a cell, regenerate)? Does every change need
-  the user to confirm it first, and can it be undone?
-- What roles may use it, and may it act on everything that role can?
-- Ship read-only Q&A first and write actions second?
-- Cost per user, and limits until section 6 exists.
+- Undo: the store has no undo today, only the toast after a drag. A snapshot before each change?
+- Does every change need the user to confirm it first?
+- Which roles may make changes through it? Viewers may edit their own working copy today.
 
-## 6. Paid AI agent (Razorpay)
+## 6. Access by coupon
 
-Original list: #5. Make the agent a paid feature.
+Original list: #5, "Paid AI agent (Razorpay)". Reworked on 24 Oct in the agent discussion
+([`discussions/2026-10-24-ai-agent.md`](discussions/2026-10-24-ai-agent.md)):
+- **No AI without access, and access comes from trial coupons.** Razorpay is dropped for now, which also removes
+  the KYC and merchant question.
+- **A coupon unlocks an institute**, redeemed by its admin. It carries a question allowance and a number of days
+  (default 200 questions over 30 days); further coupons add up.
+- **Codes** are 16 random characters, stored only as SHA-256 hashes, single-use, 10 wrong tries per user per hour.
+- **The operator issues them** with `server/scripts/issue_coupon.py` and emails them by hand. Users ask through a
+  *Request a trial coupon* `mailto:` link.
 
-Open questions:
-- Subscription, prepaid credits, or a free quota then paid?
-- ~~Charged per institute or per user?~~ Per institute; only the admin buys, editors spend (auth pass, Q8).
-- Razorpay live mode needs KYC with business or individual documents and a public site with policy pages (terms,
-  refunds, contact). Who will be the registered merchant?
-- Webhook handling on the server to grant access after payment.
+Built in T36 and T40. A paid plan (Razorpay or similar) is a possible later idea; the usage rows will give its
+pricing real cost-per-question numbers.
 
 ## 7. First-login walkthrough
 
 Original list: #8. A guided tour the first time a user logs in.
 
 Open questions:
+- The tour includes the assistant panel (#5).
 - Library (react-joyride, driver.js, Shepherd) or hand-built?
 - Can it be skipped and replayed later (from the help page)?
 - Does it load the sample college so the tour has something to show?
@@ -161,10 +185,11 @@ Original list: #6 and #7. Full discussion so far, covering AWS Lambda for the so
 and the code changes needed before any deploy: [`discussions/2026-10-22-deployment.md`](discussions/2026-10-22-deployment.md).
 
 Open questions:
-- Cloudflare Pages or Vercel for the web app? Vercel Hobby is for non-commercial use only, which clashes with the paid
-  agent (section 6). Cloudflare Pages' free plan allows commercial use.
-- Where do the new APIs (auth, data, agent) run: the same Lambda as the solver, a separate function, or a hosted
-  backend service?
+- Cloudflare Pages or Vercel for the web app? Vercel Hobby is for non-commercial use only. That clashed with a paid
+  agent, but #6 became free trial coupons on 24 Oct, so it matters only if paid plans come back. Cloudflare Pages'
+  free plan allows commercial use.
+- ~~Where do the new APIs (auth, data, agent) run?~~ Auth and data are Supabase; the agent is a route on the FastAPI
+  app, deployed as a second Lambda function from the same image (agent pass).
 - Did the Lambda memory limit increase go through?
 
 Collected by the passes above (env vars, services, public URLs needed):
@@ -192,3 +217,10 @@ Collected by the passes above (env vars, services, public URLs needed):
   `help/<page>.html` in `dist/`), and the public-link rewrite skips `/help/*`. No new env vars.
 - A paused free Supabase project breaks every published timetable link, not just sign-in: production needs a
   project that doesn't pause, or a keep-alive.
+- Agent (agent pass): server env `ANTHROPIC_API_KEY` (secret), `AGENT_MONTHLY_USD` (default 10), and
+  `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret), now needed at runtime, not only in tests. Web env
+  `VITE_AGENT_URL` (defaults to `VITE_SOLVER_URL`).
+- The same container image runs as a second Lambda function (about 512 MB) serving `/agent`, so waiting on Anthropic
+  isn't billed at the solver's memory size and chats don't use the solver's 10 concurrency slots. CORS allows the
+  `Authorization` header from the web origin. The image includes `web/src/help/*.md` and `shared/agent-tools.json`.
+- Anthropic account: set a monthly spend limit; check its API data retention against what policy v3 says.

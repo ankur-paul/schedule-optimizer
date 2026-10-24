@@ -122,3 +122,8 @@ graph LR
 | [T33](T33-help-screenshots.md) | v2: help screenshots script | C | — | — |
 | [T34](T34-help-content.md) | v2: help content: start, data, generate, timetable, troubleshooting | main | T32, T33 | — |
 | [T35](T35-help-online.md) | v2: help content: online and institutes | any | T32, T33, T31 | — |
+| [T36](T36-agent-access.md) | v2: assistant coupons and usage in the database | B | — | — |
+| [T37](T37-agent-tools.md) | v2: assistant tools and name masking | C | — | — |
+| [T38](T38-agent-endpoint.md) | v2: assistant endpoint | B | T36 | — |
+| [T39](T39-policy-v3.md) | v2: privacy policy and terms v3 | D | T36 | — |
+| [T40](T40-assistant-panel.md) | v2: assistant panel | main | T37, T38, T39 | — |
