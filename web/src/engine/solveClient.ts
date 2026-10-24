@@ -57,13 +57,21 @@ export async function checkServer(deps: GenerateDeps = {}, timeoutMs = HEALTH_TI
   }
 }
 
-/** `POST /solve`. Throws on network errors, timeouts and non-2xx responses. */
+/**
+ * The input with each teacher's name replaced by its id: teacher names are the only personal data in it, and the
+ * server works on ids. Results refer to ids, so nothing maps back; the UI labels them from the local store.
+ */
+export function withoutPersonalData(input: SolveInput): SolveInput {
+  return { ...input, teachers: input.teachers.map((t) => ({ ...t, name: t.id })) };
+}
+
+/** `POST /solve` with teacher names stripped. Throws on network errors, timeouts and non-2xx responses. */
 export async function solveOnServer(input: SolveInput, deps: GenerateDeps = {}): Promise<SolveResult> {
   const fetchFn = deps.fetch ?? globalThis.fetch;
   const res = await fetchFn(`${deps.solverUrl ?? SOLVER_URL}/solve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify(withoutPersonalData(input)),
     signal: withCancel(AbortSignal.timeout(input.options.timeLimitSec * 1000 + SOLVE_GRACE_MS), deps.signal),
   });
   if (!res.ok) throw new Error(`The exact solver answered with an error (HTTP ${res.status})`);

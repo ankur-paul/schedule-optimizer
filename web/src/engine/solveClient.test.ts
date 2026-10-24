@@ -5,7 +5,7 @@ import { tinyCollege, tinyValid, tinyWith } from "@/domain/tinyCollege";
 import type { SolveInput, SolveResult } from "@/domain/types";
 import { solveHeuristic, type HeuristicOptions } from "./heuristic";
 import { runHeuristic } from "./runHeuristic";
-import { checkServer, generate, HEURISTIC_MAX_MS, makeDraft, verify, type GenerateDeps } from "./solveClient";
+import { checkServer, generate, HEURISTIC_MAX_MS, makeDraft, verify, withoutPersonalData, type GenerateDeps } from "./solveClient";
 
 const ZERO = { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } };
 const cpsat = (patch: Partial<SolveResult> = {}): SolveResult => ({
@@ -54,15 +54,22 @@ describe("generate: exact solver only", () => {
     expect(d.runHeuristic).not.toHaveBeenCalled();
   });
 
-  it("posts the input as JSON to /solve, without a health check first", async () => {
+  it("posts the input as JSON to /solve, without teacher names or a health check first", async () => {
     const fetch = server({});
     await generate(tinyCollege, deps(fetch));
     expect(fetch).toHaveBeenCalledOnce();
     const [url, init] = fetch.mock.calls[0];
     expect(url).toBe("http://solver.test/solve");
     expect(init?.method).toBe("POST");
-    expect(JSON.parse(init?.body as string)).toEqual(tinyCollege);
+    expect(JSON.parse(init?.body as string)).toEqual(withoutPersonalData(tinyCollege));
     expect(init?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("sends no teacher name anywhere in the body", async () => {
+    const fetch = server({});
+    await generate(sampleCollege, deps(fetch));
+    const body = fetch.mock.calls[0][1]?.body as string;
+    for (const t of sampleCollege.teachers) expect(body).not.toContain(t.name);
   });
 
   it("infeasible: a failure with the diagnosis, and no quick draft", async () => {
@@ -103,6 +110,31 @@ describe("generate: exact solver only", () => {
     expect((await generate(tinyCollege, deps(server({ solve: crash })))).failure).toEqual({ kind: "serverError", message: "Solver crashed: boom" });
     const http = await generate(tinyCollege, deps(server({ solve: () => json({}, 500) })));
     expect(http.failure).toEqual({ kind: "serverError", message: "The exact solver answered with an error (HTTP 500)." });
+  });
+});
+
+describe("withoutPersonalData", () => {
+  it("replaces each teacher's name with its id and leaves everything else as it was", () => {
+    const out = withoutPersonalData(sampleCollege);
+    expect(out.teachers.map((t) => t.name)).toEqual(sampleCollege.teachers.map((t) => t.id));
+    expect({ ...out, teachers: [] }).toEqual({ ...sampleCollege, teachers: [] });
+    expect(out.teachers.map(({ name: _, ...rest }) => rest)).toEqual(sampleCollege.teachers.map(({ name: _, ...rest }) => rest));
+  });
+
+  it("leaves no teacher name anywhere in the serialised input", () => {
+    const body = JSON.stringify(withoutPersonalData(sampleCollege));
+    for (const t of sampleCollege.teachers) expect(body).not.toContain(t.name);
+  });
+
+  it("does not mutate the input", () => {
+    const before = structuredClone(sampleCollege);
+    withoutPersonalData(sampleCollege);
+    expect(sampleCollege).toEqual(before);
+  });
+
+  it("works with no teachers", () => {
+    const input = { ...tinyCollege, teachers: [] };
+    expect(withoutPersonalData(input)).toEqual(input);
   });
 });
 

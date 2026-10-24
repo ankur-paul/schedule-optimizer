@@ -60,6 +60,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [chore] App named Lattice: logo (3×3 timetable grid with an L filled in) as favicon and header mark (`LatticeMark.tsx`), tab title, README/PLAN headings (`cd web && npm run dev`, look at the header and tab icon)
 - [chore] Lattice logo for dark backgrounds (`web/public/logo-light.svg`, light tile with dark cells); the tab icon switches to it when the browser is in dark mode, and the README logo follows GitHub's theme (switch the OS to dark mode and reload; Safari shows no SVG tab icons)
 - [T20] Migration applied to the dev project with `db push`; all 29 RLS tests pass against it (fixed the test helper's `rpc()`, whose own `name` parameter clashed with `create_institute(name)`) (`cd server && uv run pytest -m supabase`)
+- [T22] Teacher names never leave the browser: `withoutPersonalData` in `solveClient.ts` swaps each teacher's name for its id in every `POST /solve` body; the UI still labels everything from the local data. Checked that uvicorn logs only method, path and status, never bodies (generate with the solver running and the devtools Network tab open: the request's `teachers` hold ids as names)
 
 ## Known issues / cuts
 
