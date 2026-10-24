@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ChevronDown, CircleX, ChevronLeft, ChevronRight, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, CircleX, CalendarX2, Download, Loader2, Lock, LockOpen, Move, Printer, RefreshCw, X } from "lucide-react";
 import { Popover } from "@base-ui/react/popover";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { expandSessions } from "@/domain/sessions";
-import type { Id } from "@/domain/types";
 import { validate } from "@/domain/validator";
 import { badgeText, classes, regenerateFailedText, regenerateSummary } from "@/features/generate/generate";
 import { cancelledToast, showFailure, useGenerate, useRunOutcome } from "@/features/generate/useGenerate";
@@ -16,19 +15,13 @@ import { useServerStatus } from "@/features/generate/useServer";
 import { isLocked, regenerateLabel, toggleLock } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSubjectColors } from "./colors";
-import { EntityPicker } from "./EntityPicker";
+import { EntityNav, useEntitySelection } from "./EntityNav";
 import { DraggableUnplaced, MoveDnd } from "./MoveDnd";
 import { placementsCsv } from "./exportCsv";
-import { entityGroups, entitySubtitle, placementsFor, stepEntity, unplacedFor, type PlacedSession, type ViewData, type ViewKind } from "./layout";
+import { entitySubtitle, placementsFor, unplacedFor, type PlacedSession, type ViewData } from "./layout";
 import { SessionDialog } from "./SessionDialog";
 import { ScoreStrip, StatsPanel } from "./StatsPanel";
 import { TimetableSheet } from "./TimetableSheet";
-
-const KINDS: { kind: ViewKind; label: string }[] = [
-  { kind: "section", label: "Section" },
-  { kind: "teacher", label: "Teacher" },
-  { kind: "room", label: "Room" },
-];
 
 export function ViewStep() {
   const result = useAppStore((s) => s.result);
@@ -53,8 +46,7 @@ export function ViewStep() {
     [settings, departments, teachers, rooms, sections, courses],
   );
 
-  const [kind, setKind] = useState<ViewKind>("section");
-  const [selected, setSelected] = useState<Record<ViewKind, Id | null>>({ section: null, teacher: null, room: null });
+  const { kind, setKind, groups, currentId, select, title } = useEntitySelection(data);
   const [open, setOpen] = useState<PlacedSession | null>(null);
   const [printAll, setPrintAll] = useState(false);
 
@@ -66,7 +58,6 @@ export function ViewStep() {
     }
   }, [data]);
   const colors = useMemo(() => buildSubjectColors(courses), [courses]);
-  const groups = useMemo(() => entityGroups(data, kind), [data, kind]);
   // Re-checked here too, so a hand-made move shows straight away whether the timetable is still clash-free.
   const validation = useMemo(() => {
     if (!result) return null;
@@ -91,12 +82,8 @@ export function ViewStep() {
 
   if (!result) return <EmptyState />;
 
-  const flat = groups.flatMap((g) => g.items);
-  const currentId = flat.some((e) => e.id === selected[kind]) ? selected[kind] : (flat[0]?.id ?? null);
-  const select = (id: Id | null) => setSelected((s) => ({ ...s, [kind]: id }));
   const entries = currentId ? placementsFor(kind, currentId, result.placements, sessions) : [];
   const missing = currentId ? unplacedFor(kind, currentId, result.unplaced, sessions) : [];
-  const title = flat.find((e) => e.id === currentId)?.name ?? "";
 
   // The exact solver, or a quick draft while it is offline (the button says so). A failure keeps the timetable.
   const regenerate = async () => {
@@ -134,32 +121,7 @@ export function ViewStep() {
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center gap-3 print:hidden">
-        <div role="tablist" aria-label="View by" className="inline-flex rounded-lg bg-muted p-1">
-          {KINDS.map((k) => (
-            <button
-              key={k.kind}
-              role="tab"
-              type="button"
-              aria-selected={kind === k.kind}
-              onClick={() => setKind(k.kind)}
-              className={cn(
-                "h-7 rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
-                kind === k.kind ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" aria-label="Previous" disabled={flat.length < 2} onClick={() => select(stepEntity(groups, currentId, -1))}>
-            <ChevronLeft />
-          </Button>
-          <EntityPicker groups={groups} value={currentId} onChange={select} placeholder={`Choose a ${kind}`} />
-          <Button variant="outline" size="icon" aria-label="Next" disabled={flat.length < 2} onClick={() => select(stepEntity(groups, currentId, 1))}>
-            <ChevronRight />
-          </Button>
-        </div>
+        <EntityNav kind={kind} onKindChange={setKind} groups={groups} currentId={currentId} onSelect={select} />
         <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
           <Button
             variant="outline"

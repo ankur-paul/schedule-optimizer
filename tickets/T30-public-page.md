@@ -1,5 +1,5 @@
 # T30 — Public timetable page
-**Status:** TODO
+**Status:** DONE
 **Lane:** D · **Prereqs:** T27 · **Branch:** t30-public-page
 
 ## Goal
@@ -35,8 +35,8 @@ desktop. Plan, Q13 and Q21:
   a renamed handle.
 
 ## Done when
-- [ ] `/<handle>/<id>` serves the page in `npm run dev` and `npm run preview`, and `published.html` is in `dist/`
-- [ ] Section, teacher and room views; the phone layout; print; `noindex`
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated (the public page)
-- [ ] Committed: `T30: public timetable page`
+- [x] `/<handle>/<id>` serves the page in `npm run dev` and `npm run preview`, and `published.html` is in `dist/`
+- [x] Section, teacher and room views; the phone layout; print; `noindex`
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md updated (the public page)
+- [x] Committed: `T30: public timetable page`
