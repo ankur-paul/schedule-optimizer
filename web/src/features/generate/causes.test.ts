@@ -22,6 +22,7 @@ describe("explainInfeasible: the solver's diagnosis", () => {
     const [c] = explain([{ kind: "noSlot", detail: "noRoom", ids: ["a-ds:P1:B1", "a-ds:P1:B2"] }]);
     expect(c).toEqual({
       kind: "noSlot",
+      detail: "noRoom",
       text: "No room may host 2 classes: CSE-2A DS Lab (B1) and CSE-2A DS Lab (B2).",
       fix: "Add a room they may use, or share one",
       link: { step: 2, tab: "rooms" },
@@ -34,6 +35,7 @@ describe("explainInfeasible: the solver's diagnosis", () => {
     const [one] = explain([{ kind: "noSlot", detail: "noStart", ids: ["b-ph:P1"] }]);
     expect(one.text).toBe("A lab is longer than any run of teaching periods without a break: ECE-2B Physics Lab.");
     expect(one.link).toEqual({ step: 2, tab: "courses", sectionId: "b" });
+    expect(one.detail).toBe("noStart");
     const [two] = explain([{ kind: "noSlot", detail: "noStart", ids: ["b-ph:P1", "a-ds:P1:B1"] }]);
     expect(two.text).toMatch(/^2 labs are longer/);
     expect(two.link).toEqual({ step: 2, tab: "courses" });

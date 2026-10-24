@@ -2,8 +2,10 @@ import { useRef, useState } from "react";
 import { AlertTriangle, Building2, CheckCircle2, Download, FileDown, FileSpreadsheet, Upload, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { HelpLink } from "@/components/HelpLink";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { helpHref } from "@/help/helpLinks";
 import { useAppStore } from "@/store/useAppStore";
 import { countsLabel, plural, useCollegeData } from "./collegeData";
 import { checkData, type DataReport } from "./dataChecks";
@@ -128,7 +130,12 @@ function ImportPanel({ pending, onApply, onCancel }: { pending: Pending; onApply
           <CardTitle className="flex items-center gap-2 text-destructive">
             <XCircle className="size-4" /> {result.errors.length} problem{result.errors.length === 1 ? "" : "s"} in {fileName}
           </CardTitle>
-          <CardDescription>Nothing was imported. Fix these rows in your file and upload it again.</CardDescription>
+          <CardDescription>
+            Nothing was imported. Fix these rows in your file and upload it again.{" "}
+            <HelpLink href={helpHref("data", "import-errors")} className="hover:text-foreground">
+              What these mean
+            </HelpLink>
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           <ul className="grid gap-1 font-mono text-xs">
@@ -241,6 +248,9 @@ function Problems({ errors, warnings }: { errors: string[]; warnings: string[] }
       {warnings.length > 0 && (
         <ProblemList tone="warning" title="Probably too full: some sessions may stay unplaced" items={warnings} />
       )}
+      <HelpLink href={helpHref("data", "data-checks")} className="text-xs text-muted-foreground hover:text-foreground">
+        What these checks mean
+      </HelpLink>
     </div>
   );
 }

@@ -1,8 +1,11 @@
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-/** The ⓘ icon next to a non-obvious field. Needs a TooltipProvider above it (App has one). */
-export function InfoTip({ children }: { children: React.ReactNode }) {
+/**
+ * The ⓘ icon next to a non-obvious field. Needs a TooltipProvider above it (App has one). `more` (a helpHref) adds
+ * *Learn more*; give it only where the help section says more than the tooltip. The popup stays open while hovered.
+ */
+export function InfoTip({ children, more }: { children: React.ReactNode; more?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
@@ -11,7 +14,18 @@ export function InfoTip({ children }: { children: React.ReactNode }) {
       >
         <Info className="size-3.5" />
       </TooltipTrigger>
-      <TooltipContent>{children}</TooltipContent>
+      <TooltipContent>
+        {more ? (
+          <span>
+            {children}{" "}
+            <a href={more} target="_blank" rel="noopener" className="font-medium whitespace-nowrap underline underline-offset-2">
+              Learn more
+            </a>
+          </span>
+        ) : (
+          children
+        )}
+      </TooltipContent>
     </Tooltip>
   );
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/InfoTip";
+import { helpHref } from "@/help/helpLinks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +36,7 @@ export function ScoreStrip({ data, placements }: Props) {
     <div className="flex flex-wrap items-center gap-2 text-sm print:hidden" aria-label="Quality score">
       <span className="flex items-center gap-1.5 font-medium">
         Score {result.total} pts{result.total === 0 && " · perfect"}
-        <InfoTip>Penalty points for the soft rules. Lower is better; 0 is perfect. Hard rules (no clashes) are never broken.</InfoTip>
+        <InfoTip more={helpHref("timetable", "score")}>Penalty points for the soft rules. Lower is better; 0 is perfect. Hard rules (no clashes) are never broken.</InfoTip>
       </span>
       {SCORE_ROWS.map((row) => {
         const points = result.breakdown[row.key];
@@ -51,7 +52,7 @@ export function ScoreStrip({ data, placements }: Props) {
             <span className="font-medium tabular-nums">
               {points > 0 ? `${scoreCount(row.key, points)} · ${points} pts` : "0"}
             </span>
-            <InfoTip>{row.tip}</InfoTip>
+            <InfoTip more={helpHref("timetable", "score")}>{row.tip}</InfoTip>
           </span>
         );
       })}
