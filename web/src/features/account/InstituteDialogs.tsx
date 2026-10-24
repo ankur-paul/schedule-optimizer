@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deleteConfirmed, inviteError, MAX_NAME, nameError, personLabel, ROLE_LABEL, sortMembers, type Invite, type InviteRole, type Member, type Membership } from "./institutes";
 import type { InstitutesApi } from "./institutesApi";
+import { requestAction } from "./useEmailConfirm";
 import { createAndSwitch, dismissCreate, failureMessage, notify, refreshInstitutes } from "./useInstitutes";
 
 const selectClass =
@@ -210,13 +211,11 @@ export function MembersDialog({ api, institute, open, onOpenChange }: { api: Ins
 
   const setRole = (m: Member, role: InviteRole) => act(() => api.setRole(id, m.userId, role), `${personLabel(m)} is now ${role === "editor" ? "an editor" : "a viewer"}.`);
 
-  const makeAdmin = async (m: Member) => {
+  // Needs a recent email-link sign-in (T26): runs at once if there is one, else the email dialog takes over.
+  const makeAdmin = (m: Member) => {
     if (!confirm(`Make ${personLabel(m)} the admin of ${institute.name}? You'll become an editor.`)) return;
-    if (await run(() => api.makeAdmin(id, m.userId))) {
-      toast.success(`${personLabel(m)} is now the admin. You're an editor.`);
-      onOpenChange(false);
-      await refreshInstitutes(api, notify);
-    }
+    onOpenChange(false);
+    void requestAction(api, { kind: "make_admin", instituteId: id, instituteName: institute.name, userId: m.userId, userLabel: personLabel(m) }, notify);
   };
 
   const remove = (m: Member) => {
@@ -249,7 +248,7 @@ export function MembersDialog({ api, institute, open, onOpenChange }: { api: Ins
                   ) : (
                     <>
                       <RoleSelect label={`Role of ${personLabel(m)}`} value={m.role} disabled={busy} onChange={(r) => void setRole(m, r)} />
-                      <Button variant="ghost" size="sm" disabled={busy} onClick={() => void makeAdmin(m)}>
+                      <Button variant="ghost" size="sm" disabled={busy} onClick={() => makeAdmin(m)}>
                         <Crown /> Make admin
                       </Button>
                       <Button variant="ghost" size="sm" className="text-destructive" disabled={busy} onClick={() => remove(m)}>

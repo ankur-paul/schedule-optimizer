@@ -72,6 +72,14 @@ def refused(res, status=403):
     assert res.status_code == status, f"expected {status}, got {res.status_code}: {res.text}"
 
 
+def needs_email(res):
+    """Refused by T26's check: the UI spots it by the hint and offers the email link."""
+    refused(res)
+    body = res.json()
+    assert body["hint"] == "email_confirmation_required", body
+    assert body["message"] == "Confirm from your email first."
+
+
 @pytest.fixture
 def inst(sb, users):
     """An institute with admin, editor and viewer members, and one pending invite. Deleted afterwards."""
@@ -234,8 +242,8 @@ def test_set_member_role(sb, users, inst):
 def test_make_admin_swaps_roles(sb, users, inst):
     args = {"institute_id": inst, "user_id": users["editor"].id}
     for who in ("editor", "viewer", "outsider"):
-        refused(sb.rpc("make_admin", sb.as_user(users[who]), **args))
-    admin = sb.as_user(users["admin"])
+        refused(sb.rpc("make_admin", sb.as_user(sb.sign_in_by_email(users[who])), **args))
+    admin = sb.as_user(sb.sign_in_by_email(users["admin"]))
     refused(sb.rpc("make_admin", admin, institute_id=inst, user_id=users["outsider"].id))
     refused(sb.rpc("make_admin", admin, institute_id=inst, user_id=users["admin"].id))
     assert sb.rpc("make_admin", admin, **args).status_code in (200, 204)
@@ -244,6 +252,18 @@ def test_make_admin_swaps_roles(sb, users, inst):
     assert roles[users["admin"].id] == "editor"
     # The old admin lost admin rights at once.
     refused(sb.rpc("make_admin", admin, **args))
+
+
+def test_make_admin_needs_a_recent_email_confirmation(sb, users, inst):
+    args = {"institute_id": inst, "user_id": users["editor"].id}
+    # A password sign-in has no email confirmation (`amr` method password).
+    res = sb.rpc("make_admin", sb.as_user(users["admin"]), **args)
+    needs_email(res)
+    assert roles_of(sb, inst)[users["admin"].id] == "admin"
+    # The role and target checks come first, so a wrong caller or target hears that instead.
+    assert "Only the admin" in sb.rpc("make_admin", sb.as_user(users["editor"]), **args).json()["message"]
+    res = sb.rpc("make_admin", sb.as_user(users["admin"]), institute_id=inst, user_id=users["outsider"].id)
+    assert "another member" in res.json()["message"]
 
 
 def test_remove_member(sb, users, inst):
@@ -257,10 +277,19 @@ def test_remove_member(sb, users, inst):
 
 
 def test_leave_institute(sb, users, inst):
-    refused(sb.rpc("leave_institute", sb.as_user(users["admin"]), institute_id=inst))
-    refused(sb.rpc("leave_institute", sb.as_user(users["outsider"]), institute_id=inst))
-    assert sb.rpc("leave_institute", sb.as_user(users["editor"]), institute_id=inst).status_code in (200, 204)
+    refused(sb.rpc("leave_institute", sb.as_user(sb.sign_in_by_email(users["admin"])), institute_id=inst))
+    refused(sb.rpc("leave_institute", sb.as_user(sb.sign_in_by_email(users["outsider"])), institute_id=inst))
+    editor = sb.as_user(sb.sign_in_by_email(users["editor"]))
+    assert sb.rpc("leave_institute", editor, institute_id=inst).status_code in (200, 204)
     assert set(roles_of(sb, inst)) == {users["admin"].id, users["viewer"].id}
+
+
+def test_leave_needs_a_recent_email_confirmation(sb, users, inst):
+    needs_email(sb.rpc("leave_institute", sb.as_user(users["editor"]), institute_id=inst))
+    assert users["editor"].id in roles_of(sb, inst)
+    # The admin and outsider checks come first.
+    assert "Hand the admin role" in sb.rpc("leave_institute", sb.as_user(users["admin"]), institute_id=inst).json()["message"]
+    assert "not a member" in sb.rpc("leave_institute", sb.as_user(users["outsider"]), institute_id=inst).json()["message"]
 
 
 def test_delete_institute(sb, users, inst):

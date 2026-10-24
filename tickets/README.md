@@ -73,6 +73,7 @@ Don't add a hand-written status table here: it would conflict on every parallel 
 | [T23](T23-legal-pages.md) | v2: privacy policy and terms pages | D | — | — |
 | [T24](T24-consent.md) | v2: consent at sign-in, re-accept on policy change | main | T21, T23 | — |
 | [T25](T25-delete-account.md) | v2: delete account, invite expiry | B | T21 | — |
+| [T26](T26-email-confirm.md) | v2: email confirmation for make admin and leave | main | T21 | — |
 
 ```mermaid
 graph LR
@@ -94,6 +95,7 @@ graph LR
   T19 & T20 --> T21
   T21 & T23 --> T24
   T21 --> T25
+  T21 --> T26
 ```
 
 ## Ticket template

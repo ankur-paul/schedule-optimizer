@@ -20,13 +20,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { authErrorMessage, avatarUrl, displayName, initials, looksLikeEmail, redirectUrl, withoutAuthError } from "./account";
+import { EmailConfirmDialogs } from "./EmailConfirmDialogs";
 import { CreateInstituteDialog, DeleteDialog, MembersDialog, RenameDialog } from "./InstituteDialogs";
 import { menuItems, roleLine, showSwitcher } from "./institutes";
 import { supabaseApi, type InstitutesApi } from "./institutesApi";
 import { syncAccount, useAccount } from "./useAccount";
+import { requestAction } from "./useEmailConfirm";
 import {
   currentInstitute,
-  failureMessage,
   notify,
   refreshInstitutes,
   resetInstitutes,
@@ -201,9 +202,10 @@ function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameter
         </DropdownMenuContent>
       </DropdownMenu>
       <CreateInstituteDialog api={api} open={createOpen} onOpenChange={setCreateOpen} />
+      <EmailConfirmDialogs client={client} api={api} />
       {active && (
         <>
-          <MembersDialog api={api} institute={active} open={dialog === "members"} onOpenChange={(o) => setDialog(o ? "members" : null)} />
+          <MembersDialog api={api} institute={active} open={dialog === "members" && active.role === "admin"} onOpenChange={(o) => setDialog(o ? "members" : null)} />
           <RenameDialog api={api} institute={active} open={dialog === "rename"} onOpenChange={(o) => setDialog(o ? "rename" : null)} />
           <DeleteDialog api={api} institute={active} open={dialog === "delete"} onOpenChange={(o) => setDialog(o ? "delete" : null)} />
         </>
@@ -223,15 +225,10 @@ function InstituteItems({ api, onOpen }: { api: InstitutesApi; onOpen: (dialog: 
   const active = useInstitutes(currentInstitute);
   if (!loaded) return null;
 
-  const leave = async () => {
+  // Needs a recent email-link sign-in (T26), like Make admin.
+  const leave = () => {
     if (!active || !confirm(`Leave ${active.name}? You'll need a new invite from the admin to come back.`)) return;
-    try {
-      await api.leave(active.instituteId);
-      toast.success(`You left ${active.name}.`);
-      await refreshInstitutes(api, notify);
-    } catch (e) {
-      toast.error(failureMessage(e));
-    }
+    void requestAction(api, { kind: "leave", instituteId: active.instituteId, instituteName: active.name }, notify);
   };
 
   const items = menuItems(active);
@@ -276,7 +273,7 @@ function InstituteItems({ api, onOpen }: { api: InstitutesApi; onOpen: (dialog: 
           </DropdownMenuItem>
         )}
         {items.includes("leave") && (
-          <DropdownMenuItem onClick={() => void leave()}>
+          <DropdownMenuItem onClick={leave}>
             <DoorOpen /> Leave institute…
           </DropdownMenuItem>
         )}
