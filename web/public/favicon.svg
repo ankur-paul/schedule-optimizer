@@ -1,14 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Lattice: a 3×3 timetable grid with the cells of an L filled in. Same geometry as LatticeMark.tsx. -->
-  <rect width="32" height="32" rx="7" fill="#1c1c1c"/>
-  <g fill="#fff">
+  <!-- Tab icon: logo.svg in a light browser, logo-light.svg in a dark one. Favicons can't load other files, so the grid is repeated here. -->
+  <style>
+    .tile { fill: #1c1c1c }
+    .cell { fill: #fff }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #fafafa }
+      .cell { fill: #1c1c1c }
+    }
+  </style>
+  <rect class="tile" width="32" height="32" rx="7"/>
+  <g class="cell">
     <rect x="5" y="5" width="6" height="6" rx="1.5"/>
     <rect x="5" y="13" width="6" height="6" rx="1.5"/>
     <rect x="5" y="21" width="6" height="6" rx="1.5"/>
     <rect x="13" y="21" width="6" height="6" rx="1.5"/>
     <rect x="21" y="21" width="6" height="6" rx="1.5"/>
   </g>
-  <g fill="#fff" fill-opacity=".22">
+  <g class="cell" fill-opacity=".22">
     <rect x="13" y="5" width="6" height="6" rx="1.5"/>
     <rect x="21" y="5" width="6" height="6" rx="1.5"/>
     <rect x="13" y="13" width="6" height="6" rx="1.5"/>

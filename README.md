@@ -1,4 +1,4 @@
-# <img src="web/public/favicon.svg" width="36" alt="" align="top"> Lattice
+# <picture><source media="(prefers-color-scheme: dark)" srcset="web/public/logo-light.svg"><img src="web/public/logo.svg" width="36" alt="" align="top"></picture> Lattice
 
 A college timetable generator. Builds a clash-free weekly class timetable for a whole college in seconds.
 

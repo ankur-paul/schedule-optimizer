@@ -1,5 +1,5 @@
 // The Lattice logo without its tile: a 3×3 timetable grid with the cells of an L filled in.
-// Drawn in currentColor, so it takes the colour of whatever tile it sits on. web/public/favicon.svg is the same mark on a dark tile.
+// Drawn in currentColor, so it takes the colour of whatever tile it sits on. web/public/logo.svg and logo-light.svg are the same mark on a dark and a light tile.
 const L_CELLS = [
   [0, 0],
   [0, 1],

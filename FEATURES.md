@@ -4,7 +4,7 @@ Lattice builds a clash-free weekly class timetable for a college. One coordinato
 
 The app walks through four steps: ① Setup week → ② Add data → ③ Generate → ④ View & export. Each step has a one-line hint, and non-obvious fields have ⓘ tooltips. On a narrow screen the stepper shows step numbers and the current step's name.
 
-The header shows the Lattice logo (a 3×3 timetable grid with an L filled in) and name; the browser tab uses the same mark as its icon.
+The header shows the Lattice logo (a 3×3 timetable grid with an L filled in) and name; the browser tab uses the same mark as its icon, a dark tile in a light browser and a light tile in a dark one (`web/public/logo.svg`, `logo-light.svg`).
 
 ## ① Setup week
 

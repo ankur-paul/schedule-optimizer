@@ -55,6 +55,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T18] Step ④: Regenerate is exact-only (*Regenerate as quick draft* while offline); a failed Regenerate keeps the timetable and toasts "Can't be built with these locks." with *See why →*, plus a red *Clear all locks* line while it stands; amber partial banner and badge; Print panel warns that unplaced classes won't print (step ④ after a partial timetable)
 - [T12] Ticket closed without the 5-minute user test (owner's call); all other T12 items were done earlier (`python3 tickets/board.py` shows T12 DONE)
 - [chore] App named Lattice: logo (3×3 timetable grid with an L filled in) as favicon and header mark (`LatticeMark.tsx`), tab title, README/PLAN headings (`cd web && npm run dev`, look at the header and tab icon)
+- [chore] Lattice logo for dark backgrounds (`web/public/logo-light.svg`, light tile with dark cells); the tab icon switches to it when the browser is in dark mode, and the README logo follows GitHub's theme (switch the OS to dark mode and reload; Safari shows no SVG tab icons)
 
 ## Known issues / cuts
 
