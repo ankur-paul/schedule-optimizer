@@ -44,4 +44,4 @@ your account at any time.
 
 ## Law
 
-The laws of India govern these terms. Disputes go to the courts of [check: Ludhiana, Punjab].
+The laws of India govern these terms.

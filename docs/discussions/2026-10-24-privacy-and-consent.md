@@ -39,8 +39,8 @@ reasons and the options turned down.
 
 It describes only what exists now: accounts, institutes, members, invites, consent records, and the solver,
 which keeps nothing. Each later pass that adds a purpose updates the policy and bumps the version: online data
-(#3), the AI provider (#5), payments (#6). The draft texts are in `docs/legal/`; the user approves them before
-T23 builds the pages.
+(#3), the AI provider (#5), payments (#6). The texts are in `docs/legal/`. **The user approved them on 24 Oct
+2026**, with no courts clause. The two `[check: …]` notes left in the privacy policy are facts for T23 to fill in.
 
 - **Operator:** Ankur Paul. Contact and grievances at `privacy@<domain>`; the domain is decided at deploy and
   read from `VITE_CONTACT_EMAIL`.
