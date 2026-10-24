@@ -34,15 +34,17 @@ def sb():
 
 @pytest.fixture(scope="module")
 def users(sb):
-    """admin, editor, viewer and outsider, who accepted the current policy, and `lapsed`, who didn't."""
+    """admin, editor, viewer and outsider, who accepted the current policy, and `lapsed`, who accepted only the
+    one before it (none while there is one version)."""
     run = secrets.token_hex(4)
     made: dict[str, User] = {}
     current = max(p["version"] for p in sb.rows("policy_versions", sb.anon()))
     try:
         for who in (*ROLES, "lapsed"):
             made[who] = sb.create_user(f"tt-{run}-{who}@example.com", name=f"TT {who.title()}")
-            if who != "lapsed":
-                sb.rpc("record_consent", sb.as_user(made[who]), version=current).raise_for_status()
+            version = current if who != "lapsed" else current - 1
+            if version > 0:
+                sb.rpc("record_consent", sb.as_user(made[who]), version=version).raise_for_status()
         yield made
     finally:
         ids = [u.id for u in made.values()]

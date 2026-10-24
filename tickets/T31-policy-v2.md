@@ -1,5 +1,5 @@
 # T31 — Privacy policy and Terms v2
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T29, T30 · **Branch:** t31-policy-v2
 
 ## Goal
@@ -42,7 +42,7 @@ Plan, Q20 and Q24: [`docs/discussions/2026-10-24-online-data.md`](../docs/discus
 
 ## Done when
 - [x] Drafts approved by the user
-- [ ] Migration applied; `POLICY_VERSION` 2 in the app; re-accept works
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated (policy v2)
-- [ ] Committed: `T31: privacy policy and terms v2`
+- [x] Migration applied; `POLICY_VERSION` 2 in the app; re-accept works
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md updated (policy v2)
+- [x] Committed: `T31: privacy policy and terms v2`
