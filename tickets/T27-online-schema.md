@@ -1,5 +1,5 @@
 # T27 — Online timetables: schema and RLS
-**Status:** TODO
+**Status:** DONE
 **Lane:** B · **Prereqs:** — · **Branch:** t27-online-schema
 
 ## Goal
@@ -60,7 +60,7 @@ Pytest (`supabase`), per role (admin, editor, viewer, non-member, signed out):
 - writes refused for a user without consent to the current policy version.
 
 ## Done when
-- [ ] Migration applies cleanly with `npx supabase db push`
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T27: online timetables schema and RLS`
+- [x] Migration applies cleanly with `npx supabase db push`
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T27: online timetables schema and RLS`
