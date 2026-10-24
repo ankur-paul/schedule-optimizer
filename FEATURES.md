@@ -1,8 +1,14 @@
 # Features
 
-The app builds a clash-free weekly class timetable for a college. One coordinator enters the data and generates the timetable, then prints or exports it. Everything is saved in the browser (`localStorage`), so there is no login and no database.
+The app builds a clash-free weekly class timetable for a college. One coordinator enters the data and generates the timetable, then prints or exports it. Everything is saved in the browser (`localStorage`). Signing in is optional and changes nothing yet; it is the start of accounts and institutes.
 
 The app walks through four steps: ① Setup week → ② Add data → ③ Generate → ④ View & export. Each step has a one-line hint, and non-obvious fields have ⓘ tooltips. On a narrow screen the stepper shows step numbers and the current step's name.
+
+## Account
+
+- **Sign in (optional).** A **Sign in** button in the header opens a dialog with *Continue with Google* and *Email me a sign-in link* ("Check your inbox at …"). Signed in, the button becomes an avatar (Google's picture, or initials) whose menu shows your name (or email) and **Sign out**. The session survives a reload.
+- **Signed out is the full app.** Signing in or out never touches the timetable data in the browser. Without `web/.env.local` (set up by `scripts/setup-auth.sh`) there is no Sign in button at all.
+- An expired or reused email link shows a toast asking for a new one.
 
 ## ① Setup week
 
@@ -86,6 +92,7 @@ Soft rules, which add to the score (lower is better):
 - A lock that blocks every other slot shows up as unplaced sessions rather than a dropped lock.
 - Printouts don't show the 🔒 marker.
 - Cancelling a CP-SAT run only stops the browser waiting. The server keeps solving until its time limit and its answer is ignored.
+- Sign-in emails come from Supabase's built-in sender, which reaches only the Supabase project's team members, 2 emails an hour. Google sign-in works only for accounts listed as test users in Google Cloud. Both open up in the deploy pass.
 - Drag and drop works in the Section view only, with a mouse; there is no keyboard dragging (use *Lock here* instead).
 
 ## Not built yet

@@ -1,5 +1,5 @@
 # T19 — Sign-in: Supabase client, Google and email link, account menu
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** A · **Prereqs:** — · **Branch:** t19-sign-in
 
 ## Goal

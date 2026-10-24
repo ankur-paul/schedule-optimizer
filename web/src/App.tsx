@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { AccountButton } from '@/features/account/AccountButton'
 import { GenerateStep } from '@/features/generate/GenerateStep'
 import { DataStep } from '@/features/data/DataStep'
 import { useCollegeData } from '@/features/data/collegeData'
@@ -72,6 +73,7 @@ function App() {
             >
               <RotateCcw /> Start over
             </Button>
+            <AccountButton />
           </div>
           <Stepper step={step} onSelect={setStep} />
         </header>
