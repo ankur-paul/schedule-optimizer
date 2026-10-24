@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import { activeInstitute, activeKey, dismissedKey, joinedMessage, promptCreate, type Membership } from "./institutes";
 import { DbFailure, type InstitutesApi, type Person } from "./institutesApi";
+import { storage } from "./storage";
 
 interface InstitutesState {
   /** Whose institutes these are; `null` when signed out. */
@@ -21,24 +22,6 @@ const empty: InstitutesState = { userId: null, memberships: [], loaded: false, r
 
 /** The signed-in user's institutes. Kept apart from the app store: none of this is timetable data. */
 export const useInstitutes = create<InstitutesState>(() => empty);
-
-/** localStorage that never throws (private mode, or no window in tests). */
-const storage = {
-  get(key: string): string | null {
-    try {
-      return globalThis.localStorage?.getItem(key) ?? null;
-    } catch {
-      return null;
-    }
-  },
-  set(key: string, value: string) {
-    try {
-      globalThis.localStorage?.setItem(key, value);
-    } catch {
-      // ignore: it just won't be remembered
-    }
-  },
-};
 
 export interface Notify {
   info(message: string): void;

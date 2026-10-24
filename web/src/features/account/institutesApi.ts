@@ -1,8 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { needsEmailConfirmation } from "./emailConfirm";
 import { dbErrorMessage, normalizeEmail, type DbError, type Invite, type InviteRole, type Joined, type Member, type Membership, type Role } from "./institutes";
 
 /** A database call that failed, with a message already in plain words (see `dbErrorMessage`). */
 export class DbFailure extends Error {}
+
+/** T26's refusal of *Make admin* or *Leave* without a recent email-link sign-in; the UI offers the link. */
+export class EmailConfirmationNeeded extends DbFailure {}
 
 /** A person's name and email, as `profiles` has them. */
 export interface Person {
@@ -58,6 +62,7 @@ export function toMembers(rows: { user_id: string; role: Role }[], profiles: Pro
 
 /** The data of a Supabase response, or a `DbFailure` in plain words. */
 function check<T>({ data, error }: { data: T; error: DbError | null }): T {
+  if (error && needsEmailConfirmation(error)) throw new EmailConfirmationNeeded(error.message ?? "Confirm from your email first.");
   if (error) throw new DbFailure(dbErrorMessage(error));
   return data;
 }

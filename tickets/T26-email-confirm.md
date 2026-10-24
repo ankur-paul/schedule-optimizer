@@ -40,7 +40,7 @@ handover, and the leaving member confirms leaving. Postgres enforces it, like ev
   in the same tab and in a new one.
 
 ## Done when
-- [ ] Both functions refuse without a recent email confirmation, and the tests prove it
+- [x] Both functions refuse without a recent email confirmation, and the tests prove it
 - [ ] The email-link flow works for Google and email-link users
-- [ ] FEATURES.md (account section, known limits) and PROGRESS.md updated
+- [x] FEATURES.md (account section, known limits) and PROGRESS.md updated
 - [ ] Committed: `T26: email confirmation for make admin and leave`

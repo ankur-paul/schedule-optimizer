@@ -122,6 +122,7 @@ export function joinedMessage(joined: Joined[]): string | null {
 export interface DbError {
   code?: string;
   message?: string;
+  hint?: string | null;
 }
 
 /**
