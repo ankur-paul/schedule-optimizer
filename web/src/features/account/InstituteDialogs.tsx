@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Crown, Mail, Trash2, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
+import { HelpLink } from "@/components/HelpLink";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { helpHref } from "@/help/helpLinks";
 import { deleteConfirmed, inviteError, MAX_NAME, nameError, personLabel, ROLE_LABEL, sortMembers, type Invite, type InviteRole, type Member, type Membership } from "./institutes";
 import type { InstitutesApi } from "./institutesApi";
 import { requestAction } from "./useEmailConfirm";
@@ -81,7 +83,8 @@ export function CreateInstituteDialog({ api, open, onOpenChange }: { api: Instit
         <DialogHeader>
           <DialogTitle>Create an institute</DialogTitle>
           <DialogDescription>
-            An institute groups the people who build its timetables. You become its admin and can invite editors and viewers.
+            An institute groups the people who build its timetables. You become its admin and can invite editors and viewers.{" "}
+            <HelpLink href={helpHref("online", "institutes")} className="hover:text-foreground">Learn more</HelpLink>
           </DialogDescription>
         </DialogHeader>
         {open && (
@@ -227,7 +230,9 @@ export function MembersDialog({ api, institute, open, onOpenChange }: { api: Ins
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Members of {institute.name}</DialogTitle>
-          <DialogDescription>You're the admin: you decide who has access and with which role.</DialogDescription>
+          <DialogDescription>
+            You're the admin: you decide who has access and with which role. <HelpLink href={helpHref("online", "institutes")} className="hover:text-foreground">What each role can do</HelpLink>
+          </DialogDescription>
         </DialogHeader>
 
         {members === null ? (

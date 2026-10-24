@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Building2, CircleHelp, DoorOpen, FileText, Link2, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Shield, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { HelpLink } from "@/components/HelpLink";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -151,7 +152,8 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
             <p className="flex items-start gap-2">
               <MailCheck className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>
-                Check your inbox at <span className="font-medium">{sentTo}</span> and open the link to sign in.
+                Check your inbox at <span className="font-medium">{sentTo}</span> and open the link to sign in.{" "}
+                <HelpLink href={helpHref("troubleshooting", "email-link")} className="hover:text-foreground">Didn't get it?</HelpLink>
               </span>
             </p>
             <Button variant="ghost" size="sm" className="justify-self-start" onClick={() => setSentTo(null)}>

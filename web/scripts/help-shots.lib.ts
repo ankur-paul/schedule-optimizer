@@ -1,8 +1,10 @@
 // The pure parts of the help screenshots script (scripts/help-shots.ts), apart so Vitest can test them without Playwright.
 import { sampleCollege } from "../src/domain/sampleCollege";
 import type { SolveResult } from "../src/domain/types";
+import { toDoc } from "../src/features/online/online";
 import { initialData, PERSIST_VERSION, type AppData } from "../src/store/useAppStore";
 import { START_STATES, type Shot, type Target } from "./help-shots.config";
+import { onlineLink } from "./help-shots.supabase";
 
 /** The script warns about PNGs bigger than this. */
 export const MAX_PNG_BYTES = 200 * 1024;
@@ -58,7 +60,9 @@ export function shotData(shot: Shot, timetable: SolveResult): AppData {
 
 /** The `localStorage` value the app's store reads on start (zustand `persist`, key `timetable-v1`). */
 export function persistedState(shot: Shot, timetable: SolveResult): string {
-  return JSON.stringify({ state: { ...shotData(shot, timetable), online: null }, version: PERSIST_VERSION });
+  const data = shotData(shot, timetable);
+  const online = shot.signedIn?.online ? onlineLink(toDoc(data), shot.signedIn.online) : null;
+  return JSON.stringify({ state: { ...data, online }, version: PERSIST_VERSION });
 }
 
 export interface Box {

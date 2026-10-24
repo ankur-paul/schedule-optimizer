@@ -31,6 +31,7 @@ describe("handleError", () => {
   it("refuses reserved words in any case", () => {
     for (const word of RESERVED_HANDLES) expect(handleError(word)).toBe("That name is reserved.");
     expect(handleError(" Privacy ")).toBe("That name is reserved.");
+    expect(handleError("help")).toBe("That name is reserved.");
   });
 
   it("forgives capitals and outer spaces, as the database does", () => {

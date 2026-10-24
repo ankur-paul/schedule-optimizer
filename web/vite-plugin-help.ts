@@ -8,8 +8,10 @@ import {
   anchorsSource,
   escapeHtml,
   parseHelpPage,
+  pngSize,
   renderHelpPage,
   type HelpPageName,
+  type ImageSize,
 } from './src/help/helpText.ts'
 import { PAGE_FOOTER, PAGE_HEADER, fillMarker, reloadOnMarkdown } from './vite-plugin-legal.ts'
 
@@ -74,14 +76,19 @@ export function helpPages(): Plugin {
         if (!name) return html
         const pages = parseAll()
         const page = pages.find((p) => p.name === name)!
+        const sizes: Record<string, ImageSize> = {}
         for (const src of page.images) {
-          if (!src.startsWith('/help/') || !existsSync(path.join(publicDir, src))) {
+          const file = path.join(publicDir, src)
+          if (!src.startsWith('/help/') || !existsSync(file)) {
             throw new Error(`${name}.md: the image ${src} isn't in public/help/`)
           }
+          // Screenshots are taken at 2× (scripts/help-shots.ts), so they show at half their pixel size.
+          const size = src.endsWith('.png') ? pngSize(readFileSync(file)) : null
+          if (size) sizes[src] = { width: Math.round(size.width / 2), height: Math.round(size.height / 2) }
         }
         if (!/<title>[^<]*<\/title>/.test(html)) throw new Error(`${file} has no <title>`)
         const title = page.name === 'index' ? 'Help · Lattice' : `${page.title} · Lattice Help`
-        const body = `${PAGE_HEADER}\n<main class="legal help">${renderHelpPage(page, pages)}</main>\n${PAGE_FOOTER}`
+        const body = `${PAGE_HEADER}\n<main class="legal help">${renderHelpPage(page, pages, sizes)}</main>\n${PAGE_FOOTER}`
         return fillMarker(html, MARKER, body, file).replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`)
       },
     },

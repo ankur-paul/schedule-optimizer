@@ -1,5 +1,5 @@
 # T35 — Help content: online and institutes
-**Status:** TODO
+**Status:** DONE
 **Lane:** any · **Prereqs:** T32, T33, T31 · **Branch:** t35-help-online
 
 ## Goal
@@ -31,10 +31,21 @@ help from the account menu and the online dialogs. Plan:
 - Click through: every new link signed in as admin, editor and viewer.
 
 ## Done when
-- [ ] `online.md` and its troubleshooting entries written with `/no-ai-slop`
-- [ ] In-app links in the account and online dialogs
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated if links were added
-- [ ] Committed: `T35: help for online and institutes`
+- [x] `online.md` and its troubleshooting entries written with `/no-ai-slop`
+- [x] In-app links in the account and online dialogs
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md updated if links were added
+- [x] Committed: `T35: help for online and institutes`
 
 ## Notes
+- Screenshots of signed-in UI are mocked, not left out: `web/scripts/help-shots.supabase.ts` answers the Supabase
+  calls the app makes, and a shot's `signedIn` picks the role and whether the working copy is linked. Pages load at
+  `https://lattice.example` (passed through to the preview server) so the public link in the versions shot doesn't
+  change with the port.
+- The click-through ran in headless Chromium against that pretend Supabase as admin, editor, viewer and signed out,
+  not with real accounts on the dev project.
+- `troubleshooting.md`: only the four online entries are written here (two new: `#changed-online`, `#consent`); T34
+  owns the rest of the page.
+- Also fixed on the way: help images showed at twice their size (shots are 2×), so the renderer now gives them
+  `width`/`height` at half their pixels; and the client's reserved link names lacked `help`, which T32 reserved in
+  the database only.
