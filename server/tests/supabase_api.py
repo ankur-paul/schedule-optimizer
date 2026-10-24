@@ -100,6 +100,23 @@ class Supabase:
         res.raise_for_status()
         return User(id=user_id, email=email, token=res.json()["access_token"])
 
+    def sign_in_by_email(self, user: User) -> User:
+        """`user` signed in again by email code, which records `amr` method otp like the app's email link does (T26).
+        The admin API makes the code, so no email is sent."""
+        res = self.http.post(
+            f"{self.url}/auth/v1/admin/generate_link",
+            headers=self.service(),
+            json={"type": "magiclink", "email": user.email},
+        )
+        res.raise_for_status()
+        res = self.http.post(
+            f"{self.url}/auth/v1/verify",
+            headers={"apikey": self.anon_key},
+            json={"type": "email", "email": user.email, "token": res.json()["email_otp"]},
+        )
+        res.raise_for_status()
+        return User(id=user.id, email=user.email, token=res.json()["access_token"])
+
     def delete_user(self, user_id: str) -> None:
         self.http.delete(f"{self.url}/auth/v1/admin/users/{user_id}", headers=self.service()).raise_for_status()
 

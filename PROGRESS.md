@@ -62,6 +62,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T20] Migration applied to the dev project with `db push`; all 29 RLS tests pass against it (fixed the test helper's `rpc()`, whose own `name` parameter clashed with `create_institute(name)`) (`cd server && uv run pytest -m supabase`)
 - [T22] Teacher names never leave the browser: `withoutPersonalData` in `solveClient.ts` swaps each teacher's name for its id in every `POST /solve` body; the UI still labels everything from the local data. Checked that uvicorn logs only method, path and status, never bodies (generate with the solver running and the devtools Network tab open: the request's `teachers` hold ids as names)
 - [T21] Institutes and members UI in the avatar menu: auto-accept invites with a toast, create-institute prompt with *Not now*, active institute remembered per browser with a switcher at 2+, role and admin line, leave, and for the admin *Members…* (role select, make admin, remove, invites with cancel), rename and delete (type the name). Logic in `institutes.ts`, calls in `institutesApi.ts`, state in `useInstitutes.ts` (sign in with `web/.env.local` set, open the avatar menu)
+- [T26] `make_admin` and `leave_institute` refuse unless the caller signed in by email link in the last 10 minutes (`amr` otp/magiclink in the token), with hint `email_confirmation_required`; migration applied to the dev project (`cd server && uv run pytest -m supabase`)
 
 ## Known issues / cuts
 
