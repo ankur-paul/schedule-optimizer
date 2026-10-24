@@ -129,21 +129,19 @@ export function statusNote(opts: { dirty: boolean; role: Role | null }): string 
 }
 
 /**
- * The header line: "On this device only", or "CSE odd sem 2026 · GNDEC", plus the `statusNote`. Signed out (role
- * unknown), it uses the institute name kept in the link.
+ * The header line: "On this device only", or "CSE odd sem 2026 · GNDEC", then "· published" when the link shows a
+ * version, plus the `statusNote`. Signed out (role unknown), it uses the institute name kept in the link.
  */
-export function statusText(link: OnlineLink | null, opts: { dirty: boolean; role: Role | null; instituteName: string | null }): string {
+export function statusText(link: OnlineLink | null, opts: { dirty: boolean; role: Role | null; instituteName: string | null; published?: boolean }): string {
   if (!link) return "On this device only";
-  const note = statusNote(opts);
-  const base = `${link.name} · ${opts.instituteName ?? link.instituteName}`;
-  return note ? `${base} · ${note}` : base;
+  return [link.name, opts.instituteName ?? link.instituteName, opts.published && "published", statusNote(opts)].filter(Boolean).join(" · ");
 }
 
-export type OnlineAction = "save" | "signInToSave" | "saveAs" | "open" | "rename" | "delete" | "unlink";
+export type OnlineAction = "save" | "signInToSave" | "saveAs" | "publish" | "versions" | "open" | "rename" | "delete" | "unlink";
 
 /**
  * The status menu's items. Signed out, *Save online* only says to sign in. A viewer of the linked timetable gets no
- * write actions on it. Without a link, *Save online* is the first save, so there is no separate *Save as new*.
+ * write actions on it, but may list its versions. Without a link, *Save online* is the first save, so there is no separate *Save as new*.
  * `account` is `loading` while signed in but before the institutes (and the consent gate) are through. Hiding items
  * is cosmetic: T27's functions are the rule.
  */
@@ -164,6 +162,8 @@ export function onlineMenu(opts: {
     if (link) {
       if (role !== "viewer") items.push("save");
       if (canCreate) items.push("saveAs");
+      if (canEdit(role)) items.push("publish");
+      if (role) items.push("versions");
     } else if (canCreate) items.push("save");
     if (hasActive) items.push("open");
     if (link && canEdit(role)) items.push("rename");

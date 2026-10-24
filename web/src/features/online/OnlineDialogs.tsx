@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CopyPlus, Trash2 } from "lucide-react";
+import { CopyPlus, History, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { notify } from "@/features/account/useInstitutes";
 import { initialData, useAppStore, type OnlineLink } from "@/store/useAppStore";
 import { conflictText, defaultInstitute, defaultName, docHash, hasUnsavedWork, MAX_TIMETABLE_NAME, whenPhrase, type Conflict } from "./online";
 import type { OnlineApi, TimetableSummary } from "./onlineApi";
+import { AskAdminBody, HandleDialog, PublishedBody, SaveFirstBody, VersionsBody } from "./PublishDialogs";
 import { createOnline, deleteOnline, openOnline, renameOnline, saveOnline, showDialog, useOnline } from "./useOnline";
 
 const selectClass =
@@ -24,13 +25,50 @@ const close = () => showDialog(null);
 
 /**
  * The status menu's dialogs, one at a time from `useOnline`. `editable` are the institutes the user may save into;
- * `active` is the institute *Open* lists.
+ * `active` is the institute *Open* lists. `onHandleSaved` reloads the memberships after the admin sets a handle.
  */
-export function OnlineDialogs({ api, link, editable, active }: { api: OnlineApi; link: OnlineLink | null; editable: Membership[]; active: Membership | null }) {
+export function OnlineDialogs({
+  api,
+  link,
+  editable,
+  active,
+  onHandleSaved,
+}: {
+  api: OnlineApi;
+  link: OnlineLink | null;
+  editable: Membership[];
+  active: Membership | null;
+  onHandleSaved: () => Promise<void>;
+}) {
   const dialog = useOnline((s) => s.dialog);
   const onOpenChange = (open: boolean) => !open && close();
   return (
     <>
+      <Dialog open={dialog?.kind === "versions"} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-xl">{dialog?.kind === "versions" && <VersionsBody api={api} timetable={dialog.timetable} />}</DialogContent>
+      </Dialog>
+
+      <Dialog open={dialog?.kind === "saveFirst"} onOpenChange={onOpenChange}>
+        <DialogContent>{dialog?.kind === "saveFirst" && <SaveFirstBody api={api} />}</DialogContent>
+      </Dialog>
+
+      <Dialog open={dialog?.kind === "askAdmin"} onOpenChange={onOpenChange}>
+        <DialogContent>{dialog?.kind === "askAdmin" && <AskAdminBody message={dialog.message} />}</DialogContent>
+      </Dialog>
+
+      <Dialog open={dialog?.kind === "published"} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-xl">{dialog?.kind === "published" && <PublishedBody url={dialog.url} version={dialog.version} />}</DialogContent>
+      </Dialog>
+
+      <HandleDialog
+        api={api}
+        institute={dialog?.kind === "handle" ? (editable.find((m) => m.instituteId === dialog.instituteId) ?? null) : null}
+        open={dialog?.kind === "handle"}
+        onOpenChange={onOpenChange}
+        onSaved={onHandleSaved}
+        then={dialog?.kind === "handle" ? dialog.then : undefined}
+      />
+
       <Dialog open={dialog?.kind === "create"} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
@@ -209,7 +247,7 @@ function OpenBody({ api, institute }: { api: OnlineApi; institute: Membership })
   }, [api, institute.instituteId]);
 
   const open = async (row: TimetableSummary) => {
-    if (await run(() => openOnline(api, row.id, institute.name))) {
+    if (await run(async () => void (await openOnline(api, row.id, institute.name)))) {
       close();
       toast.success(`Opened ${row.name} (version ${useAppStore.getState().online?.version ?? row.latestVersion}).`);
     }
@@ -267,6 +305,17 @@ function OpenBody({ api, institute }: { api: OnlineApi; institute: Membership })
                   {row.savedAt && ` · saved ${row.savedBy ? `by ${row.savedBy} ` : ""}${whenPhrase(row.savedAt)}`}
                 </div>
               </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                aria-label={`Versions of ${row.name}`}
+                onClick={() =>
+                  showDialog({ kind: "versions", timetable: { timetableId: row.id, name: row.name, instituteId: institute.instituteId, instituteName: institute.name } })
+                }
+              >
+                <History /> Versions
+              </Button>
               <Button size="sm" variant="outline" disabled={busy} onClick={() => choose(row)}>
                 Open
               </Button>

@@ -16,9 +16,9 @@ import {
   type Membership,
 } from "./institutes";
 
-const gndec: Membership = { instituteId: "i1", name: "GNDEC Ludhiana", role: "admin" };
-const pec: Membership = { instituteId: "i2", name: "PEC Chandigarh", role: "editor" };
-const viewerOnly: Membership = { instituteId: "i3", name: "Thapar", role: "viewer" };
+const gndec: Membership = { instituteId: "i1", name: "GNDEC Ludhiana", role: "admin", handle: null };
+const pec: Membership = { instituteId: "i2", name: "PEC Chandigarh", role: "editor", handle: null };
+const viewerOnly: Membership = { instituteId: "i3", name: "Thapar", role: "viewer", handle: null };
 
 const meera: Member = { userId: "u1", email: "meera@gndec.ac.in", name: "Dr. Meera Iyer", role: "admin" };
 const ankur: Member = { userId: "u2", email: "ankur@gndec.ac.in", name: null, role: "editor" };
@@ -49,14 +49,15 @@ describe("showSwitcher", () => {
 });
 
 describe("menuItems", () => {
-  it("gives the admin members, rename and delete, never leave", () => {
-    expect(menuItems(gndec)).toEqual(["members", "rename", "delete", "create"]);
+  it("gives the admin members, rename, link name and delete, never leave", () => {
+    expect(menuItems(gndec)).toEqual(["members", "rename", "handle", "delete", "create"]);
   });
 
   it("gives editors and viewers leave only, never members", () => {
     for (const m of [pec, viewerOnly]) {
       expect(menuItems(m)).toEqual(["leave", "create"]);
       expect(menuItems(m)).not.toContain("members");
+      expect(menuItems(m)).not.toContain("handle");
     }
   });
 

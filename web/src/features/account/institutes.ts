@@ -9,6 +9,8 @@ export interface Membership {
   instituteId: string;
   name: string;
   role: Role;
+  /** The institute's part of public links (T29), `null` until the admin sets it. */
+  handle: string | null;
 }
 
 /** A member as the admin sees them. Email-link users have no name. */
@@ -48,15 +50,15 @@ export function showSwitcher(memberships: Membership[]): boolean {
   return memberships.length >= 2;
 }
 
-export type MenuItem = "members" | "rename" | "delete" | "leave" | "create";
+export type MenuItem = "members" | "rename" | "handle" | "delete" | "leave" | "create";
 
 /**
- * The institute items in the account menu. Only the admin manages members and the institute; editors and viewers
- * can leave. Anyone signed in may create an institute.
+ * The institute items in the account menu. Only the admin manages members and the institute, including its link
+ * name (T29); editors and viewers can leave. Anyone signed in may create an institute.
  */
 export function menuItems(active: Membership | null): MenuItem[] {
   if (!active) return ["create"];
-  return active.role === "admin" ? ["members", "rename", "delete", "create"] : ["leave", "create"];
+  return active.role === "admin" ? ["members", "rename", "handle", "delete", "create"] : ["leave", "create"];
 }
 
 /** A member's name, else their email. */

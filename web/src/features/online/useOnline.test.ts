@@ -1,9 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Membership } from "@/features/account/institutes";
 import { DbFailure } from "@/features/account/institutesApi";
+import { useInstitutes } from "@/features/account/useInstitutes";
 import { useAppStore, type OnlineLink } from "@/store/useAppStore";
 import { docHash, isDirty, toDoc } from "./online";
-import { NotEditable, SaveConflict, type OnlineApi } from "./onlineApi";
-import { createOnline, deleteOnline, openOnline, renameOnline, saveOnline, unlink, useOnline } from "./useOnline";
+import { HandleRequired, NotEditable, SaveConflict, type OnlineApi } from "./onlineApi";
+import {
+  createOnline,
+  currentPublishState,
+  deleteOnline,
+  openOnline,
+  publishVersion,
+  refreshLinked,
+  renameOnline,
+  saveAndPublish,
+  saveOnline,
+  startPublish,
+  unlink,
+  unpublishOnline,
+  useOnline,
+} from "./useOnline";
 
 const notify = { info: vi.fn(), error: vi.fn() };
 
@@ -15,6 +31,11 @@ function fakeApi(overrides: Partial<OnlineApi> = {}) {
     save: vi.fn(async (_id: string, _data: unknown, base: number) => base + 1),
     rename: vi.fn(async () => {}),
     remove: vi.fn(async () => {}),
+    status: vi.fn(async () => ({ publicId: "k7f3q9xa2m", latestVersion: 3, liveVersion: 3 })),
+    versions: vi.fn(async () => []),
+    publish: vi.fn(async () => {}),
+    unpublish: vi.fn(async () => {}),
+    setHandle: vi.fn(async () => {}),
     ...overrides,
   } as unknown as OnlineApi & Record<keyof OnlineApi, ReturnType<typeof vi.fn>>;
 }
@@ -29,7 +50,8 @@ function linkHere(extra: Partial<OnlineLink> = {}) {
 beforeEach(() => {
   store().reset();
   store().loadSample();
-  useOnline.setState({ dialog: null, saving: false });
+  useOnline.setState({ dialog: null, saving: false, linked: null });
+  useInstitutes.setState({ userId: "u1", memberships: [], loaded: true, rememberedId: null, admin: null, createOpen: false });
   notify.info.mockClear();
   notify.error.mockClear();
 });
@@ -136,8 +158,8 @@ describe("openOnline", () => {
     store().setStep(3);
     store().setTimeLimitSec(45);
     const data = { settings: { days: ["Mon"], periods: [], lunchCandidates: [] }, printHeading: "Opened" };
-    const api = fakeApi({ open: vi.fn(async () => ({ instituteId: "i1", name: "CSE odd", version: 7, data })) });
-    await openOnline(api, "t1", "GNDEC");
+    const api = fakeApi({ open: vi.fn(async () => ({ instituteId: "i1", name: "CSE odd", version: 7, opened: 7, data })) });
+    expect(await openOnline(api, "t1", "GNDEC")).toBe(7);
     const s = store();
     expect(s.printHeading).toBe("Opened");
     expect(s.teachers).toEqual([]);
@@ -149,10 +171,170 @@ describe("openOnline", () => {
 
   it("leaves everything alone for unreadable data", async () => {
     const before = hashNow();
-    const api = fakeApi({ open: vi.fn(async () => ({ instituteId: "i1", name: "X", version: 1, data: "junk" })) });
+    const api = fakeApi({ open: vi.fn(async () => ({ instituteId: "i1", name: "X", version: 1, opened: 1, data: "junk" })) });
     await expect(openOnline(api, "t1", "GNDEC")).rejects.toThrow(/couldn't be read/);
     expect(hashNow()).toBe(before);
     expect(store().online).toBeNull();
+  });
+});
+
+describe("opening an older version (restore)", () => {
+  it("links to the latest version with unsaved changes, so Save online restores it as a new version", async () => {
+    const data = { settings: { days: ["Mon"], periods: [], lunchCandidates: [] }, printHeading: "Version 5" };
+    const api = fakeApi({ open: vi.fn(async () => ({ instituteId: "i1", name: "CSE odd", version: 7, opened: 5, data })) });
+    expect(await openOnline(api, "t1", "GNDEC", 5)).toBe(5);
+    expect(api.open).toHaveBeenCalledWith("t1", 5);
+    expect(store().printHeading).toBe("Version 5");
+    expect(store().online?.version).toBe(7);
+    expect(isDirty(store().online, hashNow())).toBe(true);
+
+    expect(await saveOnline(api, notify)).toBe(true);
+    expect(api.save).toHaveBeenCalledWith("t1", toDoc(store()), 7);
+    expect(store().online?.version).toBe(8);
+    expect(isDirty(store().online, hashNow())).toBe(false);
+  });
+});
+
+const gndec = (handle: string | null, role: Membership["role"] = "editor"): Membership => ({ instituteId: "i1", name: "GNDEC", role, handle });
+
+function withInstitute(membership: Membership, admin: { name: string | null; email: string | null } | null = null) {
+  useInstitutes.setState({ memberships: [membership], rememberedId: membership.instituteId, admin });
+}
+
+/** Linked, clean, with a result in the working copy. */
+function linkWithResult() {
+  store().setResult({ placements: [], unplaced: [], score: { total: 0, breakdown: { S1: 0, S2: 0, S3: 0, S4: 0 } }, engine: "exact" } as never);
+  linkHere();
+}
+
+describe("currentPublishState", () => {
+  it("reads the result, unsaved changes, role, handle and the active institute's admin", () => {
+    expect(currentPublishState()).toBeNull();
+    linkHere();
+    withInstitute(gndec("gndec"));
+    expect(currentPublishState()?.kind).toBe("noResult");
+    linkWithResult();
+    expect(currentPublishState()).toEqual({ kind: "ready" });
+    withInstitute(gndec(null), { name: "Meera", email: "m@x.in" });
+    expect(currentPublishState()).toEqual({ kind: "askAdmin", message: "Ask your admin (Meera) to set the institute's link name." });
+    withInstitute(gndec(null, "admin"));
+    expect(currentPublishState()).toEqual({ kind: "needsHandle" });
+    store().setPrintHeading("Edited");
+    expect(currentPublishState()).toEqual({ kind: "dirty" });
+  });
+});
+
+describe("startPublish", () => {
+  it("publishes the linked version and shows the link", async () => {
+    linkWithResult();
+    withInstitute(gndec("gndec"));
+    const api = fakeApi();
+    await startPublish(api, notify);
+    expect(api.publish).toHaveBeenCalledWith("t1", 3);
+    expect(useOnline.getState().dialog).toEqual({ kind: "published", url: "/gndec/k7f3q9xa2m", version: 3 });
+    expect(useOnline.getState().linked).toMatchObject({ timetableId: "t1", liveVersion: 3 });
+  });
+
+  it("asks to save first with unsaved changes; Save and publish saves, then publishes the new version", async () => {
+    linkWithResult();
+    withInstitute(gndec("gndec"));
+    store().setPrintHeading("Edited");
+    const api = fakeApi();
+    await startPublish(api, notify);
+    expect(useOnline.getState().dialog).toEqual({ kind: "saveFirst" });
+    expect(api.publish).not.toHaveBeenCalled();
+
+    await saveAndPublish(api, notify);
+    expect(api.save).toHaveBeenCalled();
+    expect(api.publish).toHaveBeenCalledWith("t1", 4);
+    expect(useOnline.getState().dialog).toMatchObject({ kind: "published", version: 4 });
+  });
+
+  it("doesn't publish when the save hits a conflict", async () => {
+    linkWithResult();
+    withInstitute(gndec("gndec"));
+    store().setPrintHeading("Edited");
+    const api = fakeApi({ save: vi.fn(async () => Promise.reject(new SaveConflict(null))) });
+    await saveAndPublish(api, notify);
+    expect(api.publish).not.toHaveBeenCalled();
+    expect(useOnline.getState().dialog).toEqual({ kind: "conflict", conflict: null });
+  });
+
+  it("opens the handle dialog for the admin, carrying the publish on", async () => {
+    linkWithResult();
+    withInstitute(gndec(null, "admin"));
+    const api = fakeApi();
+    await startPublish(api, notify);
+    expect(useOnline.getState().dialog).toEqual({ kind: "handle", instituteId: "i1", then: { timetableId: "t1", instituteId: "i1", version: 3, mode: "publish" } });
+    expect(api.publish).not.toHaveBeenCalled();
+  });
+
+  it("tells an editor to ask the admin", async () => {
+    linkWithResult();
+    withInstitute(gndec(null), { name: null, email: "admin@gndec.ac.in" });
+    await startPublish(fakeApi(), notify);
+    expect(useOnline.getState().dialog).toEqual({ kind: "askAdmin", message: "Ask your admin (admin@gndec.ac.in) to set the institute's link name." });
+  });
+
+  it("does nothing without a result", async () => {
+    linkHere();
+    withInstitute(gndec("gndec"));
+    const api = fakeApi();
+    await startPublish(api, notify);
+    expect(api.publish).not.toHaveBeenCalled();
+    expect(useOnline.getState().dialog).toBeNull();
+  });
+});
+
+describe("publishVersion", () => {
+  const target = { timetableId: "t1", instituteId: "i1", version: 2, mode: "makeLive" as const };
+
+  it("Make live toasts the version", async () => {
+    linkHere();
+    withInstitute(gndec("gndec"));
+    const api = fakeApi();
+    expect(await publishVersion(api, notify, target)).toBe(true);
+    expect(api.publish).toHaveBeenCalledWith("t1", 2);
+    expect(notify.info).toHaveBeenCalledWith("The public link now shows version 2.");
+  });
+
+  it("answers a stale handle refusal by role", async () => {
+    const api = fakeApi({ publish: vi.fn(async () => Promise.reject(new HandleRequired("Ask the admin."))) });
+    withInstitute(gndec("stale", "admin"));
+    expect(await publishVersion(api, notify, target)).toBe(false);
+    expect(useOnline.getState().dialog).toEqual({ kind: "handle", instituteId: "i1", then: target });
+    withInstitute(gndec("stale", "editor"));
+    await publishVersion(api, notify, target);
+    expect(useOnline.getState().dialog).toEqual({ kind: "askAdmin", message: "Ask the admin." });
+  });
+
+  it("toasts other refusals", async () => {
+    const api = fakeApi({ publish: vi.fn(async () => Promise.reject(new DbFailure("That version is no longer kept."))) });
+    expect(await publishVersion(api, notify, target)).toBe(false);
+    expect(notify.error).toHaveBeenCalledWith("Couldn't publish: That version is no longer kept.");
+  });
+});
+
+describe("refreshLinked and unpublish", () => {
+  it("tracks the linked timetable's live version", async () => {
+    linkHere();
+    const api = fakeApi();
+    await refreshLinked(api);
+    expect(useOnline.getState().linked).toEqual({ timetableId: "t1", publicId: "k7f3q9xa2m", latestVersion: 3, liveVersion: 3 });
+    api.status.mockResolvedValue({ publicId: "k7f3q9xa2m", latestVersion: 3, liveVersion: null });
+    await unpublishOnline(api, "t1");
+    expect(api.unpublish).toHaveBeenCalledWith("t1");
+    expect(useOnline.getState().linked?.liveVersion).toBeNull();
+  });
+
+  it("clears without a link, and keeps the old status on a failure", async () => {
+    useOnline.setState({ linked: { timetableId: "t1", publicId: "x", latestVersion: 1, liveVersion: 1 } });
+    await refreshLinked(fakeApi());
+    expect(useOnline.getState().linked).toBeNull();
+    linkHere();
+    useOnline.setState({ linked: { timetableId: "t1", publicId: "x", latestVersion: 1, liveVersion: 1 } });
+    await refreshLinked(fakeApi({ status: vi.fn(async () => Promise.reject(new DbFailure("offline"))) }));
+    expect(useOnline.getState().linked?.liveVersion).toBe(1);
   });
 });
 

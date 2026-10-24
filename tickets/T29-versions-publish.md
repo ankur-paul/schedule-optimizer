@@ -1,5 +1,5 @@
 # T29 — Versions and publish
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T28 · **Branch:** t29-versions-publish
 
 ## Goal
@@ -42,9 +42,9 @@ keep working.
   editor in an institute with no handle; as a viewer.
 
 ## Done when
-- [ ] Publish, Make live and Unpublish work; the link never changes
-- [ ] Opening an old version and saving restores it as a new version
-- [ ] The handle is set by the admin, prompted at the first publish, and changeable
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated (versions, publishing)
-- [ ] Committed: `T29: versions and publish`
+- [x] Publish, Make live and Unpublish work; the link never changes
+- [x] Opening an old version and saving restores it as a new version
+- [x] The handle is set by the admin, prompted at the first publish, and changeable
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md updated (versions, publishing)
+- [x] Committed: `T29: versions and publish`

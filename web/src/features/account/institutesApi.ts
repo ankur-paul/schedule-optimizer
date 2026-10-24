@@ -37,7 +37,7 @@ export interface InstitutesApi {
 interface MembershipRow {
   institute_id: string;
   role: Role;
-  institutes: { name: string } | null;
+  institutes: { name: string; handle: string | null } | null;
 }
 
 interface ProfileRow {
@@ -50,7 +50,7 @@ interface ProfileRow {
 export function toMemberships(rows: MembershipRow[]): Membership[] {
   return rows
     .filter((r) => r.institutes)
-    .map((r) => ({ instituteId: r.institute_id, name: r.institutes!.name, role: r.role }))
+    .map((r) => ({ instituteId: r.institute_id, name: r.institutes!.name, role: r.role, handle: r.institutes!.handle ?? null }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -77,7 +77,7 @@ export function supabaseApi(client: SupabaseClient): InstitutesApi {
     },
 
     async memberships(userId) {
-      const rows = check(await client.from("memberships").select("institute_id, role, institutes(name)").eq("user_id", userId));
+      const rows = check(await client.from("memberships").select("institute_id, role, institutes(name, handle)").eq("user_id", userId));
       return toMemberships((rows ?? []) as unknown as MembershipRow[]);
     },
 
