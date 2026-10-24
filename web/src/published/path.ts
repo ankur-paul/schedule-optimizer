@@ -27,8 +27,8 @@ export function publishedPath(handle: string, publicId: string): string {
   return `/${handle}/${publicId}`;
 }
 
-/** First segments that are the dev server's or the build's own, never a handle. */
-const NOT_HANDLES = new Set(["assets", "src", "node_modules", "public"]);
+/** First segments that are the dev server's or the build's own, never a handle. `help` is /help/<page>. */
+const NOT_HANDLES = new Set(["assets", "src", "node_modules", "public", "help"]);
 
 /**
  * Whether the dev or preview server should answer `url` with published.html: two plain segments (no dots, so not a

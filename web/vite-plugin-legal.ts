@@ -1,13 +1,49 @@
 // Fills privacy.html and terms.html with the rendered policy text, in dev and in the build, so the pages need no
-// JavaScript (Google's OAuth verification and crawlers fetch them).
+// JavaScript (Google's OAuth verification and crawlers fetch them). The header, footer and reload helpers are shared
+// with the help pages (vite-plugin-help.ts).
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import type { Plugin } from 'vite'
+import type { HmrContext, Plugin } from 'vite'
 import { policyValues, renderLegal } from './src/legal/legalText.ts'
 
 const LEGAL_DIR = path.resolve(import.meta.dirname, 'src/legal')
 const PAGES: Record<string, string> = { 'privacy.html': 'privacy.md', 'terms.html': 'terms.md' }
 const MARKER = '<!-- legal-text -->'
+const HEADER_MARKER = '<!-- page-header -->'
+const FOOTER_MARKER = '<!-- page-footer -->'
+
+/** The Lattice header with *Back to Lattice*, for the plain pages next to the app (styles in src/legal/legal.css). */
+export const PAGE_HEADER = `<header class="legal-header">
+  <a href="/" class="legal-brand">
+    <span class="legal-tile">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <g><rect x="1" y="1" width="6" height="6" rx="1.5" /><rect x="1" y="9" width="6" height="6" rx="1.5" /><rect x="1" y="17" width="6" height="6" rx="1.5" /><rect x="9" y="17" width="6" height="6" rx="1.5" /><rect x="17" y="17" width="6" height="6" rx="1.5" /></g>
+        <g fill-opacity="0.3"><rect x="9" y="1" width="6" height="6" rx="1.5" /><rect x="17" y="1" width="6" height="6" rx="1.5" /><rect x="9" y="9" width="6" height="6" rx="1.5" /><rect x="17" y="9" width="6" height="6" rx="1.5" /></g>
+      </svg>
+    </span>
+    Lattice
+  </a>
+  <a href="/" class="legal-back">← Back to Lattice</a>
+</header>`
+
+export const PAGE_FOOTER =
+  '<footer class="legal-footer"><a href="/help">Help</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></footer>'
+
+/** Swaps `marker` in `html` for `text`; a page without the marker fails the build instead of shipping empty. */
+export function fillMarker(html: string, marker: string, text: string, filename: string): string {
+  if (!html.includes(marker)) throw new Error(`${filename} has no ${marker} marker`)
+  return html.replace(marker, () => text)
+}
+
+/** The markdown isn't a module, so editing it in dev needs a full reload to show. */
+export function reloadOnMarkdown(dir: string) {
+  return ({ file, server }: HmrContext) => {
+    if (path.dirname(file) === dir && file.endsWith('.md')) {
+      server.ws.send({ type: 'full-reload' })
+      return []
+    }
+  }
+}
 
 export function legalPages(contactEmail: string | undefined): Plugin {
   const values = policyValues(contactEmail)
@@ -24,17 +60,11 @@ export function legalPages(contactEmail: string | undefined): Plugin {
       handler(html, ctx) {
         const source = PAGES[path.basename(ctx.filename)]
         if (!source) return html
-        if (!html.includes(MARKER)) throw new Error(`${ctx.filename} has no ${MARKER} marker`)
         const text = readFileSync(path.join(LEGAL_DIR, source), 'utf8')
-        return html.replace(MARKER, () => renderLegal(text, values))
+        const filled = fillMarker(html, MARKER, renderLegal(text, values), ctx.filename)
+        return fillMarker(fillMarker(filled, HEADER_MARKER, PAGE_HEADER, ctx.filename), FOOTER_MARKER, PAGE_FOOTER, ctx.filename)
       },
     },
-    // The markdown isn't a module, so editing it in dev needs a reload to show.
-    handleHotUpdate({ file, server }) {
-      if (path.dirname(file) === LEGAL_DIR && file.endsWith('.md')) {
-        server.ws.send({ type: 'full-reload' })
-        return []
-      }
-    },
+    handleHotUpdate: reloadOnMarkdown(LEGAL_DIR),
   }
 }

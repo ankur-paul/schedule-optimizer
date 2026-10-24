@@ -19,5 +19,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "vite-plugin-legal.ts", "vite-plugin-published.ts"]
+  "include": ["vite.config.ts", "vite-plugin-legal.ts", "vite-plugin-help.ts", "vite-plugin-published.ts"]
 }

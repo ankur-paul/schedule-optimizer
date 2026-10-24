@@ -390,7 +390,7 @@ def test_handle_is_admin_only_and_cleaned(sb, users, inst):
 
 @pytest.mark.parametrize(
     "handle",
-    ["ab", "x" * 31, "-abc", "abc-", "a_b", "a.b", "ab c", "ábc", "", None, "admin", "WWW", "published", "privacy"],
+    ["ab", "x" * 31, "-abc", "abc-", "a_b", "a.b", "ab c", "ábc", "", None, "admin", "WWW", "published", "privacy", "help"],
 )
 def test_handle_format_and_reserved_words(sb, users, inst, handle):
     res = set_handle(sb, users["admin"], inst, handle)

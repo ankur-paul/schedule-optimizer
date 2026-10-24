@@ -1,5 +1,5 @@
 # T32 — Help pages: build and layout
-**Status:** TODO
+**Status:** DONE
 **Lane:** D · **Prereqs:** — · **Branch:** t32-help-pages
 
 ## Goal
@@ -46,11 +46,11 @@ and T35 write the text. Plan: [`docs/discussions/2026-10-24-help-page.md`](../do
   and account-menu links.
 
 ## Done when
-- [ ] `/help` and the six pages serve in `npm run dev` and `npm run preview` and are in `dist/`
-- [ ] Anchors, contents list, `helpHref` and the link test
-- [ ] `help` reserved in the rewrite and in the database
-- [ ] Footer and account-menu links
-- [ ] CLAUDE.md rule added
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md mentions the help pages
-- [ ] Committed: `T32: help pages build and layout`
+- [x] `/help` and the six pages serve in `npm run dev` and `npm run preview` and are in `dist/`
+- [x] Anchors, contents list, `helpHref` and the link test
+- [x] `help` reserved in the rewrite and in the database
+- [x] Footer and account-menu links
+- [x] CLAUDE.md rule added
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md mentions the help pages
+- [x] Committed: `T32: help pages build and layout`

@@ -27,6 +27,7 @@ Before you pick, start or finish a ticket, read `tickets/README.md`. It has the 
 - Parallel branches will conflict on this file; resolve by keeping **both** sides' lines.
 - Note anything cut, known bugs or workarounds under "Known issues / cuts" so the demo has no surprises.
 - `FEATURES.md` describes what the app does now. A commit that changes what users see or can do updates the matching bullet, and its "Known limits", in the same commit. Edit it in place; it is not a log. On a merge conflict, keep both sides' changes.
+- The help pages (`web/src/help/*.md`, served at `/help`) explain what users see. A commit that changes what users see updates the matching help section in the same commit, and reruns `npm run help:shots` (T33) if a screenshot changed. Renaming a heading changes its anchor: update the `helpHref` calls too (the link test in `helpLinks.test.ts` names any that broke), or keep the old anchor with `## New name {#old-id}`.
 
 ## Scheduling rules
 
