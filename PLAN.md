@@ -23,6 +23,7 @@ tickets in [`tickets/`](tickets/README.md).
 | UI               | Vite + React + TS + Tailwind + shadcn/ui. Clean, modern, light theme. **4-step guided flow:** ① Setup week → ② Add data → ③ Generate → ④ View & export. One-line hint per step, ⓘ tooltips on every non-obvious field. **v2 (T32–T35):** static `/help` pages (a tutorial plus one page per area), linked from problem cards, tooltips and step hints. See [`docs/discussions/2026-10-24-help-page.md`](docs/discussions/2026-10-24-help-page.md). |
 | Storage          | Browser `localStorage` (zustand `persist`), signed in or out: the device's one **working copy**. **v2 (T27–T29):** *Save online* uploads it as a new version of a named timetable in an institute (one JSONB document, at most 2 MB; last 20 versions kept plus the live one), *Open from institute* downloads one, a version check stops silent overwrites, and *Publish* points a stable public link at one version. See [`docs/discussions/2026-10-24-online-data.md`](docs/discussions/2026-10-24-online-data.md). **v2:** accounts, institutes, memberships and invites live in **Supabase** (Auth + Postgres, Mumbai); sign-in with Google or an email link. Postgres row-level security is the only place roles are enforced; FastAPI stays the stateless solver. |
 | Privacy          | **v2 (T22–T24):** signed out, nothing personal leaves the browser (teacher names become IDs before `/solve`). Signing in needs a ticked "I agree to the Terms and Privacy Policy" box; acceptances are stored per policy version, and a version bump makes users accept again. Accounts are deleted on request by email (admins hand over first); invites stay until used or cancelled. Static `/privacy` and `/terms` pages. See [`docs/discussions/2026-10-24-privacy-and-consent.md`](docs/discussions/2026-10-24-privacy-and-consent.md). Policy v2 (T31) covers online data and publishing; the Terms line on adding other people's details covers uploads, and the database refuses saves from users who haven't accepted the current version. |
+| Assistant        | **v2 (T36–T40):** a read-only AI assistant in a side panel answers questions about the app and the user's own timetable (causes, unplaced classes, the score, free periods). Signed-in institute members only, once the institute's admin redeems a **trial coupon** (question allowance + days; no payments). The browser drives the loop over its working copy and runs the tools; teacher names become IDs before anything is sent. `POST /agent` on the FastAPI app makes one Claude Opus 5.5 call per request, with the help text in a cached system prompt; it stays stateless, with access, limits and usage rows (numbers only) in Supabase behind service-role-only functions. Policy v3 names Anthropic. See [`docs/discussions/2026-10-24-ai-agent.md`](docs/discussions/2026-10-24-ai-agent.md). |
 | Demo             | Local (`npm run dev` + `uvicorn`). Vercel deploy of frontend only if time allows (no server → offline banner → quick draft). |
 
 ## 2. Rules
@@ -207,6 +208,7 @@ tickets/                    one file per ticket + README index
 shared/fixtures/
   sample-college.json       SolveInput for the demo college
   sample-sessions.json      golden expandSessions output
+shared/agent-tools.json     v2: the assistant's tool definitions, read by server and web (T37)
 web/                        Vite + React + TS app
   src/domain/               types, sessions, eligibility, validator, score   (pure, tested)
   src/engine/               heuristic, worker, solveClient                    (pure-ish, tested)
@@ -216,9 +218,12 @@ web/                        Vite + React + TS app
   src/features/online/      v2: save online, open, versions, publish (T28, T29)
   src/published/            v2: the public timetable page behind published.html (T30)
   src/help/                 v2: help pages as Markdown, served at /help (T32–T35)
+  src/features/assistant/   v2: assistant panel, browser tools, name masking (T37, T40)
   src/components/ui/        shadcn
 server/                     FastAPI + CP-SAT
   main.py  models.py  sessions.py  solver.py  tests/
+  agent.py                  v2: POST /agent, one Claude call per request (T38)
+  scripts/                  v2: issue_coupon.py, agent_eval.py (T36, T40)
 supabase/migrations/        v2: tables, RLS policies and functions (T20, T24, T27)
 scripts/                    v2: setup wizards for steps only a human can do
 ```
