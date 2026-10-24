@@ -132,6 +132,10 @@ cd web && npm test && npx tsc -b     # Vitest: domain, engines, import, stats, l
 cd server && uv run pytest           # Pytest: API, session parity with the web app, CP-SAT model
 ```
 
+The RLS tests for accounts and institutes (`server/tests/test_rls.py`, marker `supabase`) run against the Supabase
+dev project and are skipped until `server/.env` has its keys. Run [`scripts/setup-supabase-cli.sh`](scripts/setup-supabase-cli.sh)
+once: it links the CLI to the project, writes the keys and applies `supabase/migrations/` with `npx supabase db push`.
+
 The web and server sides both expand the sample college into sessions and compare against the same golden
 file, [`shared/fixtures/sample-sessions.json`](shared/fixtures/sample-sessions.json), so the two solvers can't
 drift apart.
