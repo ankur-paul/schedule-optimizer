@@ -1,5 +1,5 @@
 # T23 — Privacy policy and terms pages
-**Status:** TODO
+**Status:** DONE
 **Lane:** D · **Prereqs:** — · **Branch:** t23-legal-pages
 
 ## Goal
@@ -41,9 +41,16 @@ drafts)`.
 - Click through: `npm run dev`, open `/privacy` and `/terms` with JavaScript disabled, follow the footer links.
 
 ## Done when
-- [ ] `/privacy` and `/terms` serve the approved text with placeholders filled, readable without JavaScript
-- [ ] Footer links in the app
-- [ ] `VITE_CONTACT_EMAIL` and the public URLs added to the deploy list in `docs/v2-roadmap.md`
-- [ ] Tests above pass, full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md mentions the policy pages; Known issues notes "policy not legally reviewed"
-- [ ] Committed: `T23: privacy policy and terms pages`
+- [x] `/privacy` and `/terms` serve the approved text with placeholders filled, readable without JavaScript
+- [x] Footer links in the app
+- [x] `VITE_CONTACT_EMAIL` and the public URLs added to the deploy list in `docs/v2-roadmap.md`
+- [x] Tests above pass, full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md mentions the policy pages; Known issues notes "policy not legally reviewed"
+- [x] Committed: `T23: privacy policy and terms pages`
+
+## Notes
+- Vite 8 renamed `build.rollupOptions` to `build.rolldownOptions`; the extra entries use the new name.
+- The build-time renderer is `web/vite-plugin-legal.ts` (`transformIndexHtml` on a `<!-- legal-text -->` marker);
+  the pure fill and render functions are in `web/src/legal/legalText.ts`.
+- `[check:]` notes: the subprocessor link now points at Supabase's undated list page; backups line set to
+  "erased within 7 days" (Pro keeps 7 days, Free none). Recheck if the production plan is Team or Enterprise.

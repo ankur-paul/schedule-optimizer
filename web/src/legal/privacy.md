@@ -47,8 +47,7 @@ tells you to sign in. An unused invite stays until it's used or the admin cancel
 
 - **Supabase** stores accounts and institutes in its Mumbai region, on Amazon Web Services in India. It handles the
   data for us under its [data processing terms](https://supabase.com/legal/customer-resources/data-processing-addendum)
-  and uses these [subprocessors](https://supabase.com/legal/subprocessor-list/June-1-2026.pdf) [check: link the
-  current list from Supabase's Legal Hub rather than a dated PDF].
+  and uses these [subprocessors](https://supabase.com/legal/customer-resources/subprocessor-list).
 - **Google** handles sign-in if you choose *Sign in with Google*. We receive your name, email address and profile
   picture link, and use them only for the purposes in the table above.
 - Our **solver server** receives timetable data without teacher names and keeps nothing.
@@ -64,8 +63,7 @@ tracking cookies and no analytics.
 
 - Your account and memberships: until you ask us to delete your account.
 - Invites: until they're used or cancelled.
-- Deleting is immediate. [check: Supabase backup retention on our plan, e.g. "Copies in our database host's
-  backups are erased within 7 days." or "Our database host keeps no backups."]
+- Deleting is immediate. Copies in our database host's backups are erased within 7 days.
 
 ## Your rights
 

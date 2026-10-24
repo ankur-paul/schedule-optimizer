@@ -15,6 +15,7 @@ The header shows the Lattice logo (a 3×3 timetable grid with an L filled in) an
 - **Roles.** Each institute has exactly one admin, plus editors and viewers. Editors and viewers see their role and who the admin is, and can *Leave institute* (after a confirm). Only the admin sees *Members…*, *Rename…* and *Delete institute…* (type the name to confirm). Roles are enforced by the database; a refusal shows as a plain-words toast such as "Only the admin can do that."
 - **Members (admin).** The admin first, then everyone else with name, email and a role select (editor/viewer), *Make admin* (hands the role over; you become an editor) and *Remove*. Pending invites have *Cancel*. The invite form takes an email and a role, says to use the address they'll sign in with, and rejects a malformed address, an existing member or one already invited before calling the database. No invite email is sent; tell them to sign in.
 - **Email confirmation.** *Make admin* and *Leave institute* need you to have signed in by email link in the last 10 minutes; the database refuses them otherwise. If you haven't, a *Confirm from your email* dialog emails a sign-in link to your own address (Google users too). Opening it, in the same tab or a new one, signs you in again and asks *Make X the admin of Y?* (or *Leave Y?*) once more before doing it.
+- **Privacy Policy and Terms.** *Privacy* and *Terms* links under every step open `/privacy` and `/terms` in a new tab: plain pages with the Lattice header and *Back to Lattice*, readable without JavaScript and printable on A4. The text comes from `web/src/legal/privacy.md` and `terms.md`, with the version, effective date, operator and contact address (`VITE_CONTACT_EMAIL`) filled in at build time; without that variable the pages say "(contact address not set)".
 
 ## ① Setup week
 
@@ -102,6 +103,7 @@ Soft rules, which add to the score (lower is better):
 - Roles don't limit the timetable yet: viewers can still edit the data in their own browser, and nothing is stored per institute. Both come with online data.
 - The email confirmation is a link, not a 6-digit code, because the built-in sender's templates can't be edited on the free plan. Like sign-in emails, it reaches only the Supabase team, 2 an hour; both change in the deploy pass.
 - Changes made by someone else (a new role, a removal, a deleted institute) show up when you next open the account menu, not live.
+- The Privacy Policy and Terms haven't been reviewed by a lawyer. Nobody is asked to accept them yet (that comes with T24).
 - Drag and drop works in the Section view only, with a mouse; there is no keyboard dragging (use *Lock here* instead).
 
 ## Not built yet
