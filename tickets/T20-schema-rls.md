@@ -1,5 +1,5 @@
 # T20 — Schema and RLS: institutes, memberships, invites
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** B · **Prereqs:** — · **Branch:** t20-schema-rls
 
 ## Goal
@@ -66,6 +66,6 @@ deletes them and their institutes afterwards.
 ## Done when
 - [ ] Wizard links the project and `db push` applies the migrations cleanly to a fresh project
 - [ ] Every test above passes against the dev project, and the suite passes offline with them skipped
-- [ ] Server env vars added to the deploy list in `docs/v2-roadmap.md`
+- [x] Server env vars added to the deploy list in `docs/v2-roadmap.md`
 - [ ] PROGRESS.md updated (no user-visible change, so FEATURES.md stays)
 - [ ] Committed: `T20: institutes, memberships and invites with RLS`
