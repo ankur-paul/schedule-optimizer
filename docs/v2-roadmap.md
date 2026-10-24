@@ -18,7 +18,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 |---|---|---|---|
 | 1 | [Authentication and roles](#1-authentication-and-roles) | built: T19–T21 | — |
 | 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | built: T22–T24 | 1 |
-| 3 | [Store institute data online](#3-store-institute-data-online) | idea | 1, 2 |
+| 3 | [Store institute data online](#3-store-institute-data-online) | planned: T27–T31 | 1, 2 |
 | 4 | [Help page](#4-help-page) | idea | — (best after the UI settles) |
 | 5 | [AI agent](#5-ai-agent) | idea | 1, 3, 4 |
 | 6 | [Paid AI agent (Razorpay)](#6-paid-ai-agent-razorpay) | idea | 1, 5 |
@@ -80,7 +80,7 @@ Summary:
   until used or cancelled. (Self-serve deletion and invite expiry, T25, were dropped on 24 Oct.)
 - **Pages:** static `/privacy` and `/terms`. The policy names Ankur Paul as the operator, with a
   `privacy@<domain>` contact.
-- **Export:** waits for #3.
+- **Export:** cut in #3; the policy offers a summary by email.
 
 The policy describes only what exists, so every later pass that adds a purpose bumps it. The texts are
 in `web/src/legal/` and served at `/privacy` and `/terms` (T23). Tickets T22–T24.
@@ -90,14 +90,20 @@ in `web/src/legal/` and served at `/privacy` and `/terms` (T23). Tickets T22–T
 Original list: #3. Institute details and data (teachers, rooms, courses, timetables) saved online once the user
 approves.
 
-Open questions:
-- ~~Which database?~~ Supabase Postgres, from the auth pass.
-- How does it sit with `localStorage`: online is the source of truth, or local first with sync?
-- From #2: the admin confirms they're authorised to share staff data on the first upload. Self-serve export
-  of institute data. The policy gets a new version covering online data. Viewers' read-only mode (from #1).
-- Upload of existing local data on first login.
-- Several admins editing at once: last write wins, or locking?
-- Saved timetable versions (history, restore)?
+Discussed 24 Oct: [`discussions/2026-10-24-online-data.md`](discussions/2026-10-24-online-data.md). Summary:
+- **Device first:** the browser keeps one working copy (the v1 data). *Save online* uploads it as a new version of
+  a named timetable in an institute; *Open from institute* downloads one. A header line shows the link and unsaved
+  changes.
+- **Storage:** one JSONB document per version (at most 2 MB), the last 20 versions kept plus the live one.
+- **Two editors:** a version check on save offers *Overwrite*, *Save as new* or *Cancel*.
+- **Roles:** viewers open but never write online; editors save and publish; the admin also deletes and sets the
+  institute's handle.
+- **Publishing:** a stable public link `/<handle>/<random id>` points at one version; *Make live* rolls back at
+  once. The public page has section, teacher and room views and a one-day phone layout.
+- **Privacy:** policy v2; the Terms line on other people's details replaces pass #2's admin confirmation at first
+  upload, and the database refuses saves without consent to the current version. Export is cut.
+
+Tickets T27–T31.
 
 ## 4. Help page
 
@@ -172,3 +178,8 @@ Collected by the passes above (env vars, services, public URLs needed):
 - Check Supabase's backup retention and `pg_cron` on the production plan; the privacy policy depends on both. It
   says backups are erased within 7 days (Pro keeps 7 days, Free none); Team (14 days) or Enterprise (up to 30)
   means a policy edit.
+- Public timetable links (online-data pass): the host rewrites two-segment paths `/<handle>/<id>` to
+  `published.html`, leaving `/assets/*` and real files alone (Vercel `rewrites`, Cloudflare Pages `_redirects`).
+  `npm run dev` and `npm run preview` already do (T30). The link is built from the page's origin, so no env var.
+- A paused free Supabase project breaks every published timetable link, not just sign-in: production needs a
+  project that doesn't pause, or a keep-alive.

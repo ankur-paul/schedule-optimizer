@@ -73,6 +73,11 @@ Don't add a hand-written status table here: it would conflict on every parallel 
 | [T23](T23-legal-pages.md) | v2: privacy policy and terms pages | D | — | — |
 | [T24](T24-consent.md) | v2: consent at sign-in, re-accept on policy change | main | T21, T23 | — |
 | [T26](T26-email-confirm.md) | v2: email confirmation for make admin and leave | main | T21 | — |
+| [T27](T27-online-schema.md) | v2: online timetables, versions, handle with RLS + tests | B | — | — |
+| [T28](T28-save-open.md) | v2: save online and open from institute | main | T27 | — |
+| [T29](T29-versions-publish.md) | v2: versions and publish | main | T28 | — |
+| [T30](T30-public-page.md) | v2: public timetable page | D | T27 | — |
+| [T31](T31-policy-v2.md) | v2: privacy policy and terms v2 | main | T29, T30 | — |
 
 ```mermaid
 graph LR
@@ -94,6 +99,9 @@ graph LR
   T19 & T20 --> T21
   T21 & T23 --> T24
   T21 --> T26
+  T27 --> T28 & T30
+  T28 --> T29
+  T29 & T30 --> T31
 ```
 
 ## Ticket template
