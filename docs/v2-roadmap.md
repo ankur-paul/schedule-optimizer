@@ -82,8 +82,8 @@ Summary:
   `privacy@<domain>` contact.
 - **Export:** waits for #3.
 
-The policy describes only what exists, so every later pass that adds a purpose bumps it. Drafts are in
-`legal/`. Tickets T22–T24.
+The policy describes only what exists, so every later pass that adds a purpose bumps it. The texts are
+in `web/src/legal/` and served at `/privacy` and `/terms` (T23). Tickets T22–T24.
 
 ## 3. Store institute data online
 
@@ -166,6 +166,9 @@ Collected by the passes above (env vars, services, public URLs needed):
   project's team). Free Supabase projects pause after 7 days without traffic: resume before a demo.
 - Web: `VITE_CONTACT_EMAIL` for the policy pages (privacy pass). The domain also gives `privacy@<domain>` and the
   SMTP sender.
-- Public `/privacy` and `/terms` (static Vite pages) go into Google's OAuth Branding page. The host must serve
-  them without `.html`.
-- Check Supabase's backup retention and `pg_cron` on the production plan; the privacy policy depends on both.
+- Public `/privacy` and `/terms` (static Vite pages, `privacy.html` and `terms.html` in `dist/`) go into Google's
+  OAuth Branding page. The host must serve them without `.html`: Cloudflare Pages does by default, Vercel needs
+  `"cleanUrls": true` in `vercel.json`. `npm run dev` and `npm run preview` already do.
+- Check Supabase's backup retention and `pg_cron` on the production plan; the privacy policy depends on both. It
+  says backups are erased within 7 days (Pro keeps 7 days, Free none); Team (14 days) or Enterprise (up to 30)
+  means a policy edit.

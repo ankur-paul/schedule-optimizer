@@ -111,6 +111,16 @@ function App() {
             )}
           </div>
         </main>
+
+        <footer className="mx-auto max-w-6xl px-6 pb-8 text-xs text-muted-foreground print:hidden">
+          <a href="/privacy" target="_blank" rel="noopener" className="hover:text-foreground hover:underline">
+            Privacy
+          </a>
+          {' · '}
+          <a href="/terms" target="_blank" rel="noopener" className="hover:text-foreground hover:underline">
+            Terms
+          </a>
+        </footer>
       </div>
       <Toaster theme="light" position="bottom-right" />
     </TooltipProvider>
