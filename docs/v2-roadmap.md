@@ -16,7 +16,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 
 | # | Idea | Status | Needs |
 |---|---|---|---|
-| 1 | [Authentication and roles](#1-authentication-and-roles) | idea | — |
+| 1 | [Authentication and roles](#1-authentication-and-roles) | planned: T19–T21 | — |
 | 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | idea | 1 |
 | 3 | [Store institute data online](#3-store-institute-data-online) | idea | 1, 2 |
 | 4 | [Help page](#4-help-page) | idea | — (best after the UI settles) |
@@ -59,13 +59,10 @@ The deploy should come down to public URLs, env vars and a Dockerfile. So while 
 
 Original list: #1 and #4. An admin creates and manages an institute's timetable.
 
-Open questions:
-- Which roles beyond admin: editor (can change data), viewer (teachers/students reading timetables)? Do viewers log
-  in at all, or keep the v1 no-login read-only views via a share link?
-- Is the unit an institute with several members, or one account per person?
-- Login methods: Google, email + password, email magic link?
-- Build it or use a hosted provider (Supabase Auth, Firebase Auth, Clerk, Cognito)?
-- Does the app still work logged out, as v1 does today?
+Discussed 22–24 Oct: [`discussions/2026-10-22-auth-and-roles.md`](discussions/2026-10-22-auth-and-roles.md).
+In short: Supabase (Mumbai) with Google or email-link sign-in, optional (signed out still works as v1);
+institutes with exactly one admin plus editors and viewers, joined by email invite; roles enforced only by
+Postgres RLS; teachers and students never log in. Tickets T19–T21.
 
 ## 2. Privacy policy and consent
 
@@ -84,7 +81,7 @@ Original list: #3. Institute details and data (teachers, rooms, courses, timetab
 approves.
 
 Open questions:
-- Which database, and does it come with the auth choice?
+- ~~Which database?~~ Supabase Postgres, from the auth pass.
 - How does it sit with `localStorage`: online is the source of truth, or local first with sync?
 - Upload of existing local data on first login.
 - Several admins editing at once: last write wins, or locking?
@@ -119,7 +116,7 @@ Original list: #5. Make the agent a paid feature.
 
 Open questions:
 - Subscription, prepaid credits, or a free quota then paid?
-- Charged per institute or per user?
+- ~~Charged per institute or per user?~~ Per institute; only the admin buys, editors spend (auth pass, Q8).
 - Razorpay live mode needs KYC with business or individual documents and a public site with policy pages (terms,
   refunds, contact). Who will be the registered merchant?
 - Webhook handling on the server to grant access after payment.
@@ -146,4 +143,9 @@ Open questions:
 - Did the Lambda memory limit increase go through?
 
 Collected by the passes above (env vars, services, public URLs needed):
-- (none yet)
+- Supabase project in Mumbai (`ap-south-1`); a second one for production (auth pass).
+- Web: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (public by design).
+- Server and tests: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (secret).
+- Google OAuth client: add the public domain to its redirect URLs and to Supabase's redirect allow-list.
+- SMTP sender with a domain we own, so email sign-in links reach real users (the built-in one reaches only the
+  project's team). Free Supabase projects pause after 7 days without traffic: resume before a demo.

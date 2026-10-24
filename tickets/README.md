@@ -66,6 +66,9 @@ Don't add a hand-written status table here: it would conflict on every parallel 
 | [T16](T16-server-causes.md) | Server infeasibility causes + locks probe | B | T15 | — |
 | [T17](T17-client-causes.md) | Room load checks, ranked causes with fixes, teacher filter | A | T15 | — |
 | [T18](T18-exact-first-ui.md) | Exact-first Generate UI: impossible / couldn't finish / partial / offline | main | T16, T17 | — |
+| [T19](T19-sign-in.md) | v2: sign in with Google or email link, account menu | A | — | — |
+| [T20](T20-schema-rls.md) | v2: institutes, memberships, invites with RLS + tests | B | — | — |
+| [T21](T21-institutes-members.md) | v2: institutes and members UI | main | T19, T20 | — |
 
 ```mermaid
 graph LR
@@ -84,6 +87,7 @@ graph LR
   T04 --> T15
   T15 --> T16 & T17
   T16 & T17 --> T18
+  T19 & T20 --> T21
 ```
 
 ## Ticket template

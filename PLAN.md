@@ -8,7 +8,7 @@ tickets in [`tickets/`](tickets/README.md).
 
 | Topic            | Decision                                                                                                                                                                                                               |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| User             | One central **timetable coordinator** (admin). Teachers/students get read-only views (no login).                                                                                                                       |
+| User             | One central **timetable coordinator** (admin). Teachers/students get read-only views (no login). **v2 (T19–T21):** signing in is optional; a signed-in user belongs to **institutes**, each with exactly one **admin** (point of contact: manages members, hands the role over), **editors** and **viewers**. Members join through an email invite that matches their sign-in email. Teachers/students still never log in (share link, v2 pass #3). See [`docs/discussions/2026-10-22-auth-and-roles.md`](docs/discussions/2026-10-22-auth-and-roles.md). |
 | Scope            | Weekly recurring **class** timetable only (lectures + labs). No exam timetables.                                                                                                                                       |
 | Any college      | Admin configures working days, periods (with times), break periods, lunch candidate periods. Same grid every day.                                                                                                      |
 | Data entry       | One **Excel template** (sheet per entity, CSV also accepted) + **"Load sample college"** button + small edit tables.                                                                                                   |
@@ -21,7 +21,7 @@ tickets in [`tickets/`](tickets/README.md).
 | Editing          | Click cell → details. **Lock** cells → **Regenerate** keeps locks. Drag-and-drop = stretch.                                                                                                                            |
 | Views            | One week grid with **Section / Teacher / Room** switcher, colour-coded subjects, print CSS (browser "Print → PDF"). Stats: score breakdown, teacher load table, shared room utilisation.                               |
 | UI               | Vite + React + TS + Tailwind + shadcn/ui. Clean, modern, light theme. **4-step guided flow:** ① Setup week → ② Add data → ③ Generate → ④ View & export. One-line hint per step, ⓘ tooltips on every non-obvious field. |
-| Storage          | Browser `localStorage` (zustand `persist`). No database, no auth.                                                                                                                                                      |
+| Storage          | Browser `localStorage` (zustand `persist`), signed in or out, until v2 pass #3 moves data online. **v2:** accounts, institutes, memberships and invites live in **Supabase** (Auth + Postgres, Mumbai); sign-in with Google or an email link. Postgres row-level security is the only place roles are enforced; FastAPI stays the stateless solver. |
 | Demo             | Local (`npm run dev` + `uvicorn`). Vercel deploy of frontend only if time allows (no server → offline banner → quick draft). |
 
 ## 2. Rules
@@ -211,9 +211,12 @@ web/                        Vite + React + TS app
   src/engine/               heuristic, worker, solveClient                    (pure-ish, tested)
   src/store/                zustand store + persist
   src/features/setup|data|generate|view/
+  src/features/account/     v2: sign-in, institutes, members (T19, T21)
   src/components/ui/        shadcn
 server/                     FastAPI + CP-SAT
   main.py  models.py  sessions.py  solver.py  tests/
+supabase/migrations/        v2: tables, RLS policies and functions (T20)
+scripts/                    v2: setup wizards for steps only a human can do
 ```
 
 ## 5. Testing policy (light — 2-hour budget)
@@ -225,6 +228,9 @@ Test **logic**, not UI. Each ticket lists its own minimal tests. Overall:
 - **Pytest** for `server`: session parity with golden, sample college solves with all sessions placed,
   one tiny infeasible case returns `infeasible`.
 - **No** component/E2E tests. UI is checked with the manual click-through in T12.
+- **v2, Supabase:** Pytest tests marked `supabase` check every RLS policy and database function per role (admin,
+  editor, viewer, non-member) against the dev project, plus one test that fails if any table lacks RLS. They skip
+  when `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` aren't in `server/.env`.
 - Target: whole test suite runs in < 15 s.
 
 ## 6. Timeline
