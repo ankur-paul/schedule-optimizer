@@ -28,7 +28,9 @@ user, Q8, Q24, Q25, Q29, Q31).
   - **Open:** the chat.
   - **Paused (monthly budget) and "not configured":** a plain message.
   - **Which institute:** the working copy's linked institute; otherwise a picker, hidden with one membership.
-- **Coupon box:** calls `redeem_coupon`. On success the panel opens; on error it shows the database's message.
+- **Coupon box:** calls `redeem_coupon`. On success the panel opens; on error it shows the database's message. An
+  empty result means a wrong or used code (T36: raising would roll back the counted try): show "That coupon isn't
+  valid."
 - ***Request a trial coupon*:** `mailto:` to `VITE_CONTACT_EMAIL`, subject "Lattice assistant trial". The body has
   the institute's name and handle and "What will you use it for?". Encode it properly.
 - **Header line:** "143 questions left · until 23 Nov", amber under 20 questions or 3 days left. It updates from

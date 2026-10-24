@@ -1,5 +1,5 @@
 # T36 — Assistant access: coupons and usage in the database
-**Status:** TODO
+**Status:** DONE
 **Lane:** B · **Prereqs:** — · **Branch:** t36-agent-access
 
 ## Goal
@@ -86,8 +86,16 @@ Pytest (`supabase`):
 - unit test (no network): the script's code format, alphabet and the hash test vector.
 
 ## Done when
-- [ ] Migration applies cleanly with `npx supabase db push`
-- [ ] `issue_coupon.py` issues a code that `redeem_coupon` accepts
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T36: assistant coupons and usage`
+- [x] Migration applies cleanly with `npx supabase db push`
+- [x] `issue_coupon.py` issues a code that `redeem_coupon` accepts
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T36: assistant coupons and usage`
+
+## Notes
+- A wrong or used code makes `redeem_coupon` return no rows instead of raising: raising rolls back the transaction,
+  which would drop the failure row the try limit counts. T40 shows "That coupon isn't valid." for an empty result.
+- `agent_begin` has one more hint than listed: `unknown_question`, for a question ID that isn't this user's in this
+  institute. Added to T38's list.
+- Hashing uses Postgres's built-in `sha256()`, so `pgcrypto` isn't needed.
+- The env loading moved from `tests/supabase_api.py` to `server/supabase_env.py`, so the script and T38 can import it.
