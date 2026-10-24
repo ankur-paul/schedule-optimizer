@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "gen:golden": "tsx scripts/gen-golden.ts"
+    "gen:golden": "tsx scripts/gen-golden.ts",
+    "gen:timetable": "tsx scripts/gen-sample-timetable.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

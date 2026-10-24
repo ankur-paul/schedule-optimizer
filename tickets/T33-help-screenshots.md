@@ -1,5 +1,5 @@
 # T33 — Help screenshots script
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** C · **Prereqs:** — · **Branch:** t33-help-screenshots
 
 ## Goal
