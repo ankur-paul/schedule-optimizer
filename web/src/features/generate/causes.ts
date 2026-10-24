@@ -11,9 +11,14 @@ export type CauseLink =
 
 export type CauseKind = Diagnosis["kind"] | "section" | "teacher" | "room";
 
+/** The server's `detail` on a `noSlot` diagnosis: no room may host the classes, or a lab is too long to start. */
+export type NoSlotDetail = "noRoom" | "noStart";
+
 /** One reason a timetable can't be built, in the coordinator's words, with what to do about it. */
 export interface Cause {
   kind: CauseKind;
+  /** `noSlot` only, when the server said which. */
+  detail?: NoSlotDetail;
   text: string;
   fix: string;
   link: CauseLink;
@@ -70,10 +75,11 @@ export function explainInfeasible(input: SolveInput, diagnosis: Diagnosis[] | un
     switch (d.kind) {
       case "noSlot":
         if (d.detail === "noRoom") {
-          proven.push({ ...base, text: `No room may host ${classes(n)}: ${names}.`, fix: "Add a room they may use, or share one", link: { step: 2, tab: "rooms" } });
+          proven.push({ ...base, detail: "noRoom", text: `No room may host ${classes(n)}: ${names}.`, fix: "Add a room they may use, or share one", link: { step: 2, tab: "rooms" } });
         } else if (d.detail === "noStart") {
           proven.push({
             ...base,
+            detail: "noStart",
             text: `${n === 1 ? "A lab is" : `${n} labs are`} longer than any run of teaching periods without a break: ${names}.`,
             fix: "Shorten the labs, or move a break in step ①",
             link: { step: 2, tab: "courses", ...sectionOf(d.ids) },

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HelpLink } from "@/components/HelpLink";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +11,10 @@ import { validate } from "@/domain/validator";
 import { useCollegeData } from "@/features/data/collegeData";
 import { checkData } from "@/features/data/dataChecks";
 import { useDataView } from "@/features/data/dataView";
+import { helpHref } from "@/help/helpLinks";
 import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
+import { causeHelpHref, unplacedHelpHref } from "./causeHelp";
 import { explainInfeasible, GENERAL_SUGGESTIONS, preflightWarnings, topCauses, type Cause, type CauseLink } from "./causes";
 import {
   badgeText,
@@ -105,7 +108,7 @@ function GenerateCard({ view, server, onRecheck, actions, elapsed }: {
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
           Exact solver
-          <InfoTip>
+          <InfoTip more={helpHref("generate", "engines")}>
             The exact solver (CP-SAT, from Google OR-Tools, on the Python server) finds the best timetable or proves that
             none exists. A quick draft is a fast in-browser heuristic; it only runs when you ask for one.
           </InfoTip>
@@ -129,6 +132,9 @@ function GenerateCard({ view, server, onRecheck, actions, elapsed }: {
               ) : (
                 <p>The solver service is unavailable.</p>
               )}
+              <p>
+                <HelpLink href={helpHref("troubleshooting", "solver-offline")}>What to do</HelpLink>
+              </p>
             </div>
           </div>
         )}
@@ -180,7 +186,7 @@ function GenerateCard({ view, server, onRecheck, actions, elapsed }: {
           <div className="mt-3 grid max-w-md gap-2">
             <label htmlFor="time-limit" className="flex items-center gap-1.5 font-medium">
               Time limit: <span className="tabular-nums">{timeLimitSec} s</span>
-              <InfoTip>
+              <InfoTip more={helpHref("generate", "time-limit")}>
                 How long the exact solver may search. Longer can give a better score; it stops early once it proves the best
                 one. A quick draft uses at most 5 s.
               </InfoTip>
@@ -257,7 +263,12 @@ function openLink(link: CauseLink) {
 function CauseItem({ cause }: { cause: Cause }) {
   return (
     <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-      <span className="min-w-0 flex-1 basis-72">{cause.text}</span>
+      <span className="min-w-0 flex-1 basis-72">
+        {cause.text}{" "}
+        <HelpLink href={causeHelpHref(cause)} className="text-muted-foreground hover:text-foreground">
+          What this means
+        </HelpLink>
+      </span>
       <Button variant="outline" size="sm" onClick={() => openLink(cause.link)}>
         {cause.fix} →
       </Button>
@@ -312,7 +323,12 @@ function ImpossibleCard({ view, actions }: { view: Extract<GenerateView, { state
         ) : (
           <div>
             <p className="font-medium">No single cause found: the rules conflict in combination.</p>
-            <p className="mt-1 text-muted-foreground">Things that usually help:</p>
+            <p className="mt-1 text-muted-foreground">
+              Things that usually help:{" "}
+              <HelpLink href={helpHref("generate", "no-single-cause")} className="hover:text-foreground">
+                More about this
+              </HelpLink>
+            </p>
             <ul className="mt-1 list-disc pl-5 text-muted-foreground">
               {GENERAL_SUGGESTIONS.map((s) => (
                 <li key={s}>{s}</li>
@@ -364,11 +380,14 @@ function CouldntFinishCard({ view, actions }: { view: Extract<GenerateView, { st
         </CardDescription>
       </CardHeader>
       <CardContent className="text-sm">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {retry}
           <Button variant="outline" onClick={() => actions.draft("couldntFinish")}>
             <Wand2 /> Make a quick draft instead
           </Button>
+          <HelpLink href={helpHref("generate", "couldnt-finish")} className="ml-1 text-muted-foreground hover:text-foreground">
+            What this means
+          </HelpLink>
         </div>
       </CardContent>
     </Card>
@@ -480,6 +499,9 @@ function UnplacedList({ result }: { result: SolveResult }) {
           <summary className="cursor-pointer font-medium text-amber-900 select-none">
             {g.label} <span className="font-normal tabular-nums">({g.items.length})</span>
           </summary>
+          <HelpLink href={unplacedHelpHref(g.cause)} className="mt-1 text-xs text-amber-900">
+            What this means
+          </HelpLink>
           <ul className="mt-1 grid max-h-60 gap-1 overflow-auto text-amber-900/80">
             {g.items.map((u) => (
               <li key={u.sessionId}>{u.reason}</li>
@@ -506,7 +528,7 @@ function ScoreGrid({ result }: { result: SolveResult }) {
             <div key={row.key} className="rounded-lg border p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {row.label}
-                <InfoTip>{row.tip}</InfoTip>
+                <InfoTip more={helpHref("timetable", "score")}>{row.tip}</InfoTip>
               </div>
               <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
                 {points} <span className="text-sm font-normal text-muted-foreground">pts</span>

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Course, Department, Id, Room, Section, Teacher } from "@/domain/types";
 import { EntityPicker } from "@/features/view/EntityPicker";
 import { entityGroups } from "@/features/view/layout";
+import { helpHref } from "@/help/helpLinks";
 import { useAppStore } from "@/store/useAppStore";
 import { useCollegeData } from "./collegeData";
 import type { DataReport } from "./dataChecks";
@@ -56,12 +57,13 @@ function DeleteButton({ onClick, label }: { onClick: () => void; label: string }
   );
 }
 
-function Th({ children, tip, className }: { children: React.ReactNode; tip?: string; className?: string }) {
+/** A column heading, with an ⓘ tooltip when `tip` is set and *Learn more* when `more` (a helpHref) is too. */
+function Th({ children, tip, more, className }: { children: React.ReactNode; tip?: string; more?: string; className?: string }) {
   return (
     <th className={cn("px-1 pb-2 text-left text-xs font-medium whitespace-nowrap text-muted-foreground", className)}>
       <span className="inline-flex items-center gap-1">
         {children}
-        {tip && <InfoTip>{tip}</InfoTip>}
+        {tip && <InfoTip more={more}>{tip}</InfoTip>}
       </span>
     </th>
   );
@@ -183,7 +185,7 @@ function TeachersTable({ report }: { report: DataReport }) {
   return (
     <div className="grid gap-3">
       <Table
-        head={<><Th>Name</Th><Th>Department</Th><Th tip="Periods this teacher is busy per week, and how many are free after one lunch period a day.">Load</Th><th /></>}
+        head={<><Th>Name</Th><Th>Department</Th><Th tip="Periods this teacher is busy per week, and how many are free after one lunch period a day." more={helpHref("data", "data-checks")}>Load</Th><th /></>}
         empty="No teachers yet."
       >
         {data.teachers.map((t) => {
@@ -233,7 +235,7 @@ function RoomsTable() {
   return (
     <div className="grid gap-3">
       <Table
-        head={<><Th>Name</Th><Th>Type</Th><Th tip="Owned rooms are only used by that department. Shared rooms (seminar halls, central labs) can be used by anyone.">Department</Th><th /></>}
+        head={<><Th>Name</Th><Th>Type</Th><Th tip="Owned rooms are only used by that department. Shared rooms (seminar halls, central labs) can be used by anyone." more={helpHref("data", "rooms")}>Department</Th><th /></>}
         empty="No rooms yet."
       >
         {data.rooms.map((r) => (
@@ -286,8 +288,12 @@ function SectionsTable({ report }: { report: DataReport }) {
           <>
             <Th>Name</Th>
             <Th>Department</Th>
-            <Th tip="How many groups the section splits into for labs. 1 = no split. Batch labs can run at the same time in different labs.">Lab batches</Th>
-            <Th tip="Periods per week the section needs (busiest batch for labs) vs periods free after one lunch period a day.">Load</Th>
+            <Th tip="How many groups the section splits into for labs. 1 = no split. Batch labs can run at the same time in different labs." more={helpHref("data", "lab-batches")}>
+              Lab batches
+            </Th>
+            <Th tip="Periods per week the section needs (busiest batch for labs) vs periods free after one lunch period a day." more={helpHref("data", "data-checks")}>
+              Load
+            </Th>
             <th />
           </>
         }
@@ -398,8 +404,12 @@ function CoursesTable() {
             <Th tip="One-period whole-section classes in a classroom.">Lectures/wk</Th>
             <Th tip="Lab sessions per week, for each batch.">Labs/wk</Th>
             <Th tip="Consecutive periods per lab session. A lab can't run across a break.">Lab length</Th>
-            <Th tip="Pin the labs to one lab room. Leave on 'Any eligible lab' to let the solver choose.">Lab room</Th>
-            <Th tip="For split sections: who takes each batch's lab. Default is the course teacher.">Batch teachers</Th>
+            <Th tip="Pin the labs to one lab room. Leave on 'Any eligible lab' to let the solver choose." more={helpHref("data", "rooms")}>
+              Lab room
+            </Th>
+            <Th tip="For split sections: who takes each batch's lab. Default is the course teacher." more={helpHref("data", "lab-batches")}>
+              Batch teachers
+            </Th>
             <th />
           </>
         }

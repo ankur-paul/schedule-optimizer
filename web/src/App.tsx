@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AccountButton } from '@/features/account/AccountButton'
 import { helpHref } from '@/help/helpLinks'
+import { HelpLink } from '@/components/HelpLink'
 import { LatticeMark } from '@/components/LatticeMark'
 import { OnlineStatus } from '@/features/online/OnlineStatus'
 import { GenerateStep } from '@/features/generate/GenerateStep'
@@ -20,11 +21,19 @@ import { settingsErrors, setupFooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
 import { useAppStore, type Step } from '@/store/useAppStore'
 
-const STEPS: { title: string; hint: string }[] = [
-  { title: 'Setup week', hint: 'Pick the working days and the daily bell schedule. Every day uses the same periods.' },
-  { title: 'Add data', hint: 'Load the sample college or import your Excel file, then check the tables.' },
-  { title: 'Generate', hint: 'Build a clash-free timetable. Every result is re-checked by an independent validator.' },
-  { title: 'View & export', hint: 'Browse by section, teacher or room. Lock cells, regenerate, or print.' },
+const STEPS: { title: string; hint: string; help: string }[] = [
+  {
+    title: 'Setup week',
+    hint: 'Pick the working days and the daily bell schedule. Every day uses the same periods.',
+    help: helpHref('data', 'week'),
+  },
+  { title: 'Add data', hint: 'Load the sample college or import your Excel file, then check the tables.', help: helpHref('data') },
+  {
+    title: 'Generate',
+    hint: 'Build a clash-free timetable. Every result is re-checked by an independent validator.',
+    help: helpHref('generate'),
+  },
+  { title: 'View & export', hint: 'Browse by section, teacher or room. Lock cells, regenerate, or print.', help: helpHref('timetable') },
 ]
 
 function App() {
@@ -87,7 +96,9 @@ function App() {
             <h2 className="text-2xl font-semibold tracking-tight">
               {step + 1}. {current.title}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{current.hint}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {current.hint} <HelpLink href={current.help} className="hover:text-foreground" />
+            </p>
           </div>
 
           {step === 0 && <SetupStep />}

@@ -37,11 +37,28 @@ export interface Shot {
 
 export const SHOTS: Shot[] = [
   {
+    name: "data-entry-cards",
+    start: "sample",
+    step: 1,
+    solver: "online",
+    capture: [
+      { css: '[data-slot="card"]', hasText: "Load sample college" },
+      { css: '[data-slot="card"]', hasText: "Upload your file" },
+    ],
+  },
+  {
     name: "data-checks",
     start: "sample",
     step: 1,
     solver: "online",
     capture: { css: '[data-slot="card"]', hasText: "Busiest sections" },
+  },
+  {
+    name: "generate-card",
+    start: "sample",
+    step: 2,
+    solver: "online",
+    capture: { css: '[data-slot="card"]', hasText: "Generate timetable" },
   },
   {
     name: "timetable-ready",

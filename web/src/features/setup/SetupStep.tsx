@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Period } from "@/domain/types";
+import { helpHref } from "@/help/helpLinks";
 import { useAppStore } from "@/store/useAppStore";
 import {
   ALL_DAYS,
@@ -130,7 +131,7 @@ function PeriodsCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
           Periods
-          <InfoTip>
+          <InfoTip more={helpHref("data", "week")}>
             The daily bell schedule, in time order. Include breaks as their own
             rows.
           </InfoTip>
@@ -445,7 +446,7 @@ function LunchCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
           Lunch candidates
-          <InfoTip>
+          <InfoTip more={helpHref("data", "lunch-candidates")}>
             Each section and teacher gets at least one of these free every day.
           </InfoTip>
         </CardTitle>

@@ -1,5 +1,5 @@
 # T34 — Help content: start, data, generate, timetable, troubleshooting
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T32, T33 · **Branch:** t34-help-content
 
 ## Goal
@@ -40,8 +40,8 @@ spots in the app where people get stuck. Plan:
 - Click through: follow every new link from the app; read each page at phone width and printed.
 
 ## Done when
-- [ ] Six pages written with `/no-ai-slop`, with screenshots from `npm run help:shots`
-- [ ] In-app links on problem cards, tooltips, step hints and the offline banner
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md mentions where help is linked
-- [ ] Committed: `T34: help content`
+- [x] Six pages written with `/no-ai-slop`, with screenshots from `npm run help:shots`
+- [x] In-app links on problem cards, tooltips, step hints and the offline banner
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md mentions where help is linked
+- [x] Committed: `T34: help content`
