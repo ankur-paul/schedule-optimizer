@@ -19,7 +19,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | 1 | [Authentication and roles](#1-authentication-and-roles) | built: T19–T21 | — |
 | 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | built: T22–T24 | 1 |
 | 3 | [Store institute data online](#3-store-institute-data-online) | planned: T27–T31 | 1, 2 |
-| 4 | [Help page](#4-help-page) | idea | — (best after the UI settles) |
+| 4 | [Help page](#4-help-page) | planned: T32–T35 | — |
 | 5 | [AI agent](#5-ai-agent) | idea | 1, 3, 4 |
 | 6 | [Paid AI agent (Razorpay)](#6-paid-ai-agent-razorpay) | idea | 1, 5 |
 | 7 | [First-login walkthrough](#7-first-login-walkthrough) | idea | the rest of the UI |
@@ -110,11 +110,18 @@ Tickets T27–T31.
 Original list: #10. A help page with tutorials, linked from the hard-to-understand parts of the app. The ⓘ tooltips
 could carry the "Learn more" links.
 
-Open questions:
-- Which sections need it most? Candidates: Excel import, batches and labs, locks, the "can't be built" causes, soft
-  rules and the score.
-- Text and screenshots, or short videos/GIFs?
-- Written so the agent (section 5) can use it as a source?
+Discussed 24 Oct: [`discussions/2026-10-24-help-page.md`](discussions/2026-10-24-help-page.md). Summary:
+- **Pages:** static `/help` plus `/help/start` (a 5-minute tutorial on the sample college), `data`, `generate`,
+  `timetable`, `online` and `troubleshooting`, built from Markdown like `/privacy`. English, text and screenshots,
+  written with `/no-ai-slop`. Opened in a new tab.
+- **Links:** problem cards and import errors, ⓘ tooltips where the help says more, step hints, footer and account
+  menu, all through one checked `helpHref`.
+- **Upkeep:** a CLAUDE.md rule (UI changes update the help), a link test, and `npm run help:shots` (Playwright, a
+  fixed sample timetable) to retake screenshots.
+- **The agent (#5)** reads the same Markdown files.
+- `help` becomes a reserved handle, since `/help/<page>` looks like a public link.
+
+Tickets T32–T35.
 
 ## 5. AI agent
 
@@ -181,5 +188,7 @@ Collected by the passes above (env vars, services, public URLs needed):
 - Public timetable links (online-data pass): the host rewrites two-segment paths `/<handle>/<id>` to
   `published.html`, leaving `/assets/*` and real files alone (Vercel `rewrites`, Cloudflare Pages `_redirects`).
   `npm run dev` and `npm run preview` already do (T30). The link is built from the page's origin, so no env var.
+- Help pages (help pass): the host serves `/help` and `/help/<page>` without `.html`, and the public-link rewrite
+  skips `/help/*`. No new env vars.
 - A paused free Supabase project breaks every published timetable link, not just sign-in: production needs a
   project that doesn't pause, or a keep-alive.

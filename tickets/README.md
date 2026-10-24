@@ -118,3 +118,7 @@ graph LR
 ## Done when
 - [ ] …
 ```
+| [T32](T32-help-pages.md) | v2: help pages, build and layout | D | — | — |
+| [T33](T33-help-screenshots.md) | v2: help screenshots script | C | — | — |
+| [T34](T34-help-content.md) | v2: help content: start, data, generate, timetable, troubleshooting | main | T32, T33 | — |
+| [T35](T35-help-online.md) | v2: help content: online and institutes | any | T32, T33, T31 | — |
