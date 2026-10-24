@@ -1,5 +1,5 @@
 # T24 — Consent at sign-in and re-accept on policy change
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T21, T23 · **Branch:** t24-consent
 
 ## Goal
@@ -54,9 +54,9 @@ Web:
   *Accept* records it).
 
 ## Done when
-- [ ] Sign-in is impossible without ticking the box; acceptance recorded with version and time
-- [ ] Version bump shows the blocking dialog; Accept records, Sign out signs out
-- [ ] The gate runs before `accept_invites()`
-- [ ] Migration applies cleanly with `npx supabase db push`; tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated (sign-in consent, re-accept)
-- [ ] Committed: `T24: consent at sign-in and re-accept`
+- [x] Sign-in is impossible without ticking the box; acceptance recorded with version and time
+- [x] Version bump shows the blocking dialog; Accept records, Sign out signs out
+- [x] The gate runs before `accept_invites()`
+- [x] Migration applies cleanly with `npx supabase db push`; tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md updated (sign-in consent, re-accept)
+- [x] Committed: `T24: consent at sign-in and re-accept`

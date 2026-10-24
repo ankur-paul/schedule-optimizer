@@ -1,6 +1,8 @@
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { authErrorMessage } from "./account";
+import { PENDING_CONSENT_KEY } from "./consent";
+import { storage } from "./storage";
 
 interface AccountState {
   /** The signed-in session, or `null` when signed out. */
@@ -15,11 +17,13 @@ export const useAccount = create<AccountState>(() => ({ session: null, ready: fa
 /**
  * Keeps `useAccount` in step with Supabase: reads the stored session (finishing a Google or email-link redirect), then
  * follows sign-in, sign-out and token refreshes. A failed redirect, such as an expired link, goes to `onError` in
- * plain words. Returns the unsubscribe.
+ * plain words. A sign-out, here or in another tab, also drops the sign-in dialog's consent tick. Returns the
+ * unsubscribe.
  */
 export function syncAccount(client: Pick<SupabaseClient, "auth">, onError: (message: string) => void): () => void {
   let live = true;
-  const { data } = client.auth.onAuthStateChange((_event, session) => {
+  const { data } = client.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") storage.remove(PENDING_CONSENT_KEY);
     if (live) useAccount.setState({ session, ready: true });
   });
   void client.auth.initialize().then(async ({ error }) => {
@@ -36,4 +40,11 @@ export function syncAccount(client: Pick<SupabaseClient, "auth">, onError: (mess
     live = false;
     data.subscription.unsubscribe();
   };
+}
+
+/** Signs out; an error message only if the session survived. */
+export async function signOut(client: Pick<SupabaseClient, "auth">): Promise<string | null> {
+  const { error } = await client.auth.signOut();
+  // Supabase drops the local session even when it can't reach the server, so only a session that survived is a failure.
+  return error && useAccount.getState().session ? `Couldn't sign out: ${error.message}` : null;
 }

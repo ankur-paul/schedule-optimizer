@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Building2, DoorOpen, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Building2, DoorOpen, FileText, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Shield, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuLinkItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -20,11 +21,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { authErrorMessage, avatarUrl, displayName, initials, looksLikeEmail, redirectUrl, withoutAuthError } from "./account";
+import { ConsentDialog } from "./ConsentDialog";
 import { EmailConfirmDialogs } from "./EmailConfirmDialogs";
 import { CreateInstituteDialog, DeleteDialog, MembersDialog, RenameDialog } from "./InstituteDialogs";
 import { menuItems, roleLine, showSwitcher } from "./institutes";
 import { supabaseApi, type InstitutesApi } from "./institutesApi";
-import { syncAccount, useAccount } from "./useAccount";
+import { signOut, syncAccount, useAccount } from "./useAccount";
+import { consented, resetConsent, savePendingConsent, startConsent, supabaseConsentApi, useConsent } from "./useConsent";
 import { requestAction } from "./useEmailConfirm";
 import {
   currentInstitute,
@@ -59,7 +62,25 @@ function Account({ client }: { client: SupabaseClient }) {
   );
 
   if (!ready) return null;
-  return session ? <AccountMenu client={client} user={session.user} /> : <SignInButton client={client} />;
+  return session ? <ConsentGate client={client} user={session.user} /> : <SignInButton client={client} />;
+}
+
+type SessionUser = Parameters<typeof displayName>[0] & { id: string };
+
+/**
+ * T24's gate: after every sign-in and on load with a session, nothing else happens to the account (the menu, and
+ * with it `accept_invites()`) until the current Terms and Privacy Policy are accepted on record.
+ */
+function ConsentGate({ client, user }: { client: SupabaseClient; user: SessionUser }) {
+  const api = useMemo(() => supabaseConsentApi(client), [client]);
+  const userId = user.id;
+  useEffect(() => {
+    void startConsent(api, userId, notify);
+    return resetConsent;
+  }, [api, userId]);
+
+  const ok = useConsent((s) => consented(s, userId));
+  return ok ? <AccountMenu client={client} user={user} /> : <ConsentDialog client={client} api={api} />;
 }
 
 /** Unmounts on sign-in (the email link may land in another tab), so the dialog is closed again after a sign-out. */
@@ -79,9 +100,12 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [busy, setBusy] = useState<"google" | "email" | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
   const google = async () => {
     setBusy("google");
+    // Google leaves the page; the gate records the tick when it comes back.
+    savePendingConsent();
     const { error } = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo: redirectUrl(window.location) } });
     // On success the browser is already leaving for Google.
     if (error) {
@@ -94,6 +118,7 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
     e.preventDefault();
     const address = email.trim();
     setBusy("email");
+    savePendingConsent();
     const { error } = await client.auth.signInWithOtp({ email: address, options: { emailRedirectTo: redirectUrl(window.location) } });
     setBusy(null);
     if (error) toast.error(authErrorMessage(error));
@@ -105,7 +130,10 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
       open={open}
       onOpenChange={(next) => {
         onOpenChange(next);
-        if (!next) setSentTo(null);
+        if (!next) {
+          setSentTo(null);
+          setAgreed(false);
+        }
       }}
     >
       <DialogContent>
@@ -129,7 +157,25 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
           </div>
         ) : (
           <div className="grid gap-4">
-            <Button variant="outline" disabled={busy !== null} onClick={google}>
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-primary"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+              />
+              <span>
+                I agree to the{" "}
+                <a href="/terms" target="_blank" rel="noopener" className="font-medium text-primary underline underline-offset-4">
+                  Terms
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" target="_blank" rel="noopener" className="font-medium text-primary underline underline-offset-4">
+                  Privacy Policy
+                </a>
+              </span>
+            </label>
+            <Button variant="outline" disabled={!agreed || busy !== null} onClick={google}>
               <GoogleLogo /> {busy === "google" ? "Opening Google…" : "Continue with Google"}
             </Button>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -145,7 +191,7 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <Button type="submit" disabled={busy !== null || !looksLikeEmail(email)}>
+              <Button type="submit" disabled={!agreed || busy !== null || !looksLikeEmail(email)}>
                 <Mail /> {busy === "email" ? "Sending…" : "Email me a sign-in link"}
               </Button>
             </form>
@@ -158,7 +204,7 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
 
 type InstituteDialog = "members" | "rename" | "delete";
 
-function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameters<typeof displayName>[0] & { id: string } }) {
+function AccountMenu({ client, user }: { client: SupabaseClient; user: SessionUser }) {
   const api = useMemo(() => supabaseApi(client), [client]);
   const userId = user.id;
   useEffect(() => {
@@ -171,10 +217,9 @@ function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameter
   const active = useInstitutes(currentInstitute);
   const name = displayName(user);
   const picture = avatarUrl(user);
-  const signOut = async () => {
-    const { error } = await client.auth.signOut();
-    // Supabase drops the local session even when it can't reach the server, so only a session that survived is a failure.
-    if (error && useAccount.getState().session) toast.error(`Couldn't sign out: ${error.message}`);
+  const leave = async () => {
+    const error = await signOut(client);
+    if (error) toast.error(error);
   };
   return (
     <>
@@ -196,7 +241,16 @@ function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameter
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <InstituteItems api={api} onOpen={setDialog} />
-          <DropdownMenuItem onClick={signOut}>
+          <DropdownMenuGroup>
+            <DropdownMenuLinkItem href="/privacy" target="_blank" rel="noopener">
+              <Shield /> Privacy
+            </DropdownMenuLinkItem>
+            <DropdownMenuLinkItem href="/terms" target="_blank" rel="noopener">
+              <FileText /> Terms
+            </DropdownMenuLinkItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={leave}>
             <LogOut /> Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
