@@ -1,6 +1,10 @@
 """Offline tests for the Supabase test helper's config loading."""
 
-from tests.supabase_api import key_headers, load_config, read_env_file
+import json
+
+import httpx
+
+from tests.supabase_api import Supabase, key_headers, load_config, read_env_file
 
 
 def test_read_env_file_missing_is_empty(tmp_path):
@@ -53,3 +57,12 @@ def test_load_config_environment_wins_over_file(tmp_path, monkeypatch):
 def test_key_headers_by_key_style():
     assert key_headers("sb_secret_abc") == {"apikey": "sb_secret_abc"}
     assert key_headers("eyJhbGciOi.x.y") == {"apikey": "eyJhbGciOi.x.y", "Authorization": "Bearer eyJhbGciOi.x.y"}
+
+
+def test_rpc_sends_args_named_like_its_own_parameters():
+    seen = []
+    sb = Supabase({"SUPABASE_URL": "https://abc.supabase.co/", "SUPABASE_ANON_KEY": "a", "SUPABASE_SERVICE_ROLE_KEY": "s"})
+    sb.http = httpx.Client(transport=httpx.MockTransport(lambda req: seen.append(req) or httpx.Response(204)))
+    sb.rpc("create_institute", {"apikey": "a"}, name="GNDEC", headers="x", fn="y")
+    assert str(seen[0].url) == "https://abc.supabase.co/rest/v1/rpc/create_institute"
+    assert json.loads(seen[0].content) == {"name": "GNDEC", "headers": "x", "fn": "y"}

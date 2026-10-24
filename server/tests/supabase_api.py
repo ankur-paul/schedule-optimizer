@@ -132,5 +132,5 @@ class Supabase:
             params=filters,
         )
 
-    def rpc(self, name: str, headers: dict[str, str], **args) -> httpx.Response:
-        return self.http.post(f"{self.url}/rest/v1/rpc/{name}", headers=headers, json=args)
+    def rpc(self, fn: str, headers: dict[str, str], /, **args) -> httpx.Response:
+        return self.http.post(f"{self.url}/rest/v1/rpc/{fn}", headers=headers, json=args)
