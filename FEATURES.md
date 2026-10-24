@@ -1,8 +1,10 @@
 # Features
 
-The app builds a clash-free weekly class timetable for a college. One coordinator enters the data and generates the timetable, then prints or exports it. Everything is saved in the browser (`localStorage`). Signing in is optional and changes nothing yet; it is the start of accounts and institutes.
+Lattice builds a clash-free weekly class timetable for a college. One coordinator enters the data and generates the timetable, then prints or exports it. Everything is saved in the browser (`localStorage`). Signing in is optional and changes nothing yet; it is the start of accounts and institutes.
 
 The app walks through four steps: ① Setup week → ② Add data → ③ Generate → ④ View & export. Each step has a one-line hint, and non-obvious fields have ⓘ tooltips. On a narrow screen the stepper shows step numbers and the current step's name.
+
+The header shows the Lattice logo (a 3×3 timetable grid with an L filled in) and name; the browser tab uses the same mark as its icon, a dark tile in a light browser and a light tile in a dark one (`web/public/logo.svg`, `logo-light.svg`).
 
 ## Account
 

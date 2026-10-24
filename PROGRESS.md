@@ -57,6 +57,8 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T19] Optional sign-in with Supabase: header *Sign in* dialog (Continue with Google, Email me a sign-in link), avatar menu with name and *Sign out*, session kept across reloads, expired-link toast; no button and v1 behaviour without `web/.env.local`; setup wizard `scripts/setup-auth.sh` (run the wizard, then `cd web && npm run dev`; logic in `lib/supabase.ts`, `features/account/account.ts`, `useAccount.ts`)
 - [T19] Clicked through against the real Supabase dev project: Google sign-in, email link, sign-out, session kept across a reload, app data untouched (`scripts/setup-auth.sh`, then `cd web && npm run dev`)
 - [T20] Supabase schema for accounts in `supabase/migrations/`: institutes, memberships (one admin per institute), invites and profiles, all with RLS; functions `create_institute`, `accept_invites`, `set_member_role`, `make_admin`, `remove_member`, `leave_institute`, `delete_institute`, `tables_without_rls`. `scripts/setup-supabase-cli.sh` links the CLI, writes `server/.env` and runs `db push`; `server/tests/test_rls.py` (marker `supabase`) checks every role and is skipped without `server/.env` (run the wizard, then `cd server && uv run pytest -m supabase`)
+- [chore] App named Lattice: logo (3×3 timetable grid with an L filled in) as favicon and header mark (`LatticeMark.tsx`), tab title, README/PLAN headings (`cd web && npm run dev`, look at the header and tab icon)
+- [chore] Lattice logo for dark backgrounds (`web/public/logo-light.svg`, light tile with dark cells); the tab icon switches to it when the browser is in dark mode, and the README logo follows GitHub's theme (switch the OS to dark mode and reload; Safari shows no SVG tab icons)
 
 ## Known issues / cuts
 

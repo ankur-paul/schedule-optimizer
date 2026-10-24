@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-College timetable generator. Read `PLAN.md` for decisions, rules and the data contract. Work is split into tickets in `tickets/`.
+Lattice, a college timetable generator. Read `PLAN.md` for decisions, rules and the data contract. Work is split into tickets in `tickets/`.
 
 Version 1 is done. Version 2 ideas, their order and open questions are in `docs/v2-roadmap.md`; each idea gets its own discuss -> plan -> tickets pass.
 
