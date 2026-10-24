@@ -1,5 +1,5 @@
 # T26 — Email confirmation for Make admin and Leave institute
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** main · **Prereqs:** T21 · **Branch:** t26-email-confirm
 
 ## Goal
@@ -41,6 +41,6 @@ handover, and the leaving member confirms leaving. Postgres enforces it, like ev
 
 ## Done when
 - [x] Both functions refuse without a recent email confirmation, and the tests prove it
-- [ ] The email-link flow works for Google and email-link users
+- [x] The email-link flow works for Google and email-link users
 - [x] FEATURES.md (account section, known limits) and PROGRESS.md updated
-- [ ] Committed: `T26: email confirmation for make admin and leave`
+- [x] Committed: `T26: email confirmation for make admin and leave`
