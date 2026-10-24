@@ -69,6 +69,10 @@ Don't add a hand-written status table here: it would conflict on every parallel 
 | [T19](T19-sign-in.md) | v2: sign in with Google or email link, account menu | A | — | — |
 | [T20](T20-schema-rls.md) | v2: institutes, memberships, invites with RLS + tests | B | — | — |
 | [T21](T21-institutes-members.md) | v2: institutes and members UI | main | T19, T20 | — |
+| [T22](T22-solver-names.md) | v2: strip teacher names before solving | C | — | — |
+| [T23](T23-legal-pages.md) | v2: privacy policy and terms pages | D | — | — |
+| [T24](T24-consent.md) | v2: consent at sign-in, re-accept on policy change | main | T21, T23 | — |
+| [T25](T25-delete-account.md) | v2: delete account, invite expiry | B | T21 | — |
 
 ```mermaid
 graph LR
@@ -88,6 +92,8 @@ graph LR
   T15 --> T16 & T17
   T16 & T17 --> T18
   T19 & T20 --> T21
+  T21 & T23 --> T24
+  T21 --> T25
 ```
 
 ## Ticket template

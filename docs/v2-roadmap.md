@@ -17,7 +17,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | # | Idea | Status | Needs |
 |---|---|---|---|
 | 1 | [Authentication and roles](#1-authentication-and-roles) | planned: T19–T21 | — |
-| 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | idea | 1 |
+| 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | planned: T22–T25 | 1 |
 | 3 | [Store institute data online](#3-store-institute-data-online) | idea | 1, 2 |
 | 4 | [Help page](#4-help-page) | idea | — (best after the UI settles) |
 | 5 | [AI agent](#5-ai-agent) | idea | 1, 3, 4 |
@@ -69,11 +69,20 @@ Postgres RLS; teachers and students never log in. Tickets T19–T21.
 Original list: #9. A policy page and an accept step saying what is stored, where, for how long, and that it is used
 only to generate timetables.
 
-Open questions:
-- When is it shown: at sign-up, or the first time data is about to be uploaded?
-- What if the policy changes later (re-accept)?
-- Account and data deletion, and data export: needed for the policy to be honest.
-- If the agent sends data to an AI provider, the policy must say so.
+Discussed 24 Oct: [`discussions/2026-10-24-privacy-and-consent.md`](discussions/2026-10-24-privacy-and-consent.md).
+Summary:
+- **Signed out:** the browser strips teacher names before `/solve`, so nothing personal leaves it and there is
+  nothing to accept.
+- **Signing in:** the sign-in dialog has a required checkbox, and each acceptance is recorded with the policy
+  version.
+- **Policy changes:** a version bump makes signed-in users accept again.
+- **Deletion:** self-serve account deletion; an admin hands over first. Invites expire after 30 days.
+- **Pages:** static `/privacy` and `/terms`. The policy names Ankur Paul as the operator, with a
+  `privacy@<domain>` contact.
+- **Export:** waits for #3.
+
+The policy describes only what exists, so every later pass that adds a purpose bumps it. Drafts are in
+`legal/`. Tickets T22–T25.
 
 ## 3. Store institute data online
 
@@ -83,6 +92,8 @@ approves.
 Open questions:
 - ~~Which database?~~ Supabase Postgres, from the auth pass.
 - How does it sit with `localStorage`: online is the source of truth, or local first with sync?
+- From #2: the admin confirms they're authorised to share staff data on the first upload. Self-serve export
+  of institute data. The policy gets a new version covering online data. Viewers' read-only mode (from #1).
 - Upload of existing local data on first login.
 - Several admins editing at once: last write wins, or locking?
 - Saved timetable versions (history, restore)?
@@ -103,7 +114,7 @@ Open questions:
 Original list: #2. Answers questions about the app and the user's data, and changes the data and timetables.
 
 Open questions:
-- Which model and provider? The API key stays on the server.
+- Which model and provider? The API key stays on the server. The privacy policy must name it (new version, #2).
 - Which actions does it get as tools (add a teacher, move a class, lock a cell, regenerate)? Does every change need
   the user to confirm it first, and can it be undone?
 - What roles may use it, and may it act on everything that role can?
@@ -152,3 +163,8 @@ Collected by the passes above (env vars, services, public URLs needed):
   to the public domain (it is `http://localhost:5173` now).
 - SMTP sender with a domain we own, so email sign-in links reach real users (the built-in one reaches only the
   project's team). Free Supabase projects pause after 7 days without traffic: resume before a demo.
+- Web: `VITE_CONTACT_EMAIL` for the policy pages (privacy pass). The domain also gives `privacy@<domain>` and the
+  SMTP sender.
+- Public `/privacy` and `/terms` (static Vite pages) go into Google's OAuth Branding page. The host must serve
+  them without `.html`.
+- Check Supabase's backup retention and `pg_cron` on the production plan; the privacy policy depends on both.
