@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AccountButton } from '@/features/account/AccountButton'
+import { helpHref } from '@/help/helpLinks'
 import { LatticeMark } from '@/components/LatticeMark'
 import { OnlineStatus } from '@/features/online/OnlineStatus'
 import { GenerateStep } from '@/features/generate/GenerateStep'
@@ -115,6 +116,10 @@ function App() {
         </main>
 
         <footer className="mx-auto max-w-6xl px-6 pb-8 text-xs text-muted-foreground print:hidden">
+          <a href={helpHref('index')} target="_blank" rel="noopener" className="hover:text-foreground hover:underline">
+            Help
+          </a>
+          {' · '}
           <a href="/privacy" target="_blank" rel="noopener" className="hover:text-foreground hover:underline">
             Privacy
           </a>

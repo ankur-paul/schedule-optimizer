@@ -1,0 +1,125 @@
+/* /help pages: the legal pages' layout (header, card, footer, print) plus the contents list, steps and screenshots. */
+@import "../legal/legal.css";
+
+/* The legal pages mute the "Version 1 · effective …" line under the title; a help page's first line is its intro. */
+.help h1 + p {
+  margin-top: 0.75rem;
+  font-size: inherit;
+  color: inherit;
+}
+
+.help-crumb {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.legal .help-crumb {
+  margin: 0 0 0.25rem;
+}
+
+.help-contents {
+  margin-top: 1.25rem;
+  border-left: 2px solid var(--border);
+  padding-left: 1rem;
+  font-size: 0.875rem;
+}
+
+.help-contents > p {
+  font-weight: 600;
+}
+
+.legal .help-contents ul,
+.legal .help-index-sections {
+  margin-top: 0.25rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+.legal .help-contents li + li,
+.legal .help-index-sections li + li {
+  margin-top: 0.125rem;
+}
+
+/* Lists of links: a faint underline that darkens on hover, so they read as links without shouting. */
+.legal .help-contents a,
+.legal .help-index a {
+  text-decoration-color: var(--border);
+}
+
+.legal .help-contents a:hover,
+.legal .help-index a:hover {
+  text-decoration-color: currentColor;
+}
+
+.legal .help-index {
+  list-style: none;
+  padding-left: 0;
+}
+
+.legal .help-index > li + li {
+  margin-top: 1.5rem;
+}
+
+.help-index-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.875rem;
+}
+
+.legal .help-index-sections li + li {
+  margin-top: 0;
+}
+
+.legal ol {
+  margin-top: 0.75rem;
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+
+.legal ol li + li {
+  margin-top: 0.375rem;
+}
+
+.legal img {
+  margin-top: 0.75rem;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.legal code {
+  border-radius: 0.25rem;
+  background: var(--muted);
+  padding: 0.0625rem 0.3125rem;
+  font-size: 0.875em;
+}
+
+.legal blockquote {
+  margin-top: 0.75rem;
+  border-left: 3px solid var(--primary);
+  background: color-mix(in oklch, var(--muted) 50%, transparent);
+  padding: 0.5rem 1rem;
+}
+
+/* An anchor link from the app lands with a little room above the heading. */
+.help [id] {
+  scroll-margin-top: 1rem;
+}
+
+@media print {
+  .help-crumb,
+  .help-contents {
+    display: none;
+  }
+
+  .legal img {
+    break-inside: avoid;
+  }
+
+  .help h2,
+  .help h3 {
+    break-after: avoid;
+  }
+}

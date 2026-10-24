@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Building2, DoorOpen, FileText, Link2, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Shield, Trash2, Users } from "lucide-react";
+import { Building2, CircleHelp, DoorOpen, FileText, Link2, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Shield, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabaseOnlineApi } from "@/features/online/onlineApi";
 import { HandleDialog } from "@/features/online/PublishDialogs";
+import { helpHref } from "@/help/helpLinks";
 import { supabase } from "@/lib/supabase";
 import { authErrorMessage, avatarUrl, displayName, initials, looksLikeEmail, redirectUrl, withoutAuthError } from "./account";
 import { ConsentDialog } from "./ConsentDialog";
@@ -245,6 +246,9 @@ function AccountMenu({ client, user }: { client: SupabaseClient; user: SessionUs
           <DropdownMenuSeparator />
           <InstituteItems api={api} onOpen={setDialog} />
           <DropdownMenuGroup>
+            <DropdownMenuLinkItem href={helpHref("index")} target="_blank" rel="noopener">
+              <CircleHelp /> Help
+            </DropdownMenuLinkItem>
             <DropdownMenuLinkItem href="/privacy" target="_blank" rel="noopener">
               <Shield /> Privacy
             </DropdownMenuLinkItem>

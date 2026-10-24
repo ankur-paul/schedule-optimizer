@@ -65,4 +65,12 @@ describe("isPublishedRewrite", () => {
     expect(isPublishedRewrite("/@fs/home/x.ts")).toBe(false);
     expect(isPublishedRewrite("/a/b/c")).toBe(false);
   });
+
+  it("leaves the help pages alone", () => {
+    expect(isPublishedRewrite("/help")).toBe(false);
+    expect(isPublishedRewrite("/help/data")).toBe(false);
+    expect(isPublishedRewrite("/help/troubleshooting#solver-offline")).toBe(false);
+    expect(isPublishedRewrite("/Help/data")).toBe(false);
+    expect(isPublishedRewrite("/help/data.html")).toBe(false);
+  });
 });

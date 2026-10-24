@@ -188,7 +188,7 @@ Collected by the passes above (env vars, services, public URLs needed):
 - Public timetable links (online-data pass): the host rewrites two-segment paths `/<handle>/<id>` to
   `published.html`, leaving `/assets/*` and real files alone (Vercel `rewrites`, Cloudflare Pages `_redirects`).
   `npm run dev` and `npm run preview` already do (T30). The link is built from the page's origin, so no env var.
-- Help pages (help pass): the host serves `/help` and `/help/<page>` without `.html`, and the public-link rewrite
-  skips `/help/*`. No new env vars.
+- Help pages (help pass): the host serves `/help` and `/help/<page>` without `.html` (`help.html` and
+  `help/<page>.html` in `dist/`), and the public-link rewrite skips `/help/*`. No new env vars.
 - A paused free Supabase project breaks every published timetable link, not just sign-in: production needs a
   project that doesn't pause, or a keep-alive.
