@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { LogIn, LogOut, Mail, MailCheck } from "lucide-react";
+import { Building2, DoorOpen, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -18,7 +20,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { authErrorMessage, avatarUrl, displayName, initials, looksLikeEmail, redirectUrl, withoutAuthError } from "./account";
+import { CreateInstituteDialog, DeleteDialog, MembersDialog, RenameDialog } from "./InstituteDialogs";
+import { menuItems, roleLine, showSwitcher } from "./institutes";
+import { supabaseApi, type InstitutesApi } from "./institutesApi";
 import { syncAccount, useAccount } from "./useAccount";
+import {
+  currentInstitute,
+  failureMessage,
+  notify,
+  refreshInstitutes,
+  resetInstitutes,
+  setCreateOpen,
+  startInstitutes,
+  switchInstitute,
+  useInstitutes,
+} from "./useInstitutes";
 
 /**
  * The header's account control: *Sign in* when signed out, an avatar menu when signed in. Renders nothing without a
@@ -139,7 +155,19 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
   );
 }
 
-function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameters<typeof displayName>[0] }) {
+type InstituteDialog = "members" | "rename" | "delete";
+
+function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameters<typeof displayName>[0] & { id: string } }) {
+  const api = useMemo(() => supabaseApi(client), [client]);
+  const userId = user.id;
+  useEffect(() => {
+    void startInstitutes(api, userId, notify);
+    return resetInstitutes;
+  }, [api, userId]);
+
+  const [dialog, setDialog] = useState<InstituteDialog | null>(null);
+  const createOpen = useInstitutes((s) => s.createOpen);
+  const active = useInstitutes(currentInstitute);
   const name = displayName(user);
   const picture = avatarUrl(user);
   const signOut = async () => {
@@ -148,28 +176,118 @@ function AccountMenu({ client, user }: { client: SupabaseClient; user: Parameter
     if (error && useAccount.getState().session) toast.error(`Couldn't sign out: ${error.message}`);
   };
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" className="rounded-full" aria-label={`Account: ${name}`} />}
-      >
-        <Avatar size="sm">
-          {picture && <AvatarImage src={picture} alt="" referrerPolicy="no-referrer" />}
-          <AvatarFallback>{initials(name)}</AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-auto min-w-56">
+    <>
+      <DropdownMenu onOpenChange={(open) => open && void refreshInstitutes(api, notify)}>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon" className="rounded-full" aria-label={`Account: ${name}`} />}
+        >
+          <Avatar size="sm">
+            {picture && <AvatarImage src={picture} alt="" referrerPolicy="no-referrer" />}
+            <AvatarFallback>{initials(name)}</AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-auto min-w-56">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>
+              <div className="text-sm font-medium text-foreground">{name}</div>
+              {user.email && user.email !== name && <div className="text-xs font-normal">{user.email}</div>}
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <InstituteItems api={api} onOpen={setDialog} />
+          <DropdownMenuItem onClick={signOut}>
+            <LogOut /> Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <CreateInstituteDialog api={api} open={createOpen} onOpenChange={setCreateOpen} />
+      {active && (
+        <>
+          <MembersDialog api={api} institute={active} open={dialog === "members"} onOpenChange={(o) => setDialog(o ? "members" : null)} />
+          <RenameDialog api={api} institute={active} open={dialog === "rename"} onOpenChange={(o) => setDialog(o ? "rename" : null)} />
+          <DeleteDialog api={api} institute={active} open={dialog === "delete"} onOpenChange={(o) => setDialog(o ? "delete" : null)} />
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * The institute part of the menu: the active institute with your role and its admin, the switcher (with 2+), and
+ * what your role may do. Hiding items is cosmetic; T20's policies are the rule.
+ */
+function InstituteItems({ api, onOpen }: { api: InstitutesApi; onOpen: (dialog: InstituteDialog) => void }) {
+  const memberships = useInstitutes((s) => s.memberships);
+  const loaded = useInstitutes((s) => s.loaded);
+  const admin = useInstitutes((s) => s.admin);
+  const active = useInstitutes(currentInstitute);
+  if (!loaded) return null;
+
+  const leave = async () => {
+    if (!active || !confirm(`Leave ${active.name}? You'll need a new invite from the admin to come back.`)) return;
+    try {
+      await api.leave(active.instituteId);
+      toast.success(`You left ${active.name}.`);
+      await refreshInstitutes(api, notify);
+    } catch (e) {
+      toast.error(failureMessage(e));
+    }
+  };
+
+  const items = menuItems(active);
+  return (
+    <>
+      {active && (
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            <div className="text-sm font-medium text-foreground">{name}</div>
-            {user.email && user.email !== name && <div className="text-xs font-normal">{user.email}</div>}
+            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+              <Building2 className="size-4 shrink-0" /> {active.name}
+            </div>
+            <div className="text-xs font-normal">{roleLine(active.role, admin)}</div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>
-          <LogOut /> Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      )}
+      {showSwitcher(memberships) && (
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs">Switch institute</DropdownMenuLabel>
+          <DropdownMenuRadioGroup value={active?.instituteId} onValueChange={(id: string) => void switchInstitute(api, id, notify)}>
+            {memberships.map((m) => (
+              <DropdownMenuRadioItem key={m.instituteId} value={m.instituteId}>
+                {m.name}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
+      )}
+      <DropdownMenuGroup>
+        {items.includes("members") && (
+          <DropdownMenuItem onClick={() => onOpen("members")}>
+            <Users /> Members…
+          </DropdownMenuItem>
+        )}
+        {items.includes("rename") && (
+          <DropdownMenuItem onClick={() => onOpen("rename")}>
+            <Pencil /> Rename…
+          </DropdownMenuItem>
+        )}
+        {items.includes("delete") && (
+          <DropdownMenuItem variant="destructive" onClick={() => onOpen("delete")}>
+            <Trash2 /> Delete institute…
+          </DropdownMenuItem>
+        )}
+        {items.includes("leave") && (
+          <DropdownMenuItem onClick={() => void leave()}>
+            <DoorOpen /> Leave institute…
+          </DropdownMenuItem>
+        )}
+        {items.includes("create") && (
+          <DropdownMenuItem onClick={() => setCreateOpen(true)}>
+            <Plus /> Create institute…
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+    </>
   );
 }
 

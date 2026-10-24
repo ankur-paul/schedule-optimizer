@@ -1,5 +1,5 @@
 # T21 — Institutes and members UI
-**Status:** TODO
+**Status:** BLOCKED (needs human: two-account click-through in the browser)
 **Lane:** main · **Prereqs:** T19, T20 · **Branch:** t21-institutes
 
 ## Goal
@@ -44,7 +44,7 @@ go through T20's functions and policies; the UI only hides what the role can't u
 
 ## Done when
 - [ ] Every flow above works with two real accounts
-- [ ] Non-admins see their role and the admin, never the member list
-- [ ] FEATURES.md (new account section, known limits) and PROGRESS.md updated
-- [ ] `docs/v2-roadmap.md`: idea #1 status set to built
+- [x] Non-admins see their role and the admin, never the member list
+- [x] FEATURES.md (new account section, known limits) and PROGRESS.md updated
+- [x] `docs/v2-roadmap.md`: idea #1 status set to built
 - [ ] Committed: `T21: institutes, members and invites UI`

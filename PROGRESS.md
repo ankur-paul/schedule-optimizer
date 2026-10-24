@@ -60,6 +60,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [chore] App named Lattice: logo (3×3 timetable grid with an L filled in) as favicon and header mark (`LatticeMark.tsx`), tab title, README/PLAN headings (`cd web && npm run dev`, look at the header and tab icon)
 - [chore] Lattice logo for dark backgrounds (`web/public/logo-light.svg`, light tile with dark cells); the tab icon switches to it when the browser is in dark mode, and the README logo follows GitHub's theme (switch the OS to dark mode and reload; Safari shows no SVG tab icons)
 - [T20] Migration applied to the dev project with `db push`; all 29 RLS tests pass against it (fixed the test helper's `rpc()`, whose own `name` parameter clashed with `create_institute(name)`) (`cd server && uv run pytest -m supabase`)
+- [T21] Institutes and members UI in the avatar menu: auto-accept invites with a toast, create-institute prompt with *Not now*, active institute remembered per browser with a switcher at 2+, role and admin line, leave, and for the admin *Members…* (role select, make admin, remove, invites with cancel), rename and delete (type the name). Logic in `institutes.ts`, calls in `institutesApi.ts`, state in `useInstitutes.ts` (sign in with `web/.env.local` set, open the avatar menu)
 
 ## Known issues / cuts
 
@@ -79,3 +80,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] No user test was run: nobody new has tried the app without instructions, so first-use confusion is untested.
 - [T19] Only port 5173 was clicked through with the real Supabase project; the `http://localhost:*/**` redirect entry for other Vite ports is untested (a miss lands on the Site URL, http://localhost:5173). Email links reach only the Supabase team, 2 an hour; Google sign-in only listed test users.
 - [T20] Deleting the admin's Supabase account leaves the institute with no admin (their membership goes with them); fix it by hand in the dashboard, as planned. `accept_invites` ignoring unconfirmed emails is checked only in a local Postgres run, not by the HTTP suite (the admin API can't sign in an unconfirmed user).
+- [T21] Clicked through signed out only; the signed-in flows were checked by running `supabaseApi` against the dev project with two throwaway users (every flow, 23 checks), not in the browser. Others' changes to your memberships show when the account menu next opens, not live.
