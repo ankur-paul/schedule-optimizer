@@ -1,6 +1,6 @@
 # Features
 
-Lattice builds a clash-free weekly class timetable for a college. One coordinator enters the data and generates the timetable, then prints or exports it. Everything is saved in the browser (`localStorage`). Signing in is optional and changes nothing yet; it is the start of accounts and institutes.
+Lattice builds a clash-free weekly class timetable for a college. One coordinator enters the data and generates the timetable, then prints or exports it. Everything is saved in the browser (`localStorage`). Signing in is optional. Signed in, you can create or join institutes and, as an institute's admin, manage its members; the timetable data still stays in the browser.
 
 The app walks through four steps: ① Setup week → ② Add data → ③ Generate → ④ View & export. Each step has a one-line hint, and non-obvious fields have ⓘ tooltips. On a narrow screen the stepper shows step numbers and the current step's name.
 
@@ -11,6 +11,9 @@ The header shows the Lattice logo (a 3×3 timetable grid with an L filled in) an
 - **Sign in (optional).** A **Sign in** button in the header opens a dialog with *Continue with Google* and *Email me a sign-in link* ("Check your inbox at …"). Signed in, the button becomes an avatar (Google's picture, or initials) whose menu shows your name (or email) and **Sign out**. The session survives a reload.
 - **Signed out is the full app.** Signing in or out never touches the timetable data in the browser. Without `web/.env.local` (set up by `scripts/setup-auth.sh`) there is no Sign in button at all.
 - An expired or reused email link shows a toast asking for a new one.
+- **Institutes.** On every sign-in, pending invites for your email are accepted at once, with a toast like "You joined GNDEC Ludhiana as editor". With no institute and no invite, a *Create institute* dialog asks for a name, with *Not now* (it then won't open by itself again in that browser). The avatar menu shows the active institute, your role and its admin ("Editor · admin is Dr. Meera Iyer (meera@…)"), and *Create institute…*. With two or more institutes it lists them to switch; the choice is remembered per browser, falling back to the first institute if it's gone.
+- **Roles.** Each institute has exactly one admin, plus editors and viewers. Editors and viewers see their role and who the admin is, and can *Leave institute* (after a confirm). Only the admin sees *Members…*, *Rename…* and *Delete institute…* (type the name to confirm). Roles are enforced by the database; a refusal shows as a plain-words toast such as "Only the admin can do that."
+- **Members (admin).** The admin first, then everyone else with name, email and a role select (editor/viewer), *Make admin* (hands the role over; you become an editor) and *Remove*. Pending invites have *Cancel*. The invite form takes an email and a role, says to use the address they'll sign in with, and rejects a malformed address, an existing member or one already invited before calling the database. No invite email is sent; tell them to sign in.
 
 ## ① Setup week
 
@@ -95,6 +98,8 @@ Soft rules, which add to the score (lower is better):
 - Printouts don't show the 🔒 marker.
 - Cancelling a CP-SAT run only stops the browser waiting. The server keeps solving until its time limit and its answer is ignored.
 - Sign-in emails come from Supabase's built-in sender, which reaches only the Supabase project's team members, 2 emails an hour. Google sign-in works only for accounts listed as test users in Google Cloud. Both open up in the deploy pass.
+- Roles don't limit the timetable yet: viewers can still edit the data in their own browser, and nothing is stored per institute. Both come with online data.
+- Changes made by someone else (a new role, a removal, a deleted institute) show up when you next open the account menu, not live.
 - Drag and drop works in the Section view only, with a mouse; there is no keyboard dragging (use *Lock here* instead).
 
 ## Not built yet
