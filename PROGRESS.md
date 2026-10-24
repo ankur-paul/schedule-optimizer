@@ -59,6 +59,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T20] Supabase schema for accounts in `supabase/migrations/`: institutes, memberships (one admin per institute), invites and profiles, all with RLS; functions `create_institute`, `accept_invites`, `set_member_role`, `make_admin`, `remove_member`, `leave_institute`, `delete_institute`, `tables_without_rls`. `scripts/setup-supabase-cli.sh` links the CLI, writes `server/.env` and runs `db push`; `server/tests/test_rls.py` (marker `supabase`) checks every role and is skipped without `server/.env` (run the wizard, then `cd server && uv run pytest -m supabase`)
 - [chore] App named Lattice: logo (3×3 timetable grid with an L filled in) as favicon and header mark (`LatticeMark.tsx`), tab title, README/PLAN headings (`cd web && npm run dev`, look at the header and tab icon)
 - [chore] Lattice logo for dark backgrounds (`web/public/logo-light.svg`, light tile with dark cells); the tab icon switches to it when the browser is in dark mode, and the README logo follows GitHub's theme (switch the OS to dark mode and reload; Safari shows no SVG tab icons)
+- [T20] Migration applied to the dev project with `db push`; all 29 RLS tests pass against it (fixed the test helper's `rpc()`, whose own `name` parameter clashed with `create_institute(name)`) (`cd server && uv run pytest -m supabase`)
 
 ## Known issues / cuts
 
