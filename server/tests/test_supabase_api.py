@@ -4,7 +4,8 @@ import json
 
 import httpx
 
-from tests.supabase_api import Supabase, key_headers, load_config, read_env_file
+from supabase_env import key_headers, load_config, read_env_file
+from tests.supabase_api import Supabase
 
 
 def test_read_env_file_missing_is_empty(tmp_path):

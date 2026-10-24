@@ -24,8 +24,9 @@ call and records what it cost. It stays stateless; the browser (T40) drives the 
   1. Confirm the token with Supabase Auth (`GET /auth/v1/user`) and get the user ID. Fail → 401.
   2. Call `agent_begin` with the service-role key and `budget_cents` from `AGENT_MONTHLY_USD` (default 10). Map its
      hints to responses: 403 with `{ reason }` for `not_member`, `consent_required`, `no_access` and `expired`; 429
-     with `{ reason }` for `used_up`, `paused`, `question_closed`, `too_many_calls` and `too_many_compactions`. The
-     panel shows a state for each.
+     with `{ reason }` for `used_up`, `paused`, `question_closed`, `unknown_question` (a question ID that isn't this
+     user's in this institute; T36 added it), `too_many_calls` and `too_many_compactions`. The panel shows a state for
+     each.
   3. Make one Claude call (below).
   4. Call `agent_record` with the usage and cost.
   5. Return.
