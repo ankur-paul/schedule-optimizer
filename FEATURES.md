@@ -8,7 +8,8 @@ The header shows the Lattice logo (a 3×3 timetable grid with an L filled in) an
 
 ## Account
 
-- **Sign in (optional).** A **Sign in** button in the header opens a dialog with *Continue with Google* and *Email me a sign-in link* ("Check your inbox at …"). Signed in, the button becomes an avatar (Google's picture, or initials) whose menu shows your name (or email) and **Sign out**. The session survives a reload.
+- **Sign in (optional).** A **Sign in** button in the header opens a dialog with an unticked *I agree to the Terms and Privacy Policy* box (both linked, opening in a new tab), *Continue with Google* and *Email me a sign-in link* ("Check your inbox at …"). Both buttons stay disabled until the box is ticked. Signed in, the button becomes an avatar (Google's picture, or initials) whose menu shows your name (or email), *Privacy*, *Terms* and **Sign out**. The session survives a reload.
+- **Consent.** Every acceptance of the Terms and Privacy Policy is recorded with its version and time. The box ticked at sign-in is recorded when you come back from Google or the email link. Without that (an email link opened in another browser, or an account from before consent existed), a dialog *Before you continue* blocks the account until you choose *Accept* or *Sign out*; it has no close button and ignores Esc and outside clicks. When the policy version goes up, signed-in users get the same dialog titled *We've updated our Terms and Privacy Policy*, with a *What changed* list. Nothing else happens to the account, including joining institutes from invites, until it is accepted.
 - **Signed out is the full app.** Signing in or out never touches the timetable data in the browser. Without `web/.env.local` (set up by `scripts/setup-auth.sh`) there is no Sign in button at all.
 - An expired or reused email link shows a toast asking for a new one.
 - **Institutes.** On every sign-in, pending invites for your email are accepted at once, with a toast like "You joined GNDEC Ludhiana as editor". With no institute and no invite, a *Create institute* dialog asks for a name, with *Not now* (it then won't open by itself again in that browser). The avatar menu shows the active institute, your role and its admin ("Editor · admin is Dr. Meera Iyer (meera@…)"), and *Create institute…*. With two or more institutes it lists them to switch; the choice is remembered per browser, falling back to the first institute if it's gone.
@@ -103,7 +104,8 @@ Soft rules, which add to the score (lower is better):
 - Roles don't limit the timetable yet: viewers can still edit the data in their own browser, and nothing is stored per institute. Both come with online data.
 - The email confirmation is a link, not a 6-digit code, because the built-in sender's templates can't be edited on the free plan. Like sign-in emails, it reaches only the Supabase team, 2 an hour; both change in the deploy pass.
 - Changes made by someone else (a new role, a removal, a deleted institute) show up when you next open the account menu, not live.
-- The Privacy Policy and Terms haven't been reviewed by a lawyer. Nobody is asked to accept them yet (that comes with T24).
+- The Privacy Policy and Terms haven't been reviewed by a lawyer.
+- Consent covers signing in only. The admin's promise that they may share staff data comes with storing data online (roadmap #3). A policy bump needs a migration row plus `POLICY_VERSION` and `POLICY_CHANGES` in `web/src/legal/policy.ts`; the app and database must agree, or no one can accept the new version.
 - Drag and drop works in the Section view only, with a mouse; there is no keyboard dragging (use *Lock here* instead).
 
 ## Not built yet

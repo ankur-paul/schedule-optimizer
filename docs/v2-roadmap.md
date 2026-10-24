@@ -17,7 +17,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | # | Idea | Status | Needs |
 |---|---|---|---|
 | 1 | [Authentication and roles](#1-authentication-and-roles) | built: T19–T21 | — |
-| 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | planned: T22–T24 | 1 |
+| 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | built: T22–T24 | 1 |
 | 3 | [Store institute data online](#3-store-institute-data-online) | idea | 1, 2 |
 | 4 | [Help page](#4-help-page) | idea | — (best after the UI settles) |
 | 5 | [AI agent](#5-ai-agent) | idea | 1, 3, 4 |
