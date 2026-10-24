@@ -13,8 +13,8 @@ import {
   useInstitutes,
 } from "./useInstitutes";
 
-const gndec: Membership = { instituteId: "i1", name: "GNDEC Ludhiana", role: "editor" };
-const pec: Membership = { instituteId: "i2", name: "PEC Chandigarh", role: "admin" };
+const gndec: Membership = { instituteId: "i1", name: "GNDEC Ludhiana", role: "editor", handle: null };
+const pec: Membership = { instituteId: "i2", name: "PEC Chandigarh", role: "admin", handle: null };
 const meera = { name: "Dr. Meera Iyer", email: "meera@gndec.ac.in" };
 
 /** An in-memory `InstitutesApi`: `memberships` is what the database holds for the user. */
@@ -28,7 +28,7 @@ function fakeApi(opts: { memberships?: Membership[]; joined?: Joined[]; acceptFa
     memberships: vi.fn(async () => memberships),
     admin: vi.fn(async (id: string) => (id === "i1" ? meera : { name: null, email: "me@x.in" })),
     createInstitute: vi.fn(async (name: string) => {
-      memberships = [...memberships, { instituteId: "new", name, role: "admin" }];
+      memberships = [...memberships, { instituteId: "new", name, role: "admin" as const, handle: null }];
       return "new";
     }),
   };
@@ -142,7 +142,7 @@ describe("createAndSwitch", () => {
     await startInstitutes(api, "u1", notify);
     await createAndSwitch(api, "New College", notify);
     expect(calls.createInstitute).toHaveBeenCalledWith("New College");
-    expect(currentInstitute(useInstitutes.getState())).toEqual({ instituteId: "new", name: "New College", role: "admin" });
+    expect(currentInstitute(useInstitutes.getState())).toEqual({ instituteId: "new", name: "New College", role: "admin", handle: null });
   });
 });
 

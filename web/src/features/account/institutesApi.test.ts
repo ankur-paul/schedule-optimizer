@@ -40,12 +40,12 @@ function fakeClient(responses: { data: unknown; error: unknown }[]) {
 describe("toMemberships", () => {
   it("maps rows and sorts by institute name", () => {
     const rows = [
-      { institute_id: "i2", role: "viewer" as const, institutes: { name: "PEC" } },
-      { institute_id: "i1", role: "admin" as const, institutes: { name: "GNDEC" } },
+      { institute_id: "i2", role: "viewer" as const, institutes: { name: "PEC", handle: null } },
+      { institute_id: "i1", role: "admin" as const, institutes: { name: "GNDEC", handle: "gndec" } },
     ];
     expect(toMemberships(rows)).toEqual([
-      { instituteId: "i1", name: "GNDEC", role: "admin" },
-      { instituteId: "i2", name: "PEC", role: "viewer" },
+      { instituteId: "i1", name: "GNDEC", role: "admin", handle: "gndec" },
+      { instituteId: "i2", name: "PEC", role: "viewer", handle: null },
     ]);
   });
 

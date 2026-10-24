@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DbFailure } from "@/features/account/institutesApi";
 import { initialData } from "@/store/useAppStore";
 import { toDoc } from "./online";
-import { NotEditable, onlineErrorMessage, SaveConflict, supabaseOnlineApi, toSummaries } from "./onlineApi";
+import { HandleRequired, NotEditable, onlineErrorMessage, SaveConflict, supabaseOnlineApi, toSummaries, toVersions } from "./onlineApi";
 
 /** A stand-in Supabase client, as in `institutesApi.test.ts`: each awaited query or rpc gives the next queued response. */
 function fakeClient(responses: { data: unknown; error: unknown }[]) {
@@ -75,6 +75,25 @@ describe("toSummaries", () => {
   });
 });
 
+describe("toVersions", () => {
+  it("sorts newest first and names each saver", () => {
+    expect(
+      toVersions(
+        [
+          { version: 6, saved_by: "u1", saved_at: "2026-10-23T10:00:00Z" },
+          { version: 7, saved_by: "u2", saved_at: "2026-10-24T10:42:00Z" },
+          { version: 2, saved_by: null, saved_at: "2026-10-20T10:00:00Z" },
+        ],
+        [{ user_id: "u2", name: "Meera", email: "meera@gndec.ac.in" }],
+      ),
+    ).toEqual([
+      { version: 7, savedBy: "Meera", savedAt: "2026-10-24T10:42:00Z" },
+      { version: 6, savedBy: null, savedAt: "2026-10-23T10:00:00Z" },
+      { version: 2, savedBy: null, savedAt: "2026-10-20T10:00:00Z" },
+    ]);
+  });
+});
+
 describe("supabaseOnlineApi", () => {
   it("lists without reading version data, and skips the extra queries for none", async () => {
     const { api, calls } = fakeClient([
@@ -96,8 +115,25 @@ describe("supabaseOnlineApi", () => {
       { data: { institute_id: "i1", name: "CSE", latest_version: 3 }, error: null },
       { data: { data: doc }, error: null },
     ]);
-    expect(await api.open("t1")).toEqual({ instituteId: "i1", name: "CSE", version: 3, data: doc });
+    expect(await api.open("t1")).toEqual({ instituteId: "i1", name: "CSE", version: 3, opened: 3, data: doc });
     expect(calls).toContainEqual(["eq", ["version", 3]]);
+  });
+
+  it("opens an older version with the latest as the base", async () => {
+    const { api, calls } = fakeClient([
+      { data: { institute_id: "i1", name: "CSE", latest_version: 7 }, error: null },
+      { data: { data: doc }, error: null },
+    ]);
+    expect(await api.open("t1", 5)).toEqual({ instituteId: "i1", name: "CSE", version: 7, opened: 5, data: doc });
+    expect(calls).toContainEqual(["eq", ["version", 5]]);
+  });
+
+  it("says a pruned version is no longer kept", async () => {
+    const { api } = fakeClient([
+      { data: { institute_id: "i1", name: "CSE", latest_version: 30 }, error: null },
+      { data: null, error: null },
+    ]);
+    await expect(api.open("t1", 2)).rejects.toThrow("Version 2 is no longer kept.");
   });
 
   it("says a timetable that can't be read is gone", async () => {
@@ -144,5 +180,64 @@ describe("supabaseOnlineApi", () => {
     await api.remove("t1");
     expect(calls).toContainEqual(["rpc", ["rename_timetable", { timetable_id: "t1", name: "New" }]]);
     expect(calls).toContainEqual(["rpc", ["delete_timetable", { timetable_id: "t1" }]]);
+  });
+
+  it("reads the publish status, or null for a timetable that's gone", async () => {
+    const { api } = fakeClient([{ data: { public_id: "k7f3q9xa2m", latest_version: 7, live_version: 5 }, error: null }, { data: null, error: null }]);
+    expect(await api.status("t1")).toEqual({ publicId: "k7f3q9xa2m", latestVersion: 7, liveVersion: 5 });
+    expect(await api.status("t1")).toBeNull();
+  });
+
+  it("lists versions without their data, newest first", async () => {
+    const { api, calls } = fakeClient([
+      {
+        data: [
+          { version: 1, saved_by: "u1", saved_at: "2026-10-23T10:00:00Z" },
+          { version: 2, saved_by: "u1", saved_at: "2026-10-24T10:00:00Z" },
+        ],
+        error: null,
+      },
+      { data: [{ user_id: "u1", name: "Meera", email: null }], error: null },
+    ]);
+    expect(await api.versions("t1")).toEqual([
+      { version: 2, savedBy: "Meera", savedAt: "2026-10-24T10:00:00Z" },
+      { version: 1, savedBy: "Meera", savedAt: "2026-10-23T10:00:00Z" },
+    ]);
+    expect(calls).toContainEqual(["select", ["version, saved_by, saved_at"]]);
+    expect(calls.filter(([m]) => m === "in")).toEqual([["in", ["user_id", ["u1"]]]]);
+  });
+
+  it("publishes, makes live and unpublishes through the functions", async () => {
+    const { api, calls } = fakeClient([
+      { data: null, error: null },
+      { data: null, error: null },
+    ]);
+    await api.publish("t1", 5);
+    await api.unpublish("t1");
+    expect(calls).toContainEqual(["rpc", ["publish_timetable", { timetable_id: "t1", version: 5 }]]);
+    expect(calls).toContainEqual(["rpc", ["unpublish_timetable", { timetable_id: "t1" }]]);
+  });
+
+  it("turns a missing handle into HandleRequired and keeps other refusals' words", async () => {
+    const message = "The institute needs a handle for its links. Ask the admin to set one.";
+    const noHandle = fakeClient([{ data: null, error: { code: "42501", message, hint: "handle_required" } }]);
+    const error = await noHandle.api.publish("t1", 1).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HandleRequired);
+    expect((error as Error).message).toBe(message);
+
+    const noResult = fakeClient([{ data: null, error: { code: "22023", message: "Generate the timetable before publishing it." } }]);
+    const other = await noResult.api.publish("t1", 1).catch((e: unknown) => e);
+    expect(other).not.toBeInstanceOf(HandleRequired);
+    expect((other as Error).message).toBe("Generate the timetable before publishing it.");
+  });
+
+  it("sets the handle cleaned, and passes on 'That handle is taken.'", async () => {
+    const { api, calls } = fakeClient([
+      { data: null, error: null },
+      { data: null, error: { code: "23505", message: "That handle is taken." } },
+    ]);
+    await api.setHandle("i1", "  GNDEC ");
+    expect(calls).toContainEqual(["rpc", ["set_institute_handle", { institute_id: "i1", handle: "gndec" }]]);
+    await expect(api.setHandle("i1", "pec")).rejects.toThrow("That handle is taken.");
   });
 });

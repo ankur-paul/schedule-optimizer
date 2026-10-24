@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { dbErrorMessage, personLabel, type DbError } from "@/features/account/institutes";
 import { DbFailure } from "@/features/account/institutesApi";
 import { parseConflict, type Conflict, type OnlineDoc } from "./online";
+import { cleanHandle, type VersionSummary } from "./publish";
 
 /** `save_timetable` refused a stale base: someone saved since. *Overwrite* retries with `conflict.latestVersion`. */
 export class SaveConflict extends DbFailure {
@@ -15,6 +16,9 @@ export class SaveConflict extends DbFailure {
 /** The linked timetable was deleted, or the user can no longer edit it; *Save as new timetable* still works. */
 export class NotEditable extends DbFailure {}
 
+/** `publish_timetable` refused for want of the institute's handle; the admin sets it, an editor asks the admin. */
+export class HandleRequired extends DbFailure {}
+
 /** One row of *Open from institute*. */
 export interface TimetableSummary {
   id: string;
@@ -26,12 +30,24 @@ export interface TimetableSummary {
   savedAt: string | null;
 }
 
-/** The latest version of a timetable, as downloaded. `data` is checked by `fromDoc`. */
+/**
+ * A version of a timetable, as downloaded. `version` is the latest, the base of the next save, so saving an older
+ * `opened` version restores it as a new one. `data` is checked by `fromDoc`.
+ */
 export interface OpenedTimetable {
   instituteId: string;
   name: string;
   version: number;
+  opened: number;
   data: unknown;
+}
+
+/** Where a timetable's public link stands (T29). */
+export interface PublishStatus {
+  publicId: string;
+  latestVersion: number;
+  /** The version the link shows; `null` when unpublished. */
+  liveVersion: number | null;
 }
 
 /**
@@ -40,12 +56,22 @@ export interface OpenedTimetable {
  */
 export interface OnlineApi {
   list(instituteId: string): Promise<TimetableSummary[]>;
-  open(timetableId: string): Promise<OpenedTimetable>;
+  /** The latest version, or `version` when given. */
+  open(timetableId: string, version?: number): Promise<OpenedTimetable>;
   create(instituteId: string, name: string, data: OnlineDoc): Promise<{ timetableId: string; version: number }>;
   /** The new version number. Throws `SaveConflict` for a stale base and `NotEditable` for a deleted timetable or lost access. */
   save(timetableId: string, data: OnlineDoc, baseVersion: number): Promise<number>;
   rename(timetableId: string, name: string): Promise<void>;
   remove(timetableId: string): Promise<void>;
+  /** `null` when the timetable is gone or can't be read. */
+  status(timetableId: string): Promise<PublishStatus | null>;
+  /** The kept versions, newest first. */
+  versions(timetableId: string): Promise<VersionSummary[]>;
+  /** Points the public link at `version`. Throws `HandleRequired` when the institute has no handle. */
+  publish(timetableId: string, version: number): Promise<void>;
+  unpublish(timetableId: string): Promise<void>;
+  /** Admin only. A taken handle refuses with "That handle is taken." */
+  setHandle(instituteId: string, handle: string): Promise<void>;
 }
 
 type PgError = DbError & { details?: string | null };
@@ -89,8 +115,18 @@ interface VersionRow {
   saved_at: string;
 }
 
+type ProfileRow = { user_id: string; name: string | null; email: string | null };
+
+/** The kept versions newest first, each with its saver's name (or email); a saver whose profile is gone shows as unknown. */
+export function toVersions(versions: Omit<VersionRow, "timetable_id">[], profiles: ProfileRow[]): VersionSummary[] {
+  const people = new Map(profiles.map((p) => [p.user_id, personLabel(p)]));
+  return versions
+    .map((v) => ({ version: v.version, savedBy: v.saved_by ? (people.get(v.saved_by) ?? null) : null, savedAt: v.saved_at }))
+    .sort((a, b) => b.version - a.version);
+}
+
 /** The list rows, by name, each with who saved its latest version and when (a saver whose profile is gone shows as unknown). */
-export function toSummaries(timetables: TimetableRow[], versions: VersionRow[], profiles: { user_id: string; name: string | null; email: string | null }[]): TimetableSummary[] {
+export function toSummaries(timetables: TimetableRow[], versions: VersionRow[], profiles: ProfileRow[]): TimetableSummary[] {
   const people = new Map(profiles.map((p) => [p.user_id, personLabel(p)]));
   return timetables
     .map((t) => {
@@ -108,6 +144,12 @@ export function toSummaries(timetables: TimetableRow[], versions: VersionRow[], 
 }
 
 export function supabaseOnlineApi(client: SupabaseClient): OnlineApi {
+  /** The profiles of the people who saved `versions`, for their names. */
+  const savers = async (versions: { saved_by: string | null }[]): Promise<ProfileRow[]> => {
+    const ids = [...new Set(versions.map((v) => v.saved_by).filter((id): id is string => !!id))];
+    return ids.length ? ((check(await client.from("profiles").select("user_id, name, email").in("user_id", ids)) ?? []) as ProfileRow[]) : [];
+  };
+
   return {
     async list(instituteId) {
       const timetables = (check(await client.from("timetables").select("id, name, latest_version, live_version").eq("institute_id", instituteId)) ?? []) as TimetableRow[];
@@ -116,12 +158,10 @@ export function supabaseOnlineApi(client: SupabaseClient): OnlineApi {
       const versions = (check(
         await client.from("timetable_versions").select("timetable_id, version, saved_by, saved_at").in("timetable_id", timetables.map((t) => t.id)),
       ) ?? []) as VersionRow[];
-      const savers = [...new Set(versions.map((v) => v.saved_by).filter((id): id is string => !!id))];
-      const profiles = savers.length ? (check(await client.from("profiles").select("user_id, name, email").in("user_id", savers)) ?? []) : [];
-      return toSummaries(timetables, versions, profiles as { user_id: string; name: string | null; email: string | null }[]);
+      return toSummaries(timetables, versions, await savers(versions));
     },
 
-    async open(timetableId) {
+    async open(timetableId, version) {
       const gone = "That timetable was deleted, or you're no longer a member of its institute.";
       const tt = check(await client.from("timetables").select("institute_id, name, latest_version").eq("id", timetableId).maybeSingle()) as {
         institute_id: string;
@@ -129,11 +169,12 @@ export function supabaseOnlineApi(client: SupabaseClient): OnlineApi {
         latest_version: number;
       } | null;
       if (!tt) throw new DbFailure(gone);
-      const row = check(await client.from("timetable_versions").select("data").eq("timetable_id", timetableId).eq("version", tt.latest_version).maybeSingle()) as {
+      const opened = version ?? tt.latest_version;
+      const row = check(await client.from("timetable_versions").select("data").eq("timetable_id", timetableId).eq("version", opened).maybeSingle()) as {
         data: unknown;
       } | null;
-      if (!row) throw new DbFailure(gone);
-      return { instituteId: tt.institute_id, name: tt.name, version: tt.latest_version, data: row.data };
+      if (!row) throw new DbFailure(version === undefined ? gone : `Version ${version} is no longer kept.`);
+      return { instituteId: tt.institute_id, name: tt.name, version: tt.latest_version, opened, data: row.data };
     },
 
     async create(instituteId, name, data) {
@@ -155,6 +196,37 @@ export function supabaseOnlineApi(client: SupabaseClient): OnlineApi {
 
     async remove(timetableId) {
       check(await client.rpc("delete_timetable", { timetable_id: timetableId }));
+    },
+
+    async status(timetableId) {
+      const row = check(await client.from("timetables").select("public_id, latest_version, live_version").eq("id", timetableId).maybeSingle()) as {
+        public_id: string;
+        latest_version: number;
+        live_version: number | null;
+      } | null;
+      return row && { publicId: row.public_id, latestVersion: row.latest_version, liveVersion: row.live_version };
+    },
+
+    async versions(timetableId) {
+      const rows = (check(await client.from("timetable_versions").select("version, saved_by, saved_at").eq("timetable_id", timetableId)) ?? []) as Omit<
+        VersionRow,
+        "timetable_id"
+      >[];
+      return toVersions(rows, await savers(rows));
+    },
+
+    async publish(timetableId, version) {
+      const { error } = await client.rpc("publish_timetable", { timetable_id: timetableId, version });
+      if (error?.hint === "handle_required") throw new HandleRequired(onlineErrorMessage(error));
+      check({ data: null, error });
+    },
+
+    async unpublish(timetableId) {
+      check(await client.rpc("unpublish_timetable", { timetable_id: timetableId }));
+    },
+
+    async setHandle(instituteId, handle) {
+      check(await client.rpc("set_institute_handle", { institute_id: instituteId, handle: cleanHandle(handle) }));
     },
   };
 }

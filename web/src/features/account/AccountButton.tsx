@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Building2, DoorOpen, FileText, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Shield, Trash2, Users } from "lucide-react";
+import { Building2, DoorOpen, FileText, Link2, LogIn, LogOut, Mail, MailCheck, Pencil, Plus, Shield, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabaseOnlineApi } from "@/features/online/onlineApi";
+import { HandleDialog } from "@/features/online/PublishDialogs";
 import { supabase } from "@/lib/supabase";
 import { authErrorMessage, avatarUrl, displayName, initials, looksLikeEmail, redirectUrl, withoutAuthError } from "./account";
 import { ConsentDialog } from "./ConsentDialog";
@@ -202,10 +204,11 @@ function SignInDialog({ client, open, onOpenChange }: { client: SupabaseClient; 
   );
 }
 
-type InstituteDialog = "members" | "rename" | "delete";
+type InstituteDialog = "members" | "rename" | "handle" | "delete";
 
 function AccountMenu({ client, user }: { client: SupabaseClient; user: SessionUser }) {
   const api = useMemo(() => supabaseApi(client), [client]);
+  const onlineApi = useMemo(() => supabaseOnlineApi(client), [client]);
   const userId = user.id;
   useEffect(() => {
     void startInstitutes(api, userId, notify);
@@ -261,6 +264,13 @@ function AccountMenu({ client, user }: { client: SupabaseClient; user: SessionUs
         <>
           <MembersDialog api={api} institute={active} open={dialog === "members" && active.role === "admin"} onOpenChange={(o) => setDialog(o ? "members" : null)} />
           <RenameDialog api={api} institute={active} open={dialog === "rename"} onOpenChange={(o) => setDialog(o ? "rename" : null)} />
+          <HandleDialog
+            api={onlineApi}
+            institute={active.role === "admin" ? active : null}
+            open={dialog === "handle"}
+            onOpenChange={(o) => setDialog(o ? "handle" : null)}
+            onSaved={() => refreshInstitutes(api, notify)}
+          />
           <DeleteDialog api={api} institute={active} open={dialog === "delete"} onOpenChange={(o) => setDialog(o ? "delete" : null)} />
         </>
       )}
@@ -319,6 +329,11 @@ function InstituteItems({ api, onOpen }: { api: InstitutesApi; onOpen: (dialog: 
         {items.includes("rename") && (
           <DropdownMenuItem onClick={() => onOpen("rename")}>
             <Pencil /> Rename…
+          </DropdownMenuItem>
+        )}
+        {items.includes("handle") && active && (
+          <DropdownMenuItem onClick={() => onOpen("handle")}>
+            <Link2 /> Link name{active.handle ? `: ${active.handle}` : "…"}
           </DropdownMenuItem>
         )}
         {items.includes("delete") && (

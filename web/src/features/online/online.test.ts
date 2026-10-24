@@ -138,6 +138,12 @@ describe("statusText", () => {
     expect(statusText(link, { dirty: true, role: null, instituteName: null })).toBe("CSE odd sem 2026 · GNDEC · unsaved changes");
     expect(statusText(link, { dirty: true, role: "viewer", instituteName: "GNDEC" })).toBe("CSE odd sem 2026 · GNDEC · view only");
   });
+
+  it("says published before the note", () => {
+    expect(statusText(link, { dirty: false, role: "editor", instituteName: "GNDEC", published: true })).toBe("CSE odd sem 2026 · GNDEC · published");
+    expect(statusText(link, { dirty: true, role: "editor", instituteName: "GNDEC", published: true })).toBe("CSE odd sem 2026 · GNDEC · published · unsaved changes");
+    expect(statusText(null, { dirty: false, role: null, instituteName: null, published: true })).toBe("On this device only");
+  });
 });
 
 describe("statusNote", () => {
@@ -166,14 +172,14 @@ describe("onlineMenu", () => {
   });
 
   it("linked editor and admin", () => {
-    expect(onlineMenu({ ...base, link, role: "editor" })).toEqual(["save", "saveAs", "open", "rename", "unlink"]);
-    expect(onlineMenu({ ...base, link, role: "admin" })).toEqual(["save", "saveAs", "open", "rename", "delete", "unlink"]);
+    expect(onlineMenu({ ...base, link, role: "editor" })).toEqual(["save", "saveAs", "publish", "versions", "open", "rename", "unlink"]);
+    expect(onlineMenu({ ...base, link, role: "admin" })).toEqual(["save", "saveAs", "publish", "versions", "open", "rename", "delete", "unlink"]);
   });
 
   it("linked viewer: no writes to that timetable", () => {
-    expect(onlineMenu({ ...base, link, role: "viewer", canCreate: false })).toEqual(["open", "unlink"]);
+    expect(onlineMenu({ ...base, link, role: "viewer", canCreate: false })).toEqual(["versions", "open", "unlink"]);
     // An editor elsewhere may still save a copy there.
-    expect(onlineMenu({ ...base, link, role: "viewer" })).toEqual(["saveAs", "open", "unlink"]);
+    expect(onlineMenu({ ...base, link, role: "viewer" })).toEqual(["saveAs", "versions", "open", "unlink"]);
   });
 
   it("linked without access: Save is offered and the server says why it can't", () => {
@@ -182,9 +188,9 @@ describe("onlineMenu", () => {
 });
 
 describe("names and institutes", () => {
-  const gndec: Membership = { instituteId: "i1", name: "GNDEC", role: "viewer" };
-  const pec: Membership = { instituteId: "i2", name: "PEC", role: "editor" };
-  const iit: Membership = { instituteId: "i3", name: "IIT", role: "admin" };
+  const gndec: Membership = { instituteId: "i1", name: "GNDEC", role: "viewer", handle: null };
+  const pec: Membership = { instituteId: "i2", name: "PEC", role: "editor", handle: null };
+  const iit: Membership = { instituteId: "i3", name: "IIT", role: "admin", handle: null };
 
   it("defaults the name to the print heading, else Timetable, else a copy of the linked one", () => {
     expect(defaultName("  GNDEC · Sem 5 ")).toBe("GNDEC · Sem 5");
