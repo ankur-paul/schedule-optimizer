@@ -1,5 +1,5 @@
 # T22 — Strip teacher names before solving
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** — · **Branch:** t22-solver-names
 
 ## Goal
@@ -20,6 +20,10 @@ with the teacher's ID before `POST /solve`. First ticket of v2 idea #2; see gril
   still show real teacher names in the UI (they are rendered from the local store, not the response).
 - Check that the server doesn't log request bodies (uvicorn's access log records only the path); note the result
   in the ticket. The privacy policy (T23) says the solver keeps nothing.
+  - **Checked (2026-10-24):** `server/main.py` and `solver.py` log nothing themselves. With
+    `uv run uvicorn main:app`, a `POST /solve` holding a marker teacher name, and a malformed one (422), the log has
+    only `"POST /solve HTTP/1.1" 200 OK` / `422 Unprocessable Entity` lines; the marker appears nowhere. Server
+    messages count sessions and never name anything, and the locks probe runs on the server (no second request).
 
 ## Tests
 - Vitest: the output has no teacher name anywhere (serialise and search for each name); it deep-equals the input
@@ -27,8 +31,8 @@ with the teacher's ID before `POST /solve`. First ticket of v2 idea #2; see gril
 - Vitest on the solve path: the body sent to the mocked `fetch` contains no teacher name.
 
 ## Done when
-- [ ] `/solve` requests carry teacher IDs in place of names; the UI still shows names everywhere
-- [ ] Server logging checked and noted
-- [ ] Tests above pass, full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md notes that the solver receives no names
-- [ ] Committed: `T22: strip teacher names before solving`
+- [x] `/solve` requests carry teacher IDs in place of names; the UI still shows names everywhere
+- [x] Server logging checked and noted
+- [x] Tests above pass, full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md notes that the solver receives no names
+- [x] Committed: `T22: strip teacher names before solving`
