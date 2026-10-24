@@ -1,6 +1,6 @@
-# College Timetable Generator
+# <img src="web/public/favicon.svg" width="36" alt="" align="top"> Lattice
 
-Builds a clash-free weekly class timetable for a whole college in seconds.
+A college timetable generator. Builds a clash-free weekly class timetable for a whole college in seconds.
 
 Most colleges still build the timetable by hand in a spreadsheet. It takes the coordinator days, and a single
 change (a teacher leaves, a lab moves) can cause clashes across a dozen sections. This app takes the college's

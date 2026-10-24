@@ -1,6 +1,6 @@
-# College Timetable Generator — Plan
+# Lattice — Plan
 
-A web app that generates **clash-free weekly class timetables** for any college.
+Lattice is a web app that generates **clash-free weekly class timetables** for any college.
 Built with parallel Claude Code agents. Work is split into
 tickets in [`tickets/`](tickets/README.md).
 

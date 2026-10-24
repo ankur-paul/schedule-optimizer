@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { ArrowLeft, ArrowRight, CalendarDays, Check, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { LatticeMark } from '@/components/LatticeMark'
 import { GenerateStep } from '@/features/generate/GenerateStep'
 import { DataStep } from '@/features/data/DataStep'
 import { useCollegeData } from '@/features/data/collegeData'
@@ -57,10 +58,10 @@ function App() {
         <header className="border-b bg-background print:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-4">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <CalendarDays className="size-5" />
+              <LatticeMark className="size-6" />
             </div>
             <div className="flex-1">
-              <h1 className="text-base leading-tight font-semibold">Timetable Generator</h1>
+              <h1 className="text-base leading-tight font-semibold">Lattice</h1>
               <p className="text-xs text-muted-foreground">Clash-free weekly class timetables for any college</p>
             </div>
             <Button
