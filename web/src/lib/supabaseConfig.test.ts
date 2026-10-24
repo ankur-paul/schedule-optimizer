@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { supabaseConfig } from "./supabase";
+import { supabaseConfig } from "./supabaseConfig";
 
 const URL = "https://abcd.supabase.co";
 const KEY = "anon-key";

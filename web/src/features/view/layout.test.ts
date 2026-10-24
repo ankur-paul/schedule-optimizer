@@ -11,6 +11,7 @@ import {
   placementsFor,
   sessionDetails,
   cellLabel,
+  otherLines,
   stepEntity,
   timeRange,
   unplacedFor,
@@ -234,6 +235,14 @@ describe("layoutWeek / timeRange / sessionDetails", () => {
     expect(cellLabel({ ...details, kind: "lecture", batch: null }, true)).toBe(
       "Data Structures, CSE A, Prof. Rahul Verma, CSE Lab 1, Tue P3–P4, 11:00–12:40, locked",
     );
+  });
+
+  it("names on a card whatever the view doesn't already say", () => {
+    const s = expandSessions(data).find((x) => x.id === "cse-a-ds:P1:B2")!;
+    const details = sessionDetails(data, { session: s, placement: { sessionId: s.id, day: 1, period: 3, roomId: "lab-cse1" } });
+    expect(otherLines("section", details)).toEqual(["Prof. Rahul Verma", "CSE Lab 1"]);
+    expect(otherLines("teacher", details)).toEqual(["CSE A", "CSE Lab 1"]);
+    expect(otherLines("room", details)).toEqual(["CSE A", "Prof. Rahul Verma"]);
   });
 
   it("falls back to ids for unknown references", () => {

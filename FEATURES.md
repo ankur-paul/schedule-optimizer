@@ -71,6 +71,15 @@ Changing any setting clears the current timetable and its locks, because placeme
 - **Print / PDF.** **Print** is the main button in step ④. It opens a small panel with the heading printed at the top (e.g. college and semester, saved with the data) and two choices: **This timetable** prints the current view, **All sections** prints one A4 landscape page per section. Subject colours are kept and app controls, toasts and tooltips are hidden. Use the browser's *Save as PDF* to get a file. With unplaced classes the panel warns that they won't appear on printouts.
 - **CSV.** The CSV button next to Print (with the outlined Regenerate) downloads every placement as one row: section, batch, day, periods, time, subject, kind, teacher, room. It opens cleanly in Excel.
 
+## Public timetable page
+
+- **A link anyone can open.** `<site>/<handle>/<id>` (e.g. `/gndec/k7f3q9xa2m`) shows a published timetable without signing in. The header has the institute name, the timetable name, the print heading and "Updated 24 Oct 2026" (when the live version was saved).
+- **Section, Teacher and Room views** with the same picker (search, previous, next) and grids as step ④, read-only: no locks, no dragging, no stats. Clicking a class opens its details.
+- **On a phone** (below 640 px) it shows one day at a time as a list of classes (time, periods, subject, teacher or section, room) with day tabs, opening on today, or the first day when today isn't a teaching day.
+- **Print** uses step ④'s A4 landscape layout for the current view.
+- An old link keeps working after the institute changes its handle; the address bar switches to the new one. An unknown or unpublished id says "This timetable isn't published."; without the Supabase env vars, or when the request fails, "Couldn't load this timetable. Try again later."
+- Marked `noindex` for search engines, with no analytics. The page loads none of the sign-in or account code.
+
 ## Scheduling rules
 
 Hard rules, which a valid timetable never breaks:
@@ -111,8 +120,10 @@ Soft rules, which add to the score (lower is better):
 - The Privacy Policy and Terms haven't been reviewed by a lawyer.
 - Consent covers signing in only; the wording for saving online and publishing comes with policy v2 (T31). A policy bump needs a migration row plus `POLICY_VERSION` and `POLICY_CHANGES` in `web/src/legal/policy.ts`; the app and database must agree, or no one can accept the new version.
 - Drag and drop works in the Section view only, with a mouse; there is no keyboard dragging (use *Lock here* instead).
+- The public page doesn't remember which section or teacher you picked; it opens on the first section each time. It has no *Print all sections*.
 
 ## Not built yet
 
+- Publishing from the app (T29): until then a timetable can be published only through the database functions, so the public page has nothing to show for real users yet.
 - Vercel deploy with an in-browser glpk.js solver (T14).
-- The version list, *Publish* and the public timetable page (T29, T30).
+- The version list of a saved timetable (T29).

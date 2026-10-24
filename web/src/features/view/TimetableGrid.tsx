@@ -4,7 +4,7 @@ import { Lock, LockOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Id, Settings } from "@/domain/types";
 import { subjectColor } from "./colors";
-import { cellLabel, sessionDetails, type Block, type DayLayout, type PlacedSession, type ViewData, type ViewKind } from "./layout";
+import { cellLabel, otherLines, sessionDetails, type Block, type DayLayout, type PlacedSession, type ViewData, type ViewKind } from "./layout";
 import { dragId, formatDelta, slotId, type MoveTarget } from "./moves";
 
 /** Drag-and-drop on the grid (needs a surrounding `DndContext`): cards drag, every teaching slot is a drop target. */
@@ -265,8 +265,7 @@ export function CellCardBody({ data, kind, block, locked, lockSpace = false }: {
   lockSpace?: boolean;
 }) {
   const info = sessionDetails(data, block);
-  const lines =
-    kind === "section" ? [info.teacher, info.room] : kind === "teacher" ? [info.section, info.room] : [info.section, info.teacher];
+  const lines = otherLines(kind, info);
   return (
     <>
       <span className={cn("flex w-full items-start gap-1", lockSpace && "pr-5 print:pr-0")}>
