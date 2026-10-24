@@ -64,6 +64,10 @@ step **4** to browse it.
 
 The web app looks for the server at `http://localhost:8000`; set `VITE_SOLVER_URL` to point it elsewhere.
 
+**Optional sign-in.** Without `web/.env.local` the app runs signed out, exactly as above. To turn on *Sign in*
+(Google or an email link, through Supabase), run `scripts/setup-auth.sh` once. It walks you through the Supabase
+and Google Cloud dashboards and writes `web/.env.local` (see `web/.env.example`). Restart `npm run dev` afterwards.
+
 ## How it works
 
 ```

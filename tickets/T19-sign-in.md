@@ -1,5 +1,5 @@
 # T19 — Sign-in: Supabase client, Google and email link, account menu
-**Status:** TODO
+**Status:** DONE
 **Lane:** A · **Prereqs:** — · **Branch:** t19-sign-in
 
 ## Goal
@@ -43,8 +43,8 @@ institute UI on both.
   address, sign out, and a reload keeps the session.
 
 ## Done when
-- [ ] Wizard runs end to end and leaves a working `web/.env.local`
-- [ ] Google and email-link sign-in work locally; sign-out works; session survives a reload
-- [ ] With no env vars the app is v1, with no Sign in button
-- [ ] FEATURES.md (account menu, known limits) and PROGRESS.md updated
-- [ ] Committed: `T19: sign in with Google or email link`
+- [x] Wizard runs end to end and leaves a working `web/.env.local`
+- [x] Google and email-link sign-in work locally; sign-out works; session survives a reload
+- [x] With no env vars the app is v1, with no Sign in button
+- [x] FEATURES.md (account menu, known limits) and PROGRESS.md updated
+- [x] Committed: `T19: sign in with Google or email link`
