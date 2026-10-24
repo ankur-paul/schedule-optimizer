@@ -1,6 +1,7 @@
 // The help screenshots (T33): one entry per PNG in web/public/help/. `npm run help:shots` takes them all.
 // To add one: give it a unique name, a starting state, the steps to get there and what to capture.
 import type { Id } from "../src/domain/types";
+import type { Role } from "../src/features/account/institutes";
 import type { Step } from "../src/store/useAppStore";
 
 /**
@@ -11,7 +12,7 @@ export type StartState = "sample" | "timetable";
 export const START_STATES: StartState[] = ["sample", "timetable"];
 
 /** An element on the page: by role and accessible name, by its visible text, or by CSS (optionally containing text). */
-export type Target = { role: "button" | "tab" | "heading" | "dialog" | "link"; name: string } | { text: string } | { css: string; hasText?: string };
+export type Target = { role: "button" | "tab" | "heading" | "dialog" | "link" | "menuitem"; name: string } | { text: string } | { css: string; hasText?: string };
 
 export type Action = { click: Target } | { hover: Target } | { fill: Target; value: string } | { waitFor: Target };
 
@@ -26,6 +27,12 @@ export interface Shot {
   /** Sessions to lock, at their place in the fixed timetable (`timetable` start only). */
   locks?: Id[];
   printHeading?: string;
+  /**
+   * Signed in as the member with this role of the pretend institute in help-shots.supabase.ts, optionally with the
+   * working copy linked to its saved timetable (`latest`, or `behind` a newer save so *Save online* conflicts).
+   * Without it the app runs signed out.
+   */
+  signedIn?: { as: Role; online?: "latest" | "behind" };
   actions?: Action[];
   /** The element to capture, or several: the image then covers all of them. */
   capture: Target | Target[];
@@ -67,5 +74,58 @@ export const SHOTS: Shot[] = [
     printHeading: "GNDEC Ludhiana · Semester 5, 2026",
     actions: [{ click: { role: "button", name: "Print" } }, { waitFor: { text: "Heading on printouts" } }],
     capture: [{ role: "button", name: "Print" }, { css: '[role="dialog"]', hasText: "Heading on printouts" }],
+  },
+  {
+    name: "account-menu",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "editor" },
+    actions: [{ click: { role: "button", name: "Account: Rahul Verma" } }, { waitFor: { text: "Leave institute…" } }],
+    capture: [{ role: "button", name: "Account: Rahul Verma" }, { css: '[role="menu"]' }],
+  },
+  {
+    name: "members-dialog",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "admin" },
+    actions: [
+      { click: { role: "button", name: "Account: Dr. Meera Iyer" } },
+      { click: { role: "menuitem", name: "Members…" } },
+      { waitFor: { text: "jaspreet@gndec.ac.in" } },
+    ],
+    capture: { css: '[role="dialog"]', hasText: "Members of GNDEC Ludhiana" },
+  },
+  {
+    name: "online-menu",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "editor", online: "latest" },
+    actions: [{ click: { css: '[aria-label^="Online:"]' } }, { waitFor: { text: "Open from GNDEC Ludhiana…" } }],
+    capture: [{ css: '[aria-label^="Online:"]' }, { css: '[role="menu"]' }],
+  },
+  {
+    name: "online-versions",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "editor", online: "latest" },
+    actions: [
+      { click: { css: '[aria-label^="Online:"]' } },
+      { click: { role: "menuitem", name: "Versions…" } },
+      { waitFor: { text: "Version 1 · Dr. Meera Iyer · 20 Oct, 11:05" } },
+    ],
+    capture: { css: '[role="dialog"]', hasText: "Versions of CSE odd sem 2026" },
+  },
+  {
+    name: "online-conflict",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "editor", online: "behind" },
+    actions: [{ click: { css: '[aria-label^="Online:"]' } }, { click: { role: "menuitem", name: "Save online" } }, { waitFor: { text: "Overwrite" } }],
+    capture: { css: '[role="dialog"]', hasText: "changed online" },
   },
 ];

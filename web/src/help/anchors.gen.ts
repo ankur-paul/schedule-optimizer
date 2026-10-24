@@ -5,6 +5,6 @@ export const HELP_ANCHORS = {
   data: ['excel', 'import-errors', 'rooms', 'lab-batches', 'lunch-candidates', 'data-checks'],
   generate: ['engines', 'time-limit', 'cant-be-built', 'couldnt-finish', 'partial'],
   timetable: ['score', 'locks', 'drag-and-drop', 'print'],
-  online: ['signing-in', 'institutes', 'saving-online', 'versions', 'publishing'],
-  troubleshooting: ['solver-offline', 'email-link', 'admin-only', 'import-rejected', 'short-limit'],
+  online: ['signing-in', 'institutes', 'saving-online', 'conflicts', 'versions', 'publishing', 'leaving-and-deleting'],
+  troubleshooting: ['solver-offline', 'email-link', 'admin-only', 'changed-online', 'consent', 'import-rejected', 'short-limit'],
 } as const

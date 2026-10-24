@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Mail, MailCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { LearnMore } from "@/components/LearnMore";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { helpHref } from "@/help/helpLinks";
 import { actionQuestion, pendingKey } from "./emailConfirm";
 import type { InstitutesApi } from "./institutesApi";
 import { useAccount } from "./useAccount";
@@ -63,7 +65,7 @@ function SendLinkDialog({ client }: { client: SupabaseClient }) {
             <MailCheck className="mt-0.5 size-4 shrink-0 text-primary" />
             <span>
               Check your inbox at <span className="font-medium">{sentTo}</span> and open the link within the hour. It signs you in
-              again and brings you back here to finish.
+              again and brings you back here to finish. <LearnMore href={helpHref("troubleshooting", "email-link")}>Didn't get it?</LearnMore>
             </span>
           </p>
         ) : (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Copy, ExternalLink, Radio } from "lucide-react";
 import { toast } from "sonner";
+import { LearnMore } from "@/components/LearnMore";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +11,7 @@ import { useAction } from "@/features/account/InstituteDialogs";
 import type { Membership } from "@/features/account/institutes";
 import { DbFailure } from "@/features/account/institutesApi";
 import { failureMessage, notify, useInstitutes } from "@/features/account/useInstitutes";
+import { helpHref } from "@/help/helpLinks";
 import { initialData, useAppStore } from "@/store/useAppStore";
 import { canEdit, docHash, hasUnsavedWork, roleIn } from "./online";
 import type { OnlineApi, PublishStatus } from "./onlineApi";
@@ -51,7 +53,7 @@ export function PublishedBody({ url, version }: { url: string; version: number }
         <DialogTitle>Published version {version}</DialogTitle>
         <DialogDescription>
           Anyone with this link can see the timetable without signing in; search engines don't list it. Publishing again updates what it shows,
-          and the link stays the same.
+          and the link stays the same. <LearnMore href={helpHref("online", "publishing")} />
         </DialogDescription>
       </DialogHeader>
       <LinkField url={url} />
@@ -93,7 +95,8 @@ export function AskAdminBody({ message }: { message: string }) {
       <DialogHeader>
         <DialogTitle>Your institute needs a link name</DialogTitle>
         <DialogDescription>
-          Public links start with the institute's link name, like /gndec/k7f3q9xa2m, and only the admin can set it. {message}
+          Public links start with the institute's link name, like /gndec/k7f3q9xa2m, and only the admin can set it. {message}{" "}
+          <LearnMore href={helpHref("online", "publishing")} />
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
@@ -133,7 +136,8 @@ export function HandleDialog({
               <DialogDescription>
                 {institute.handle
                   ? `Public links of ${institute.name} start with it. Links shared before keep working: the part after the name finds the timetable.`
-                  : `Public links of ${institute.name} start with it. Pick something short that students will recognise, like your college's initials.`}
+                  : `Public links of ${institute.name} start with it. Pick something short that students will recognise, like your college's initials.`}{" "}
+                <LearnMore href={helpHref("online", "publishing")} />
               </DialogDescription>
             </DialogHeader>
             <HandleForm api={api} institute={institute} onDone={() => onOpenChange(false)} onSaved={onSaved} then={then} />
@@ -350,7 +354,7 @@ export function VersionsBody({ api, timetable }: { api: OnlineApi; timetable: Ti
         <DialogTitle>Versions of {timetable.name}</DialogTitle>
         <DialogDescription>
           Each Save online adds a version; kept: the last 20, plus the live one. Open one to load it here; saving it then makes it the newest
-          version.
+          version. <LearnMore href={helpHref("online", "versions")} />
         </DialogDescription>
       </DialogHeader>
       {live !== null && status && (

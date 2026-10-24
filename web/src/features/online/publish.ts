@@ -2,8 +2,8 @@ import type { Role } from "@/features/account/institutes";
 import { publishedPath } from "@/published/path";
 import { formatWhen } from "./online";
 
-/** Words T27's `handle_problem` refuses as a handle: the site's own paths. */
-export const RESERVED_HANDLES = ["assets", "privacy", "terms", "api", "published", "admin", "login", "static", "www"];
+/** Words `handle_problem` refuses as a handle (T27, plus `help` from T32): the site's own paths. */
+export const RESERVED_HANDLES = ["assets", "privacy", "terms", "api", "published", "admin", "login", "static", "www", "help"];
 
 /** The handle as `set_institute_handle` stores it: trimmed and lower-cased. */
 export function cleanHandle(handle: string): string {

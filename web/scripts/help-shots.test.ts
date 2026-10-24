@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import timetableJson from "../../shared/fixtures/sample-timetable.json";
 import { sampleCollege } from "../src/domain/sampleCollege";
 import type { SolveResult } from "../src/domain/types";
+import { docHash, isDirty } from "../src/features/online/online";
 import { PERSIST_VERSION } from "../src/store/useAppStore";
 import { SHOTS, type Shot } from "./help-shots.config";
 import { captureTargets, persistedState, shotData, shotProblems, unionClip } from "./help-shots.lib";
+import { TIMETABLE } from "./help-shots.supabase";
 
 const timetable = timetableJson as SolveResult;
 const shot = (over: Partial<Shot> = {}): Shot => ({
@@ -92,6 +94,22 @@ describe("persistedState", () => {
     expect(saved.version).toBe(PERSIST_VERSION);
     expect(saved.state).toMatchObject({ step: 2, online: null, timeLimitSec: 20 });
     expect(saved.state.result.placements).toHaveLength(timetable.placements.length);
+  });
+
+  it("links the working copy for a signed-in shot that asks, unchanged since its save", () => {
+    const saved = JSON.parse(persistedState(shot({ signedIn: { as: "editor", online: "latest" } }), timetable));
+    expect(saved.state.online).toMatchObject({ timetableId: TIMETABLE.id, version: TIMETABLE.latest });
+    expect(isDirty(saved.state.online, docHash(saved.state))).toBe(false);
+  });
+
+  it("links one version back, with changes, for a conflict", () => {
+    const saved = JSON.parse(persistedState(shot({ signedIn: { as: "editor", online: "behind" } }), timetable));
+    expect(saved.state.online.version).toBe(TIMETABLE.latest - 1);
+    expect(isDirty(saved.state.online, docHash(saved.state))).toBe(true);
+  });
+
+  it("stays unlinked when signed in without a timetable", () => {
+    expect(JSON.parse(persistedState(shot({ signedIn: { as: "admin" } }), timetable)).state.online).toBeNull();
   });
 });
 

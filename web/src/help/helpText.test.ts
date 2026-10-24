@@ -7,6 +7,7 @@ import {
   headingId,
   helpPath,
   parseHelpPage,
+  pngSize,
   renderHelpPage,
   type HelpPageName,
   type ParsedHelpPage,
@@ -82,6 +83,42 @@ describe('parseHelpPage', () => {
     const page = parseHelpPage('data', '# D\n\n![The import dialog](/help/import.png)\n')
     expect(page.images).toEqual(['/help/import.png'])
     expect(renderHelpPage(page, pages)).toContain('<img src="/help/import.png" alt="The import dialog">')
+  })
+
+  it('gives an image its width and height when the size is known', () => {
+    const page = parseHelpPage('data', '# D\n\n![The "Import" dialog](/help/import.png)\n\n![Other](/help/other.png)\n')
+    const html = renderHelpPage(page, pages, { '/help/import.png': { width: 320, height: 180 } })
+    expect(html).toContain('<img src="/help/import.png" alt="The &quot;Import&quot; dialog" width="320" height="180">')
+    expect(html).toContain('<img src="/help/other.png" alt="Other">')
+    // Rendering again without sizes drops them: the size isn't left behind on the parsed page.
+    expect(renderHelpPage(page, pages)).toContain('alt="The &quot;Import&quot; dialog">')
+  })
+})
+
+describe('pngSize', () => {
+  const png = (width: number, height: number) => {
+    const bytes = new Uint8Array(33)
+    bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52])
+    const view = new DataView(bytes.buffer)
+    view.setUint32(16, width)
+    view.setUint32(20, height)
+    return bytes
+  }
+
+  it('reads the size from the header', () => {
+    expect(pngSize(png(1180, 1020))).toEqual({ width: 1180, height: 1020 })
+  })
+
+  it('reads a slice of a bigger buffer', () => {
+    const padded = new Uint8Array(40)
+    padded.set(png(70000, 3), 4)
+    expect(pngSize(padded.subarray(4))).toEqual({ width: 70000, height: 3 })
+  })
+
+  it("is null for anything that isn't a PNG", () => {
+    expect(pngSize(new Uint8Array(0))).toBeNull()
+    expect(pngSize(png(10, 10).subarray(0, 20))).toBeNull()
+    expect(pngSize(new TextEncoder().encode('GIF89a and some more bytes here'))).toBeNull()
   })
 })
 

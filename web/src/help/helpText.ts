@@ -25,6 +25,13 @@ export interface ParsedHelpPage {
 }
 
 type HeadingWithId = Tokens.Heading & { id?: string }
+type ImageWithSize = Tokens.Image & { size?: ImageSize }
+
+/** The size an image is shown at, in CSS pixels. */
+export interface ImageSize {
+  width: number
+  height: number
+}
 
 const EXPLICIT_ID = /\s*\{#([^}]*)\}\s*$/
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -61,8 +68,22 @@ const markdown = new Marked({
       const attr = id ? ` id="${id}"` : ''
       return `<h${token.depth}${attr}>${this.parser.parseInline(token.tokens)}</h${token.depth}>\n`
     },
+    image(token) {
+      const { size } = token as ImageWithSize
+      if (!size) return false
+      const title = token.title ? ` title="${escapeHtml(token.title)}"` : ''
+      return `<img src="${escapeHtml(token.href)}" alt="${escapeHtml(token.text)}"${title} width="${size.width}" height="${size.height}">`
+    },
   },
 })
+
+/** A PNG's pixel size from its IHDR chunk, or `null` when the bytes aren't a PNG. */
+export function pngSize(bytes: Uint8Array): ImageSize | null {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+  if (bytes.length < 24 || signature.some((b, i) => bytes[i] !== b)) return null
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+  return { width: view.getUint32(16), height: view.getUint32(20) }
+}
 
 /** Takes `{#id}` off the end of a heading, from its text and its last inline token. */
 function takeExplicitId(heading: Tokens.Heading): string | undefined {
@@ -146,11 +167,13 @@ function leadTokens(page: ParsedHelpPage): Token[] {
 
 /**
  * The page's `<main>` content. A page gets a contents list of its `##` sections after its lead text; the index gets
- * the list of pages, each with its lead and its sections. Links into /help are checked against `pages`.
+ * the list of pages, each with its lead and its sections. Links into /help are checked against `pages`. An image
+ * found in `imageSizes` gets that width and height, so it shows at that size and the page doesn't jump as it loads.
  */
-export function renderHelpPage(page: ParsedHelpPage, pages: ParsedHelpPage[]): string {
+export function renderHelpPage(page: ParsedHelpPage, pages: ParsedHelpPage[], imageSizes: Record<string, ImageSize> = {}): string {
   markdown.walkTokens(page.tokens, (token) => {
     if (token.type === 'link') checkLink(token.href, page, pages)
+    if (token.type === 'image') (token as ImageWithSize).size = imageSizes[token.href]
   })
   const titleAt = page.tokens.findIndex((t) => t.type === 'heading' && t.depth === 1)
   const lead = leadTokens(page)

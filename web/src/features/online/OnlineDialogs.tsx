@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CopyPlus, History, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { LearnMore } from "@/components/LearnMore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useAction } from "@/features/account/InstituteDialogs";
 import { deleteConfirmed, nameError, type Membership } from "@/features/account/institutes";
 import { notify } from "@/features/account/useInstitutes";
+import { helpHref } from "@/help/helpLinks";
 import { initialData, useAppStore, type OnlineLink } from "@/store/useAppStore";
 import { conflictText, defaultInstitute, defaultName, docHash, hasUnsavedWork, MAX_TIMETABLE_NAME, whenPhrase, type Conflict } from "./online";
 import type { OnlineApi, TimetableSummary } from "./onlineApi";
@@ -74,7 +76,8 @@ export function OnlineDialogs({
           <DialogHeader>
             <DialogTitle>{link ? "Save as new timetable" : "Save online"}</DialogTitle>
             <DialogDescription>
-              Uploads this working copy as a new timetable that the institute's members can open. Later saves add versions to it.
+              Uploads this working copy as a new timetable that the institute's members can open. Later saves add versions to it.{" "}
+              <LearnMore href={helpHref("online", "saving-online")} />
             </DialogDescription>
           </DialogHeader>
           {dialog?.kind === "create" && <CreateForm api={api} link={link} editable={editable} activeId={active?.instituteId ?? null} />}
@@ -91,7 +94,9 @@ export function OnlineDialogs({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Can't save to {link?.name ?? "this timetable"}</DialogTitle>
-            <DialogDescription>{dialog?.kind === "gone" ? dialog.message : null} Your working copy is unchanged.</DialogDescription>
+            <DialogDescription>{dialog?.kind === "gone" ? dialog.message : null} Your working copy is unchanged.{" "}
+              <LearnMore href={helpHref("online", "conflicts")} />
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={close}>
@@ -214,7 +219,8 @@ function ConflictBody({ api, link, conflict }: { api: OnlineApi; link: OnlineLin
           {conflictText(conflict)}{" "}
           {conflict
             ? "Overwrite saves your working copy as the newest version; theirs stays in the version list. Or save yours as a new timetable."
-            : "Save yours as a new timetable, or cancel and open theirs."}
+            : "Save yours as a new timetable, or cancel and open theirs."}{" "}
+          <LearnMore href={helpHref("online", "conflicts")} />
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
