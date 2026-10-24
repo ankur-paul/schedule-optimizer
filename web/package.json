@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "gen:golden": "tsx scripts/gen-golden.ts"
+    "gen:golden": "tsx scripts/gen-golden.ts",
+    "help:shots": "tsx scripts/help-shots.ts",
+    "gen:timetable": "tsx scripts/gen-sample-timetable.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -36,6 +38,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "marked": "18.0.14",
     "oxlint": "^1.88.0",
+    "playwright": "1.64.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",

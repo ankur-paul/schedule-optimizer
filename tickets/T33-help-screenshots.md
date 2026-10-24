@@ -1,5 +1,5 @@
 # T33 — Help screenshots script
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** — · **Branch:** t33-help-screenshots
 
 ## Goal
@@ -35,8 +35,8 @@ after a UI change the screenshots can be taken again without hand work. Plan:
 - `npm test` must not run Playwright.
 
 ## Done when
-- [ ] `npm run help:shots` writes the starter shots to `web/public/help/`, and a second run changes nothing
-- [ ] `shared/fixtures/sample-timetable.json` and how to make it again
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T33: help screenshots script`
+- [x] `npm run help:shots` writes the starter shots to `web/public/help/`, and a second run changes nothing
+- [x] `shared/fixtures/sample-timetable.json` and how to make it again
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T33: help screenshots script`
