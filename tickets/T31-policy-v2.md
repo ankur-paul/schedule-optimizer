@@ -14,6 +14,17 @@ Plan, Q20 and Q24: [`docs/discussions/2026-10-24-online-data.md`](../docs/discus
 ## Details
 - **Claude drafts, the user approves before anything is committed.** Set `BLOCKED (needs human: approve drafts)`
   while waiting.
+- **Approved 24 Oct 2026:** [`docs/policy-v2/privacy.md`](../docs/policy-v2/privacy.md) and
+  [`docs/policy-v2/terms.md`](../docs/policy-v2/terms.md), drafted before T29 from the plan. Copy them over
+  `web/src/legal/` as they are; if T29 ended up working differently from what they say (versions, publishing, the
+  public page), change only those facts and ask the user again. Decided with the approval: plain words for the
+  teacher-data paragraph (the institution decides, we process for it), not "Data Fiduciary / Data Processor"; keep
+  "We may also unpublish a timetable that breaks them"; `POLICY_EFFECTIVE_DATE` is the day T31 ships.
+- Approved `POLICY_CHANGES[2]`:
+  - "Institutes can save timetables online, including teachers' names. Every member can open them, and the last 20
+    versions are kept."
+  - "A saved timetable can be published at a link that anyone who has it can open without signing in."
+  - "When you save or publish other people's details, you confirm your institution allows it."
 - Privacy policy: what is stored online (the working copy's data, including teacher names, as versions of named
   timetables), who can see it per role, that publishing makes a version readable by anyone with the link and that
   the page asks search engines not to index it, the last 20 versions kept, that deleting a timetable or institute
@@ -30,7 +41,7 @@ Plan, Q20 and Q24: [`docs/discussions/2026-10-24-online-data.md`](../docs/discus
   after; a user who hasn't accepted v2 can't save (T27's check).
 
 ## Done when
-- [ ] Drafts approved by the user
+- [x] Drafts approved by the user
 - [ ] Migration applied; `POLICY_VERSION` 2 in the app; re-accept works
 - [ ] Tests above pass; full suite and `npx tsc -b` green
 - [ ] PROGRESS.md line; FEATURES.md updated (policy v2)
