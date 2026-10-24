@@ -147,7 +147,8 @@ Collected by the passes above (env vars, services, public URLs needed):
 - Web: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (public by design).
 - Server and tests: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (secret).
 - Google OAuth client: add the public domain to its redirect URLs and to Supabase's redirect allow-list. Publish
-  the Google consent screen (it is in Testing, so only listed test users can sign in), and set Supabase's Site URL
+  the Google consent screen (it is in Testing, so only listed test users can sign in); publishing needs the app's
+  home page and privacy policy URLs on our domain (from pass #2) in its Branding page, and set Supabase's Site URL
   to the public domain (it is `http://localhost:5173` now).
 - SMTP sender with a domain we own, so email sign-in links reach real users (the built-in one reaches only the
   project's team). Free Supabase projects pause after 7 days without traffic: resume before a demo.

@@ -252,6 +252,8 @@ step "Pick a Google Cloud project at the top, or create one (e.g. timetable-dev)
 step "If it says Google Auth Platform not configured yet, click Get started:"
 step "  App name: Timetable Generator. User support email: yours."
 step "  Audience: External. Contact email: yours. Agree, then Create."
+note "App domain (home page, privacy policy, terms) and Authorized domains: leave blank. They're"
+note "optional while the app is in Testing; Google needs them only to publish (deploy pass)."
 note "Already set up? Nothing to do here."
 pause "Press Enter when the consent screen exists."
 
