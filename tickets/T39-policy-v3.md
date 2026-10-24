@@ -19,7 +19,7 @@ accepts it again before the panel (T40) can send anything. Plan, Privacy and Q13
 - **Privacy policy:**
   - The assistant is optional and only for institutes with access.
   - What goes to Anthropic (a US company, processing in the US): the user's questions with teacher names replaced
-    by IDs, and the timetable details the assistant looks up. Section, room and course names are sent as they are.
+    by codes, and the timetable details the assistant looks up. Section, room and course names are sent as they are.
   - That we don't store chats; they stay in the browser tab.
   - How long Anthropic keeps API data, and that it doesn't train on it. Check Anthropic's current commercial terms
     and data retention page while drafting, and cite what you read in the ticket.
@@ -30,7 +30,7 @@ accepts it again before the panel (T40) can send anything. Plan, Privacy and Q13
 - **Terms:** the assistant can be wrong, so check its answers. Coupons are a free trial, can be withdrawn, and have
   no cash value. Don't paste other people's personal details into questions.
 - **`POLICY_CHANGES[3]`:** two or three short lines for the re-accept dialog, e.g. "The optional assistant sends
-  your questions and the timetable details it looks up to Anthropic in the US. Teachers' names are replaced by IDs
+  your questions and the timetable details it looks up to Anthropic in the US. Teachers' names are replaced by codes
   first, and we don't store your chats."
 - **Ship together:** the app and the database must agree on the version, so the migration and `policy.ts` go in one
   commit and the migration is pushed before the web change is used (as in T31).

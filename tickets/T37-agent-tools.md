@@ -1,5 +1,5 @@
 # T37 — Assistant tools and name masking
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** — · **Branch:** t37-agent-tools
 
 ## Goal
@@ -40,13 +40,17 @@ Q26).
   the query.
 - **Masking.**
   - **What gets masked:** teacher names are the only personal data (as in `withoutPersonalData`).
-    - `maskText(text, teachers)`: every teacher name the user typed becomes its id. It matches whole words,
+    - **Codes, not ids** (decided while building): a teacher imported from Excel has an id that is a slug of the
+      name (`dr-anita-sharma`), so the model sees a code per teacher instead, e.g. `T-K3X9Q`, from a hash of the id.
+      It stays the same for the whole chat while teachers are added, removed or reordered (`teacherCodes`).
+    - `maskText(text, teachers)`: every teacher name or id the user typed becomes its code. It matches whole words,
       ignores case, and tries longer names first, so "Ravi Kumar" wins over "Ravi".
-    - Tool results carry ids only.
-  - **What gets unmasked:** `unmaskText(text, teachers)` turns ids in the model's answer back into names for
-    display. It matches whole tokens only, so an id such as `T1` doesn't change `T10`.
+    - Tool results carry codes only: each tool runs on a copy of the data whose teacher ids and names are codes
+      (`maskTeachers`), so messages reused from data checks, causes and the validator can't name anyone.
+  - **What gets unmasked:** `unmaskText(text, teachers)` turns codes in the model's answer back into names for
+    display. It matches whole tokens only, so one code never changes a longer token.
   - Section, room and course names are not personal and are sent as they are.
-  - **Known limit:** a misspelt teacher name isn't caught. FEATURES.md notes it in T40.
+  - **Known limit:** a misspelt or partial teacher name ("Sharma" for "Dr. Anita Sharma") isn't caught. FEATURES.md notes it in T40.
 - **Help anchors.** Tool results name anchors through the same typed list as `helpHref`, so the link test covers
   them.
 
@@ -63,7 +67,7 @@ Q26).
   result on the sample college.
 
 ## Done when
-- [ ] `shared/agent-tools.json`, `tools.ts` and `mask.ts` with the behaviour above
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T37: assistant tools and name masking`
+- [x] `shared/agent-tools.json`, `tools.ts` and `mask.ts` with the behaviour above
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T37: assistant tools and name masking`
