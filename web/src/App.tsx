@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AccountButton } from '@/features/account/AccountButton'
 import { LatticeMark } from '@/components/LatticeMark'
+import { OnlineStatus } from '@/features/online/OnlineStatus'
 import { GenerateStep } from '@/features/generate/GenerateStep'
 import { DataStep } from '@/features/data/DataStep'
 import { useCollegeData } from '@/features/data/collegeData'
@@ -74,6 +75,7 @@ function App() {
             >
               <RotateCcw /> Start over
             </Button>
+            <OnlineStatus />
             <AccountButton />
           </div>
           <Stepper step={step} onSelect={setStep} />

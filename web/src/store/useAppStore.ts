@@ -22,7 +22,25 @@ export interface AppData {
   printHeading: string;
 }
 
+/** What an online version holds (T28): the data, locks, result and print heading. Step and time limit stay on the device. */
+export type WorkingCopy = Omit<AppData, "step" | "timeLimitSec">;
+
+/** The online timetable the working copy is linked to (T28). */
+export interface OnlineLink {
+  instituteId: string;
+  /** The institute's name when linked, shown while signed out (the memberships aren't loaded then). */
+  instituteName: string;
+  timetableId: string;
+  name: string;
+  /** The version saved or opened last: the base of the next save's version check. */
+  version: number;
+  /** `docHash` of the working copy at that save or open; the copy has unsaved changes when its hash differs. */
+  savedHash: string;
+}
+
 export interface AppState extends AppData {
+  /** `null`: on this device only. Kept apart from `AppData`, which is what a solve or a version is built from. */
+  online: OnlineLink | null;
   /** Placements refer to day/period indexes, so changing settings drops the result and locks. */
   setSettings: (settings: Settings) => void;
   setDepartments: (departments: Department[]) => void;
@@ -39,11 +57,14 @@ export interface AppState extends AppData {
   setData: (data: Pick<AppData, "departments" | "teachers" | "rooms" | "sections" | "courses">) => void;
   /** Replace all data with the demo college (keeps the current step). */
   loadSample: () => void;
-  /** Back to an empty college and a Mon–Fri week with no periods, on step ①. */
+  setOnline: (online: OnlineLink | null) => void;
+  /** Replace the working copy with an opened online version and link to it (keeps the step and time limit). */
+  loadOnline: (data: WorkingCopy, online: OnlineLink) => void;
+  /** Back to an empty college and a Mon–Fri week with no periods, on step ①, on this device only (drops the link). */
   reset: () => void;
 }
 
-const initialData = (): AppData => ({
+export const initialData = (): AppData => ({
   settings: { days: ["Mon", "Tue", "Wed", "Thu", "Fri"], periods: [], lunchCandidates: [] },
   departments: [],
   teachers: [],
@@ -82,13 +103,14 @@ const safeStorage: StateStorage = {
   },
 };
 
-/** 1: `engineMode` removed (T18, exact solver only). */
-export const PERSIST_VERSION = 1;
+/** 1: `engineMode` removed (T18, exact solver only). 2: `online` link added (T28). */
+export const PERSIST_VERSION = 2;
 
 /** Upgrade state saved by an older version of the app. */
 export function migrateState(persisted: unknown, version: number): AppState {
   const state = { ...(persisted as Record<string, unknown>) };
   if (version < 1) delete state.engineMode;
+  if (version < 2) state.online = null;
   return state as unknown as AppState;
 }
 
@@ -96,6 +118,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       ...initialData(),
+      online: null,
       setSettings: (settings) => set({ settings, result: null, locks: [] }),
       setDepartments: (departments) => set({ departments }),
       setTeachers: (teachers) => set({ teachers }),
@@ -122,7 +145,9 @@ export const useAppStore = create<AppState>()(
           locks: [],
         });
       },
-      reset: () => set(initialData()),
+      setOnline: (online) => set({ online }),
+      loadOnline: (data, online) => set({ ...data, online }),
+      reset: () => set({ ...initialData(), online: null }),
     }),
     {
       name: "timetable-v1",
