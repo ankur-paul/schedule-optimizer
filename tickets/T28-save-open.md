@@ -1,5 +1,5 @@
 # T28 — Save online and open from institute
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T27 · **Branch:** t28-save-open
 
 ## Goal
@@ -55,9 +55,9 @@ Rename (editors and admin) and Delete (admin, type the name). Deleting the linke
   choice), as a viewer (no write actions), signed out (status line stays).
 
 ## Done when
-- [ ] Save online, Save as new, Open, Rename and Delete work against the dev project
-- [ ] A stale save shows the conflict dialog and never overwrites silently
-- [ ] Viewers can't write online; signed out works as before
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated (online timetables, the known limits)
-- [ ] Committed: `T28: save online and open from institute`
+- [x] Save online, Save as new, Open, Rename and Delete work against the dev project
+- [x] A stale save shows the conflict dialog and never overwrites silently
+- [x] Viewers can't write online; signed out works as before
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md updated (online timetables, the known limits)
+- [x] Committed: `T28: save online and open from institute`

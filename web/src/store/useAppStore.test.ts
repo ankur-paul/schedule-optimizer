@@ -33,8 +33,12 @@ describe("printHeading", () => {
 describe("migrateState", () => {
   it("drops engineMode from state saved before version 1, keeping the rest", () => {
     const old = { engineMode: "auto", timeLimitSec: 30, printHeading: "X" };
-    expect(migrateState(old, 0)).toEqual({ timeLimitSec: 30, printHeading: "X" });
+    expect(migrateState(old, 0)).toEqual({ timeLimitSec: 30, printHeading: "X", online: null });
     expect(old).toHaveProperty("engineMode"); // input not mutated
+  });
+
+  it("adds an empty online link to state saved by version 1", () => {
+    expect(migrateState({ timeLimitSec: 30, printHeading: "X" }, 1)).toEqual({ timeLimitSec: 30, printHeading: "X", online: null });
   });
 
   it("leaves current state alone", () => {

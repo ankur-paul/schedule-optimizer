@@ -24,7 +24,7 @@ function RoleSelect({ value, onChange, label, disabled }: { value: InviteRole; o
 }
 
 /** Runs a database action with a busy flag; a refusal becomes a toast in plain words. Returns whether it worked. */
-function useAction() {
+export function useAction() {
   const [busy, setBusy] = useState(false);
   const run = async (action: () => Promise<void>): Promise<boolean> => {
     setBusy(true);
