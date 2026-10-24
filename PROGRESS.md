@@ -55,6 +55,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T18] Step ④: Regenerate is exact-only (*Regenerate as quick draft* while offline); a failed Regenerate keeps the timetable and toasts "Can't be built with these locks." with *See why →*, plus a red *Clear all locks* line while it stands; amber partial banner and badge; Print panel warns that unplaced classes won't print (step ④ after a partial timetable)
 - [T12] Ticket closed without the 5-minute user test (owner's call); all other T12 items were done earlier (`python3 tickets/board.py` shows T12 DONE)
 - [T19] Optional sign-in with Supabase: header *Sign in* dialog (Continue with Google, Email me a sign-in link), avatar menu with name and *Sign out*, session kept across reloads, expired-link toast; no button and v1 behaviour without `web/.env.local`; setup wizard `scripts/setup-auth.sh` (run the wizard, then `cd web && npm run dev`; logic in `lib/supabase.ts`, `features/account/account.ts`, `useAccount.ts`)
+- [T19] Clicked through against the real Supabase dev project: Google sign-in, email link, sign-out, session kept across a reload, app data untouched (`scripts/setup-auth.sh`, then `cd web && npm run dev`)
 
 ## Known issues / cuts
 
@@ -72,3 +73,4 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T12] Cancelling a CP-SAT run only stops the browser waiting: the server keeps solving until its time limit, and its answer is ignored.
 - [T18] Step ③'s failure card stays until the next run, even after the data is fixed. The server reports "no solution in time" as `status: "error"`, so the client spots a timeout by its message ("found no solution in"). Dragging an unplaced class in from a partial timetable was not clicked through for T18 (the over-booked test data had no free slot); the drag code is T13's, unchanged.
 - [T12] No user test was run: nobody new has tried the app without instructions, so first-use confusion is untested.
+- [T19] Only port 5173 was clicked through with the real Supabase project; the `http://localhost:*/**` redirect entry for other Vite ports is untested (a miss lands on the Site URL, http://localhost:5173). Email links reach only the Supabase team, 2 an hour; Google sign-in only listed test users.
