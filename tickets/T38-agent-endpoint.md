@@ -36,7 +36,7 @@ call and records what it cost. It stays stateless; the browser (T40) drives the 
     content: a `refusal` returns a polite "I can't help with that" block.
   - **System prompt:** fixed instructions, then the full help text, marked for caching.
     - Instructions: answer about Lattice and the user's timetables only; use the tools for anything about their
-      data; teachers appear as ids; link help as `/help/<page>#<anchor>`; reply in the user's language; be short.
+      data; teachers appear as codes such as `T-K3X9Q` (T37), which the panel shows as names; link help as `/help/<page>#<anchor>`; reply in the user's language; be short.
     - Help text: `web/src/help/*.md` with image lines dropped. Read once at startup from `AGENT_HELP_DIR` (default:
       the repo's `web/src/help`) in a fixed order, so the cached prefix doesn't change between requests.
   - **Tools:** `shared/agent-tools.json` (T37), loaded at startup. The client never sends tools or a system prompt.

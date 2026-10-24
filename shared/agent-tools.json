@@ -1,0 +1,79 @@
+[
+  {
+    "name": "overview",
+    "description": "Counts of sections, teachers, rooms, courses and classes; whether a timetable exists (not generated, built, partial with unplaced classes, can't be built, couldn't finish); its score in total and per soft rule (S1-S4); and the number of locked classes. Start here.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "schedule",
+    "description": "The week of one section, teacher or room as days x periods. Each busy cell lists the course, section (and batch), teacher id, room and whether it is locked. Breaks and lunch-candidate periods are marked. Use find first if you don't know the id.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["section", "teacher", "room"] },
+        "id": { "type": "string", "description": "The section, teacher or room id, e.g. from find." }
+      },
+      "required": ["kind", "id"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "free_periods",
+    "description": "The free teaching periods of one section, teacher or room in the generated timetable, per day, with lunch candidates marked. Teachers have no availability data, so free means not teaching in this timetable.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["section", "teacher", "room"] },
+        "id": { "type": "string" },
+        "day": { "type": "string", "description": "Optional day name as set up in step 1, e.g. Tue. Leave out for the whole week." }
+      },
+      "required": ["kind", "id"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "problems",
+    "description": "Everything wrong right now: data checks (errors block Next in step 2, warnings may leave classes unplaced), unplaced classes grouped by cause, and the causes of the last 'Can't be built' result with their fixes. Each entry has a help link.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "score_details",
+    "description": "Where each soft-rule penalty in the score comes from: rule, section or teacher, day, periods and points. S1 same subject twice a day, S2 teacher more than 3 periods in a row, S3 idle periods in a section's day, S4 a batch idle during another batch's lab. Leave out rule for all four.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "rule": { "type": "string", "enum": ["S1", "S2", "S3", "S4"] }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "find",
+    "description": "Sections, rooms, courses and teachers whose name or id contains the text, ignoring case (at most 20). Teachers match by id only. Use it to get the id that schedule and free_periods need.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" }
+      },
+      "required": ["text"],
+      "additionalProperties": false
+    }
+  }
+]
