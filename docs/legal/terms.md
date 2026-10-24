@@ -39,8 +39,8 @@ We may suspend or delete accounts that break these terms, and we'll tell you fir
 ## Changes and ending
 
 We may change or stop Lattice. If we stop it, we'll give signed-in users notice so they can save their timetables.
-When these terms change, we publish a new version and ask you to accept it. You can stop using Lattice and delete
-your account at any time.
+When these terms change, we publish a new version and ask you to accept it. You can stop using Lattice and ask us
+to delete your account at any time.
 
 ## Law
 

@@ -41,7 +41,7 @@ don't sell it or use it for ads.
 ### Invites
 
 When an admin invites you, we store your email address before you have signed up. We don't email you; the admin
-tells you to sign in. An unused invite is deleted after 30 days, or sooner if the admin cancels it.
+tells you to sign in. An unused invite stays until it's used or the admin cancels it.
 
 ## Where your data is kept
 
@@ -62,8 +62,8 @@ tracking cookies and no analytics.
 
 ## How long we keep it
 
-- Your account and memberships: until you delete your account.
-- Invites: until they're used or cancelled, and never more than 30 days.
+- Your account and memberships: until you ask us to delete your account.
+- Invites: until they're used or cancelled.
 - Deleting is immediate. [check: Supabase backup retention on our plan, e.g. "Copies in our database host's
   backups are erased within 7 days." or "Our database host keeps no backups."]
 
@@ -71,8 +71,8 @@ tracking cookies and no analytics.
 
 You can:
 
-- delete your account from the account menu (*Delete account…*). An institute's admin must first make someone
-  else admin or delete the institute. Deleting your account also withdraws your consent;
+- ask us to delete your account by writing to {{CONTACT_EMAIL}}. We do it within 30 days. An institute's admin
+  must first make someone else admin or delete the institute. Deleting your account also withdraws your consent;
 - ask for a summary of the personal data we hold about you, and who we've shared it with, by writing to
   {{CONTACT_EMAIL}};
 - correct your data. Your name comes from your Google account: change it there and Lattice picks it up the next

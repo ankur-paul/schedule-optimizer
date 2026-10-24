@@ -17,7 +17,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | # | Idea | Status | Needs |
 |---|---|---|---|
 | 1 | [Authentication and roles](#1-authentication-and-roles) | built: T19–T21 | — |
-| 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | planned: T22–T25 | 1 |
+| 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | planned: T22–T24 | 1 |
 | 3 | [Store institute data online](#3-store-institute-data-online) | idea | 1, 2 |
 | 4 | [Help page](#4-help-page) | idea | — (best after the UI settles) |
 | 5 | [AI agent](#5-ai-agent) | idea | 1, 3, 4 |
@@ -76,13 +76,14 @@ Summary:
 - **Signing in:** the sign-in dialog has a required checkbox, and each acceptance is recorded with the policy
   version.
 - **Policy changes:** a version bump makes signed-in users accept again.
-- **Deletion:** self-serve account deletion; an admin hands over first. Invites expire after 30 days.
+- **Deletion:** on request by email, done by hand within 30 days; an admin hands over first. Invites stay
+  until used or cancelled. (Self-serve deletion and invite expiry, T25, were dropped on 24 Oct.)
 - **Pages:** static `/privacy` and `/terms`. The policy names Ankur Paul as the operator, with a
   `privacy@<domain>` contact.
 - **Export:** waits for #3.
 
 The policy describes only what exists, so every later pass that adds a purpose bumps it. Drafts are in
-`legal/`. Tickets T22–T25.
+`legal/`. Tickets T22–T24.
 
 ## 3. Store institute data online
 

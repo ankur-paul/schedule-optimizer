@@ -36,8 +36,7 @@ Web:
   - otherwise (older pending, none, or signed in on another device from an email link): a blocking dialog with no
     close button, and Esc and outside clicks do nothing. Title "Before you continue" (never accepted) or "We've
     updated our Terms and Privacy Policy" (accepted an older one), the `POLICY_CHANGES` lines for the versions in
-    between, links to both pages, and the buttons *Accept* and *Sign out*. If T25 is merged, add a *Delete my
-    account* link.
+    between, links to both pages, and the buttons *Accept* and *Sign out*.
   - A failed read or record shows a toast and keeps the dialog. Never let the user through unrecorded.
 - Clear `lattice.pendingConsent` on sign-out, and ignore a malformed value.
 - Account menu: *Privacy* and *Terms* links.

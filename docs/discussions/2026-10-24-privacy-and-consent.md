@@ -129,3 +129,9 @@ T24 and T25 wait for T21 because they edit the same account menu and sign-in cod
 - **Q11 The policy describes only what exists.** Each later pass bumps the version, so users re-accept for real
   changes. Rejected: a future-proof policy full of "we may" clauses.
 - **Q12 Claude drafts, the user reviews.** No legal review yet; noted as a known issue before #6.
+
+## Later change (24 Oct): T25 dropped
+
+T25 (self-serve account deletion and 30-day invite expiry) is dropped, reversing Q7 and Q9. Users ask by email
+and we delete the account by hand within 30 days; an admin still hands over first. Invites stay until used or
+cancelled. `docs/legal/privacy.md` and `terms.md` were changed to match before T23 publishes them.
