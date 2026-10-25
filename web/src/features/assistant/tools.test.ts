@@ -123,7 +123,7 @@ describe("schedule", () => {
     const lock = timetable.placements.find((p) => p.sessionId === "cse-a-ds:P1:B1")!;
     const out = run("schedule", { kind: "section", id: "cse-a" }, { ...base, locks: [lock] });
     const entries = out.days[lock.day].cells[lock.period];
-    expect([entries].flat()).toContainEqual(expect.objectContaining({ course: "Data Structures", batch: 1, lab: true, locked: true }));
+    expect([entries].flat()).toContainEqual(expect.objectContaining({ session: "cse-a-ds:P1:B1", course: "Data Structures", batch: 1, lab: true, locked: true }));
   });
 
   it("finds sections and rooms by name too, but teachers only by code", () => {
@@ -184,8 +184,12 @@ describe("problems", () => {
   it("groups unplaced classes by cause with help links, masking the solver's words", () => {
     const out = run("problems", {}, partial);
     expect(out.unplaced).toEqual([
-      { cause: "Teacher already busy", help: "/help/generate#teacher-busy", classes: ["CSE A Data Structures"] },
-      { cause: "Other reasons", help: "/help/generate#other-reasons", classes: [`CSE A Operating Systems: ${code("t-c1")} (${code("t-c1")}) had no free slot`] },
+      { cause: "Teacher already busy", help: "/help/generate#teacher-busy", classes: [{ session: dropA, name: "CSE A Data Structures" }] },
+      {
+        cause: "Other reasons",
+        help: "/help/generate#other-reasons",
+        classes: [{ session: dropB, name: "CSE A Operating Systems", reason: `${code("t-c1")} (${code("t-c1")}) had no free slot` }],
+      },
     ]);
   });
 

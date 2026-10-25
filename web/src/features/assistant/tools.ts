@@ -144,7 +144,7 @@ export function schedule(data: ToolData, input: { kind: EntityKind; id: string }
     name: found.name,
     periods: settings.periods.map((p) => ({ p: p.label, time: time(p), ...(p.kind === "break" && { break: true }), ...(lunch.has(p.id) && { lunch: true }) })),
     days: settings.days.map((day, d) => ({ day, cells: settings.periods.map((p) => (p.kind === "break" ? null : cell(week[d][p.id]))) })),
-    note: "cells[i] is periods[i]; null is free. A lab fills each period it covers. Teachers are codes.",
+    note: "cells[i] is periods[i]; null is free. A lab fills each period it covers. Teachers are codes. session is the class id that propose_changes takes.",
   };
 }
 
@@ -154,6 +154,7 @@ function cellEntry(ctx: Context, kind: EntityKind, { session, placement }: Place
   const section = ctx.clean.sections.find((s) => s.id === session.sectionId);
   const room = ctx.clean.rooms.find((r) => r.id === placement.roomId);
   return {
+    session: session.id,
     course: course?.subject ?? session.courseId,
     ...(kind !== "section" && { section: section?.name ?? session.sectionId }),
     ...(session.batch != null && { batch: session.batch }),
@@ -216,7 +217,11 @@ export function problems(data: ToolData): Result {
         cause: g.label,
         help: unplacedHelpHref(g.cause),
         // "Other reasons" has only the solver's words, which may name a teacher.
-        classes: g.items.map((u) => (g.cause === "other" ? `${label(u.sessionId)}: ${maskText(u.reason, ctx.teachers)}` : label(u.sessionId))),
+        classes: g.items.map((u) => ({
+          session: u.sessionId,
+          name: label(u.sessionId),
+          ...(g.cause === "other" && { reason: maskText(u.reason, ctx.teachers) }),
+        })),
       }));
     }
     const { violations } = validate(ctx.clean, result.placements);

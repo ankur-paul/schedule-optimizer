@@ -12,7 +12,7 @@
   },
   {
     "name": "schedule",
-    "description": "The week of one section, teacher or room as days x periods. Each busy cell lists the course, section (and batch), teacher id, room and whether it is locked. Breaks and lunch-candidate periods are marked. Use find first if you don't know the id.",
+    "description": "The week of one section, teacher or room as days x periods. Each busy cell lists the class id (session), course, section (and batch), teacher id, room and whether it is locked. Breaks and lunch-candidate periods are marked. Use find first if you don't know the id.",
     "strict": true,
     "input_schema": {
       "type": "object",
@@ -41,7 +41,7 @@
   },
   {
     "name": "problems",
-    "description": "Everything wrong right now: data checks (errors block Next in step 2, warnings may leave classes unplaced), unplaced classes grouped by cause, and the causes of the last 'Can't be built' result with their fixes. Each entry has a help link.",
+    "description": "Everything wrong right now: data checks (errors block Next in step 2, warnings may leave classes unplaced), unplaced classes (with their ids) grouped by cause, and the causes of the last 'Can't be built' result with their fixes. Each entry has a help link.",
     "strict": true,
     "input_schema": {
       "type": "object",
