@@ -34,20 +34,20 @@ export function trialMailto(to: string, institute: RequestingInstitute): string 
 }
 
 /**
- * The same email as a Gmail compose window. `account` (the signed-in email) is Gmail's `authuser`, so it opens in
- * that account when several are signed in.
+ * The same email as a Gmail compose window. `account` (the signed-in email) goes in the path, `/mail/u/<email>/`,
+ * so Gmail opens it in that account when several are signed in; without it, the first one (`/u/0/`). `tf=cm` opens
+ * the compose window; the older `view=cm&fs=1` no longer does.
  */
 export function trialGmailUrl(to: string, institute: RequestingInstitute, account?: string): string {
   const params: [string, string][] = [
-    ["view", "cm"],
-    ["fs", "1"],
     ["to", to],
     ["su", TRIAL_SUBJECT],
     ["body", trialBody(institute)],
+    ["tf", "cm"],
   ];
-  if (account) params.push(["authuser", account]);
   // encodeURIComponent, as for the mailto: Gmail shows a "+" from URLSearchParams as a plus.
-  return `https://mail.google.com/mail/?${params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&")}`;
+  const query = params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
+  return `https://mail.google.com/mail/u/${account ? encodeURIComponent(account) : "0"}/?${query}`;
 }
 
 /** The dialog's copy rows: the same email in three parts, to paste into any email. */

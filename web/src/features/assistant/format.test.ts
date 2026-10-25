@@ -48,9 +48,8 @@ describe("trialGmailUrl", () => {
 
   it("opens a filled Gmail compose window", () => {
     const url = new URL(trialGmailUrl("ops+lattice@example.org", institute));
-    expect(url.origin + url.pathname).toBe("https://mail.google.com/mail/");
-    expect(url.searchParams.get("view")).toBe("cm");
-    expect(url.searchParams.get("fs")).toBe("1");
+    expect(url.origin).toBe("https://mail.google.com");
+    expect(url.searchParams.get("tf")).toBe("cm");
     expect(url.searchParams.get("to")).toBe("ops+lattice@example.org");
     expect(url.searchParams.get("su")).toBe("Lattice assistant trial");
     expect(url.searchParams.get("body")).toBe("Institute: GNDEC & Co\nHandle: gndec\n\nWhat will you use it for?\n");
@@ -69,10 +68,16 @@ describe("trialGmailUrl", () => {
     expect(url.searchParams.get("body")).toBe('Institute: Tom\'s "Institute" #1?\nHandle: (not set)\n\nWhat will you use it for?\n');
   });
 
-  it("picks the signed-in account only when one is given", () => {
-    expect(new URL(trialGmailUrl("a@b.org", institute)).searchParams.has("authuser")).toBe(false);
-    expect(new URL(trialGmailUrl("a@b.org", institute, "")).searchParams.has("authuser")).toBe(false);
-    expect(new URL(trialGmailUrl("a@b.org", institute, "asha+x@gndec.ac.in")).searchParams.get("authuser")).toBe("asha+x@gndec.ac.in");
+  it("opens in the signed-in account, else the first one", () => {
+    expect(new URL(trialGmailUrl("a@b.org", institute)).pathname).toBe("/mail/u/0/");
+    expect(new URL(trialGmailUrl("a@b.org", institute, "")).pathname).toBe("/mail/u/0/");
+    const url = new URL(trialGmailUrl("a@b.org", institute, "asha+x@gndec.ac.in"));
+    expect(decodeURIComponent(url.pathname)).toBe("/mail/u/asha+x@gndec.ac.in/");
+    expect([...url.searchParams.keys()]).toEqual(["to", "su", "body", "tf"]);
+  });
+
+  it("keeps an odd account name inside its path segment", () => {
+    expect(new URL(trialGmailUrl("a@b.org", institute, "x/../y?z#w")).pathname).toBe("/mail/u/x%2F..%2Fy%3Fz%23w/");
   });
 });
 
