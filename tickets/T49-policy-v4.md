@@ -1,5 +1,5 @@
 # T49 — Privacy policy and Terms v4
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** D · **Prereqs:** — · **Branch:** t49-policy-v4
 
 ## Goal
@@ -59,6 +59,9 @@ Plan, *Privacy policy v4* and Q15:
     deletes the logs after 14 days."
 - **Approved 25 Oct 2026** as drafted, with both `POLICY_CHANGES[4]` lines. The migration was pushed to dev by the
   user (the auto-mode check refused `db push`).
+- **Clicked through** on the dev project with a throwaway admin who had accepted only v3 (session put into
+  localStorage, as in T44; deleted afterwards): the *We've updated* dialog listed both v4 lines, *Accept* closed
+  it, and *Save online* then saved to the institute. `/privacy` shows Version 4 with the new links.
 
 ## Tests
 - `legalText.test.ts` and the consent tests pass with version 4.
@@ -68,6 +71,6 @@ Plan, *Privacy policy v4* and Q15:
 ## Done when
 - [x] Drafts approved by the user
 - [x] Policy, terms, `policy.ts` and the migration committed together; the migration pushed to dev
-- [ ] Tests above pass; full suite and `npx tsc -b` green
+- [x] Tests above pass; full suite and `npx tsc -b` green
 - [x] FEATURES.md (if the privacy bullet names the providers), PROGRESS.md line
-- [ ] Committed: `T49: policy v4`
+- [x] Committed: `T49: policy v4`
