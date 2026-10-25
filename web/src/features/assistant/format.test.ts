@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowanceLine, answerBlocks, askAdminLine, inlineParts, safeHref, toolLabel, trialMailto } from "./format";
+import { allowanceLine, answerBlocks, askAdminLine, inlineParts, safeHref, toolLabel, trialMailto, trialRequestText } from "./format";
 import { teacherCodes } from "./mask";
 
 const now = new Date("2026-10-25T12:00:00Z");
@@ -40,6 +40,24 @@ describe("trialMailto", () => {
     const url = new URL(trialMailto("a@b.org", { name: "Tom's \"Institute\" #1?", handle: null }));
     expect(url.searchParams.get("subject")).toBe("Lattice assistant trial");
     expect(url.searchParams.get("body")).toBe('Institute: Tom\'s "Institute" #1?\nHandle: (not set)\n\nWhat will you use it for?\n');
+  });
+});
+
+describe("trialRequestText", () => {
+  it("has the address, subject and the mailto's body, unencoded", () => {
+    expect(trialRequestText("ops+lattice@example.org", { name: "GNDEC & Co", handle: "gndec" })).toBe(
+      "To: ops+lattice@example.org\nSubject: Lattice assistant trial\n\nInstitute: GNDEC & Co\nHandle: gndec\n\nWhat will you use it for?\n",
+    );
+  });
+
+  it("says when the link name isn't set", () => {
+    expect(trialRequestText("a@b.org", { name: "Tom's \"Institute\" #1?", handle: null })).toContain('Institute: Tom\'s "Institute" #1?\nHandle: (not set)\n');
+  });
+
+  it("matches the body the mailto sends", () => {
+    const institute = { name: "Punjab Engg", handle: "pec" };
+    const body = new URL(trialMailto("a@b.org", institute)).searchParams.get("body")!;
+    expect(trialRequestText("a@b.org", institute).split("\n\n").slice(1).join("\n\n")).toBe(body);
   });
 });
 

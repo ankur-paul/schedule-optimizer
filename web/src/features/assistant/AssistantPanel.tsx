@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { postAgent, supabaseAssistantApi, type AssistantApi } from "./agentClient";
 import { askText, type AskCard } from "./askAbout";
-import { allowanceLine, answerBlocks, askAdminLine, trialMailto, type Inline } from "./format";
+import { allowanceLine, answerBlocks, askAdminLine, trialMailto, trialRequestText, type Inline } from "./format";
 import { unmaskText } from "./mask";
 import { chooseInstitute, panelState, type PanelState } from "./panelState";
 import {
@@ -455,26 +455,27 @@ function Unlock({ api, instituteId, renew }: { api: AssistantApi; instituteId: s
           <a href={trialMailto(CONTACT_EMAIL, membership)} className="text-xs text-primary underline underline-offset-2">
             Request a trial coupon
           </a>
-          <ContactLine />
+          <ContactLine institute={membership} />
         </>
       )}
     </form>
   );
 }
 
-/** For admins without a mail app, where *Request a trial coupon* does nothing: the address to write to, with *Copy*. */
-function ContactLine() {
+/** For admins without a mail app, where *Request a trial coupon* does nothing: the same email to copy into webmail. */
+function ContactLine({ institute }: { institute: { name: string; handle: string | null } }) {
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(CONTACT_EMAIL);
-      toast.success("Address copied.");
+      await navigator.clipboard.writeText(trialRequestText(CONTACT_EMAIL, institute));
+      toast.success("Request copied. Paste it into an email to us.");
     } catch {
-      toast.error("Couldn't copy. Select the address and copy it yourself.");
+      toast.error("Couldn't copy. Write to the address yourself, with your institute's name.");
     }
   };
   return (
     <p className="text-xs text-muted-foreground">
-      No email app? Write to <span className="select-all text-foreground">{CONTACT_EMAIL}</span> with your institute's name.{" "}
+      No email app? Copy the request and send it from your webmail to{" "}
+      <span className="select-all text-foreground">{CONTACT_EMAIL}</span>.{" "}
       <button type="button" onClick={() => void copy()} className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline">
         <Copy className="size-3" /> Copy
       </button>

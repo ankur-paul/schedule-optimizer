@@ -19,17 +19,23 @@ export function allowanceLine(access: Access, now: Date): { text: string; low: b
   return { text: `${n} question${n === 1 ? "" : "s"} left · until ${until}`, low };
 }
 
+type RequestingInstitute = { name: string; handle: string | null };
+
+const TRIAL_SUBJECT = "Lattice assistant trial";
+
+function trialBody(institute: RequestingInstitute): string {
+  return [`Institute: ${institute.name}`, `Handle: ${institute.handle ?? "(not set)"}`, "", "What will you use it for?", ""].join("\n");
+}
+
 /** *Request a trial coupon*: an email to the operator with the institute filled in. */
-export function trialMailto(to: string, institute: { name: string; handle: string | null }): string {
-  const body = [
-    `Institute: ${institute.name}`,
-    `Handle: ${institute.handle ?? "(not set)"}`,
-    "",
-    "What will you use it for?",
-    "",
-  ].join("\n");
+export function trialMailto(to: string, institute: RequestingInstitute): string {
   // encodeURIComponent, not URLSearchParams: mail apps read "+" as a plus, not a space.
-  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent("Lattice assistant trial")}&body=${encodeURIComponent(body)}`;
+  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(TRIAL_SUBJECT)}&body=${encodeURIComponent(trialBody(institute))}`;
+}
+
+/** The same email as plain text, for *Copy* when there is no mail app to open: paste it into webmail. */
+export function trialRequestText(to: string, institute: RequestingInstitute): string {
+  return `To: ${to}\nSubject: ${TRIAL_SUBJECT}\n\n${trialBody(institute)}`;
 }
 
 /** The locked screen's line for editors and viewers: whom to ask, with their email so they can. */
