@@ -110,9 +110,13 @@ Soft rules, which add to the score (lower is better):
 | S2 | A teacher teaching more than 3 periods in a row | 5 per period beyond 3 |
 | S3 | Idle periods in a section's day, not counting lunch candidates | 2 per period |
 | S4 | One batch idle while another batch of the section is in a lab | 3 per idle batch-period |
+| S5 | Free periods before a section's or teacher's last class of a day, one free lunch candidate excused | 1 per period |
+
+Each soft rule can be switched off (`softRules` in the working copy, saved with the data and online versions); a rule that's off shows "Off" in the score and adds nothing. There is no switch in the UI yet (T54).
 
 ## Known limits
 
+- Late finish (S5) is counted in the score but neither engine aims for it yet (T53), so scores are much higher than before: the sample's best timetable scores 417 (18 of it batches waiting, 399 late finish). The help pages' screenshots and "scores 18" text predate it.
 - The heuristic runs until its time limit unless it reaches score 0, and its results vary slightly between runs.
 - The exact solver needs about 2 s before its first solution on the sample, so very short limits end in *Couldn't finish*; heavily over-booked data can also take longer than 5 s to prove impossible.
 - A *Can't be built* or *Couldn't finish* card stays until the next run, even after the data is fixed.

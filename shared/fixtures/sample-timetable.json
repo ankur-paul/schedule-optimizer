@@ -1265,12 +1265,13 @@
   ],
   "unplaced": [],
   "score": {
-    "total": 18,
+    "total": 417,
     "breakdown": {
       "subjectRepeat": 0,
       "teacherOverload": 0,
       "sectionGaps": 0,
-      "batchIdle": 18
+      "batchIdle": 18,
+      "lateFinish": 399
     }
   },
   "timeMs": 19194

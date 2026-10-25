@@ -531,7 +531,7 @@ function ScoreGrid({ result }: { result: SolveResult }) {
         Score: <span className="tabular-nums">{result.score.total}</span>
         <span className="font-normal text-muted-foreground">(lower is better, 0 is perfect)</span>
       </p>
-      <div className="grid gap-2 sm:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {SCORE_ROWS.map((row) => {
           const points = result.score.breakdown[row.key];
           return (
@@ -540,10 +540,16 @@ function ScoreGrid({ result }: { result: SolveResult }) {
                 {row.label}
                 <InfoTip more={helpHref("timetable", "score")}>{row.tip}</InfoTip>
               </div>
-              <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
-                {points} <span className="text-sm font-normal text-muted-foreground">pts</span>
-              </div>
-              <div className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, points)}</div>
+              {points == null ? (
+                <div className="text-xl font-semibold text-muted-foreground">Off</div>
+              ) : (
+                <>
+                  <div className={cn("text-xl font-semibold tabular-nums", points === 0 && "text-muted-foreground")}>
+                    {points} <span className="text-sm font-normal text-muted-foreground">pts</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground tabular-nums">{scoreCount(row.key, points)}</div>
+                </>
+              )}
             </div>
           );
         })}

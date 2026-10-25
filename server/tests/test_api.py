@@ -19,7 +19,7 @@ def test_solve_sample_returns_camelcase_result():
     assert data["status"] in ("optimal", "feasible")
     assert len(data["placements"]) == 210
     assert set(data["placements"][0]) == {"sessionId", "day", "period", "roomId"}
-    assert set(data["score"]["breakdown"]) == {"subjectRepeat", "teacherOverload", "sectionGaps", "batchIdle"}
+    assert set(data["score"]["breakdown"]) == {"subjectRepeat", "teacherOverload", "sectionGaps", "batchIdle", "lateFinish"}
     assert "timeMs" in data
 
 
@@ -75,3 +75,13 @@ def test_solve_omits_unset_optional_fields():
     data = client.post("/solve", json=body).json()
     assert data["status"] in ("optimal", "feasible")
     assert "diagnosis" not in data and "message" not in data
+
+
+def test_solve_accepts_partial_soft_rules_and_sends_off_rules_as_null():
+    body = tiny(periods="T", courses=[course("c1", lectures=1)]).model_dump()
+    body["softRules"] = {"s1": False}
+    data = client.post("/solve", json=body).json()
+    assert data["score"]["breakdown"] == {
+        "subjectRepeat": None, "teacherOverload": 0, "sectionGaps": 0, "batchIdle": 0, "lateFinish": 0}
+    del body["softRules"]
+    assert client.post("/solve", json=body).json()["score"]["breakdown"]["subjectRepeat"] == 0

@@ -13,8 +13,8 @@ export function nextTimeLimit(t: number): number | null {
 
 /** What the engines get: the college data, the current locks, and run options. */
 export function buildSolveInput(data: AppData, options: SolveInput["options"]): SolveInput {
-  const { settings, departments, teachers, rooms, sections, courses, locks } = data;
-  return { settings, departments, teachers, rooms, sections, courses, locks, options };
+  const { settings, departments, teachers, rooms, sections, courses, locks, softRules } = data;
+  return { settings, departments, teachers, rooms, sections, courses, locks, options, softRules };
 }
 
 /** Reasons the Generate button is disabled (first one is shown). */

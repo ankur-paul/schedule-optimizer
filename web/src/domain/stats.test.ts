@@ -73,12 +73,13 @@ describe("roomUtilisation", () => {
 });
 
 describe("SCORE_ROWS", () => {
-  it("covers every breakdown key once, in S1–S4 order", () => {
+  it("covers every breakdown key once, in S1–S5 order", () => {
     expect(SCORE_ROWS.map((r) => [r.rule, r.key])).toEqual([
       ["S1", "subjectRepeat"],
       ["S2", "teacherOverload"],
       ["S3", "sectionGaps"],
       ["S4", "batchIdle"],
+      ["S5", "lateFinish"],
     ]);
   });
 });
@@ -89,6 +90,7 @@ describe("scoreCount", () => {
     expect(scoreCount("subjectRepeat", 20)).toBe("2 extra lectures");
     expect(scoreCount("teacherOverload", 5)).toBe("1 extra period");
     expect(scoreCount("sectionGaps", 4)).toBe("2 free periods");
+    expect(scoreCount("lateFinish", 3)).toBe("3 free periods");
   });
 
   it("says 0 with the plural unit when nothing was penalised", () => {

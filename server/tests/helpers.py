@@ -15,8 +15,13 @@ def tiny(
     courses: list[dict] | None = None,
     teachers: int = 2,
     locks: list[dict] | None = None,
+    soft_rules: dict | None = None,
 ) -> SolveInput:
-    """Build a small SolveInput. `periods` is a string of T (teaching) / B (break), one char per period."""
+    """Build a small SolveInput. `periods` is a string of T (teaching) / B (break), one char per period.
+
+    `soft_rules` defaults to S5 off: the CP-SAT objective has no S5 until T53, so an optimal result's total would
+    include S5 points the solver never tried to avoid.
+    """
     return SolveInput.model_validate(
         {
             "settings": {
@@ -35,6 +40,7 @@ def tiny(
             "courses": courses or [],
             "locks": locks or [],
             "options": {"timeLimitSec": 5, "seed": 1},
+            "softRules": soft_rules if soft_rules is not None else {"s5": False},
         }
     )
 

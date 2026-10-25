@@ -1,7 +1,7 @@
 import type { AppData } from "./useAppStore";
 
-/** What Undo brings back: the working copy's data, settings, result and locks. Not the step, the online link or UI state. */
-export type Snapshot = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks">;
+/** What Undo brings back: the working copy's data, settings, result, locks and soft-rule switches. Not the step, the online link or UI state. */
+export type Snapshot = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks" | "softRules">;
 
 /** One whole change: the state before it (or after it, on the Redo stack) and what it was, e.g. "move CSE B DS to Tue P4". */
 export interface UndoEntry {
@@ -21,8 +21,8 @@ export const emptyStacks = (): UndoStacks => ({ undo: [], redo: [] });
 
 /** The snapshot fields of a state. Arrays are shared, not copied: the store replaces them on every change. */
 export function takeSnapshot(state: Snapshot): Snapshot {
-  const { settings, departments, teachers, rooms, sections, courses, result, locks } = state;
-  return { settings, departments, teachers, rooms, sections, courses, result, locks };
+  const { settings, departments, teachers, rooms, sections, courses, result, locks, softRules } = state;
+  return { settings, departments, teachers, rooms, sections, courses, result, locks, softRules };
 }
 
 /** Add an entry before a change; the oldest drops past the limit, and Redo is cleared. */

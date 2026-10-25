@@ -7,7 +7,7 @@ import { solveHeuristic, type HeuristicOptions } from "./heuristic";
 import { runHeuristic } from "./runHeuristic";
 import { checkServer, generate, HEURISTIC_MAX_MS, makeDraft, verify, withoutPersonalData, type GenerateDeps } from "./solveClient";
 
-const ZERO = { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } };
+const ZERO = { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0, lateFinish: 0 } };
 const cpsat = (patch: Partial<SolveResult> = {}): SolveResult => ({
   engine: "cpsat",
   status: "optimal",

@@ -2,7 +2,7 @@
 
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_serializer
 from pydantic.alias_generators import to_camel
 
 Id = str
@@ -75,6 +75,19 @@ class Options(Model):
     seed: Optional[int] = None
 
 
+class SoftRules(Model):
+    """Which soft rules count (PLAN.md §2). A missing key takes its default, as in score.ts's DEFAULT_SOFT_RULES."""
+
+    s1: bool = True
+    s2: bool = True
+    s3: bool = True
+    s4: bool = True
+    s5: bool = True
+
+
+DEFAULT_SOFT_RULES = SoftRules()
+
+
 class SolveInput(Model):
     settings: Settings
     departments: list[Department]
@@ -84,13 +97,24 @@ class SolveInput(Model):
     courses: list[Course]
     locks: list[Placement] = []
     options: Options = Options()
+    soft_rules: SoftRules = DEFAULT_SOFT_RULES
 
 
 class ScoreBreakdown(Model):
-    subject_repeat: int = 0
-    teacher_overload: int = 0
-    section_gaps: int = 0
-    batch_idle: int = 0
+    """Points per soft rule (S1–S5); None when the rule is switched off, so "off" never reads as 0."""
+
+    subject_repeat: Optional[int] = 0
+    teacher_overload: Optional[int] = 0
+    section_gaps: Optional[int] = 0
+    batch_idle: Optional[int] = 0
+    late_finish: Optional[int] = 0
+
+    @model_serializer(mode="wrap")
+    def _keep_off_rules(self, handler, info):
+        # /solve drops None fields (response_model_exclude_none), but a rule that's off must still arrive, as null.
+        out = handler(self)
+        keys = [name if info.by_alias is False else to_camel(name) for name in type(self).model_fields]
+        return {k: out.get(k) for k in keys}
 
 
 class Score(Model):

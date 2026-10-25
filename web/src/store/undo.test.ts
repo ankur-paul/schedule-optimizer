@@ -5,7 +5,7 @@ import { emptyStacks, nextRedoLabel, nextUndoLabel, pushEntry, redoEntry, takeSn
 /** A snapshot told apart by its locks: one lock per `n`. */
 function snap(n: number): Snapshot {
   const locks: Placement[] = Array.from({ length: n }, (_, i) => ({ sessionId: `s${i}`, day: 0, period: i, roomId: "r" }));
-  return { settings: { days: ["Mon"], periods: [], lunchCandidates: [] }, departments: [], teachers: [], rooms: [], sections: [], courses: [], result: null, locks };
+  return { settings: { days: ["Mon"], periods: [], lunchCandidates: [] }, departments: [], teachers: [], rooms: [], sections: [], courses: [], result: null, locks, softRules: { s1: true, s2: true, s3: true, s4: true, s5: n % 2 === 0 } };
 }
 
 const entry = (label: string, n: number) => ({ label, snapshot: snap(n) });

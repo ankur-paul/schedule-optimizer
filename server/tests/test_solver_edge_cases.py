@@ -724,15 +724,56 @@ class TestRunOptions:
 class TestScorePlacements:
     def test_matches_the_reference_on_a_hand_made_timetable(self):
         # S1: 3 lectures of a on Monday (2 extra × 10); S4: B2 idles during B1's lab at P0 and B1 during B2's at P1 (2 × 3).
-        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], teachers=3,
+        # S5: t2 is free at P0 before their lab at P1, t3 at P0–P1 before lecturing P2–P4 (3 × 1).
+        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], teachers=3, soft_rules={},
                    courses=[course("a", lectures=3, teacher="t3"), course("lab", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])])
         placements = [Placement(session_id=sid, day=0, period=p, room_id=r) for sid, p, r in [
             ("lab:P1:B1", 0, "lab1"), ("lab:P1:B2", 1, "lab1"), ("a:L1", 2, "r1"), ("a:L2", 4, "r1"), ("a:L3", 3, "r1")]]
         sessions = {s.id: s for s in expand_sessions(inp)}
         got = score_placements(inp, sessions, placements)
-        assert got.breakdown.model_dump(by_alias=False) == {"subject_repeat": 20, "teacher_overload": 0, "section_gaps": 0, "batch_idle": 6}
+        assert got.breakdown.model_dump(by_alias=False) == {
+            "subject_repeat": 20, "teacher_overload": 0, "section_gaps": 0, "batch_idle": 6, "late_finish": 3}
         ref = reference_score(inp, placements)
-        assert got.total == ref["total"] == 26
+        assert got.total == ref["total"] == 29
+
+    def test_switched_off_rules_are_none_and_left_out_of_the_total(self):
+        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], teachers=3,
+                   soft_rules={"s1": False, "s5": False},
+                   courses=[course("a", lectures=3, teacher="t3"), course("lab", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])])
+        placements = [Placement(session_id=sid, day=0, period=p, room_id=r) for sid, p, r in [
+            ("lab:P1:B1", 0, "lab1"), ("lab:P1:B2", 1, "lab1"), ("a:L1", 2, "r1"), ("a:L2", 4, "r1"), ("a:L3", 3, "r1")]]
+        got = score_placements(inp, {s.id: s for s in expand_sessions(inp)}, placements)
+        assert got.breakdown.model_dump(by_alias=False) == {
+            "subject_repeat": None, "teacher_overload": 0, "section_gaps": 0, "batch_idle": 6, "late_finish": None}
+        assert got.total == reference_score(inp, placements)["total"] == 6
+
+    @pytest.mark.parametrize(("periods", "lunch", "at", "expected"), [
+        # (section, teacher t1, teacher t2) free periods before their last class; c1 is t1's, c2 is t2's.
+        ("TTTTT", [1], {"c1:L1": 0, "c2:L1": 2}, (0, 0, 1)),  # the free P1 is a lunch candidate: excused
+        ("TTTTT", [], {"c1:L1": 0, "c2:L1": 4}, (3, 0, 4)),  # P1–P3 free, none a lunch candidate
+        ("TTTT", [], {"c1:L1": 2, "c2:L1": 3}, (2, 2, 3)),  # a late start counts too
+        ("TTTTTT", [], {"c2:L1": 5}, (5, 0, 5)),  # one class in the last period
+        ("TTTTTT", [3], {"c2:L1": 5}, (4, 0, 4)),
+        ("TTTTT", [1, 2], {"c2:L1": 4}, (3, 0, 3)),  # only one lunch candidate is excused
+        ("TTBTT", [], {"c2:L1": 4}, (3, 0, 3)),  # the break isn't a teaching period
+        ("TTTTT", [], {}, (0, 0, 0)),  # a day with no classes
+    ])
+    def test_late_finish_hand_worked(self, periods, lunch, at, expected):
+        inp = tiny(periods=periods, lunch=lunch, soft_rules={},
+                   courses=[course("c1", lectures=1), course("c2", lectures=1, teacher="t2")])
+        placements = [Placement(session_id=sid, day=0, period=p, room_id="r1") for sid, p in at.items()]
+        got = score_placements(inp, {s.id: s for s in expand_sessions(inp)}, placements)
+        assert got.breakdown.late_finish == sum(expected)
+        assert reference_score(inp, placements)["late_finish"] == sum(expected)
+
+    def test_late_finish_counts_a_section_busy_while_one_batch_is(self):
+        # B1's 2-period lab at P2–P3: the section and t1 are both free at P0–P1; B2 has nothing all day.
+        inp = tiny(periods="TTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], soft_rules={},
+                   courses=[course("lab", labs=1, lab_length=2)])
+        placements = [Placement(session_id="lab:P1:B1", day=0, period=2, room_id="lab1")]
+        got = score_placements(inp, {s.id: s for s in expand_sessions(inp)}, placements)
+        assert got.breakdown.late_finish == 2 + 2
+        assert reference_score(inp, placements)["late_finish"] == 4
 
     def test_teacher_overload_counts_across_sections_and_labs(self):
         inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section("s1"), section("s2")],

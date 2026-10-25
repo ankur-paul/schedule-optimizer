@@ -39,7 +39,7 @@ def test_sample_has_no_hard_violations(sample_result):
 def test_sample_score_is_consistent(sample_result):
     _, res = sample_result
     b = res.score.breakdown
-    assert res.score.total == b.subject_repeat + b.teacher_overload + b.section_gaps + b.batch_idle
+    assert res.score.total == b.subject_repeat + b.teacher_overload + b.section_gaps + b.batch_idle + b.late_finish
     assert res.time_ms > 0
 
 

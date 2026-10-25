@@ -47,9 +47,21 @@ export interface SolveInput {
   courses: Course[];
   locks: Placement[];         // must appear unchanged in the output
   options: { timeLimitSec: number; seed?: number };
+  /** Which soft rules count (PLAN.md §2). Missing, or a missing key, means the default (`DEFAULT_SOFT_RULES`). */
+  softRules?: Partial<SoftRules>;
 }
 
-export interface ScoreBreakdown { subjectRepeat: number; teacherOverload: number; sectionGaps: number; batchIdle: number }
+/** On/off per soft rule; a rule that's off adds nothing to the score. */
+export interface SoftRules { s1: boolean; s2: boolean; s3: boolean; s4: boolean; s5: boolean }
+
+/** Points per soft rule (S1–S5); `null` when the rule is switched off, so "off" never reads as 0. */
+export interface ScoreBreakdown {
+  subjectRepeat: number | null;
+  teacherOverload: number | null;
+  sectionGaps: number | null;
+  batchIdle: number | null;
+  lateFinish: number | null;
+}
 export interface Score { total: number; breakdown: ScoreBreakdown }
 
 /** Why a session has no slot. `noRoom` / `noStart`: it can never be placed; the rest: what blocked it most. */

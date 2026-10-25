@@ -1,5 +1,6 @@
 import { eligibleRooms, validStarts } from "@/domain/eligibility";
 import { sessionLabel } from "@/domain/grid";
+import { rng } from "@/domain/rng";
 import { score, WEIGHTS } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
 import type { Id, Placement, Session, SolveInput, SolveResult, UnplacedCause } from "@/domain/types";
@@ -24,23 +25,11 @@ export function solveHeuristic(input: SolveInput, opts: HeuristicOptions): Solve
       status: "error",
       placements: [],
       unplaced: [],
-      score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } },
+      score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0, lateFinish: 0 } },
       timeMs: Math.round(performance.now() - t0),
       message: e instanceof Error ? e.message : String(e),
     };
   }
-}
-
-/** mulberry32: small seeded PRNG so runs are reproducible for a given seed. */
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 type Blocker = Extract<UnplacedCause, "teacher" | "section" | "room" | "lunch">;

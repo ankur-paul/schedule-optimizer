@@ -44,9 +44,10 @@ function useWorkingHash(): string {
   const locks = useAppStore((s) => s.locks);
   const result = useAppStore((s) => s.result);
   const printHeading = useAppStore((s) => s.printHeading);
+  const softRules = useAppStore((s) => s.softRules);
   return useMemo(
-    () => docHash({ settings, departments, teachers, rooms, sections, courses, locks, result, printHeading }),
-    [settings, departments, teachers, rooms, sections, courses, locks, result, printHeading],
+    () => docHash({ settings, departments, teachers, rooms, sections, courses, locks, result, printHeading, softRules }),
+    [settings, departments, teachers, rooms, sections, courses, locks, result, printHeading, softRules],
   );
 }
 
