@@ -200,7 +200,9 @@ deploys the newest.
    has been deployed at that point.
 3. **Image:** logs in to AWS through OIDC as the role in the repository variable `AWS_DEPLOY_ROLE_ARN`, builds
    the [`Dockerfile`](../Dockerfile) for `linux/amd64` with `--provenance=false` (Lambda refuses an image index)
-   and pushes it to ECR as `lattice-server:<commit SHA>`.
+   and pushes it to ECR as `lattice-server:<commit SHA>`. It signs in to ECR Public first, where the Lambda
+   adapter comes from: anonymous pulls share a per-IP cap with everyone on the runner's address and fail with 429
+   "Data limit exceeded" (the first deploy hit it). If that sign-in fails it warns and pulls anonymously.
 4. **Functions:** `aws lambda update-function-code` on `lattice-solver` and `lattice-agent`, then waits for both
    updates to finish. It **never** calls `update-function-configuration`: env vars, memory and timeout are set by
    hand in the console, and a deploy leaves them alone.
@@ -273,8 +275,11 @@ In `ap-south-1` (Mumbai) it makes:
 
 - **ECR** repository `lattice-server`, with a lifecycle rule keeping the last 10 images (so rollback reaches 10
   deploys back).
-- **GitHub's OIDC provider** and the role **`lattice-deploy`**, trusted only for
-  `repo:ankur-paul/schedule-optimizer:ref:refs/heads/main`. It may push to `lattice-server` and call
+- **GitHub's OIDC provider** and the role **`lattice-deploy`**, trusted only for `main` of this repository. The token's subject is
+  `repo:ankur-paul/schedule-optimizer:ref:refs/heads/main`, or with immutable ids
+  (`repo:ankur-paul@132210959/schedule-optimizer@1428875491:ref:refs/heads/main`) as this repository uses; the
+  script asks GitHub which (`gh api repos/<repo>/actions/oidc/customization/sub`) and trusts both. It may push to `lattice-server`, sign in
+  to ECR Public (`ecr-public:GetAuthorizationToken`, `sts:GetServiceBearerToken`) and call
   `UpdateFunctionCode`/`GetFunction` on the two functions, nothing else.
 - The role **`lattice-lambda`** the functions run as, with `AWSLambdaBasicExecutionRole` (logs only).
 - **`lattice-solver`** (3,008 MB, 150 s) and **`lattice-agent`** (512 MB, 300 s), x86_64, from the newest image
