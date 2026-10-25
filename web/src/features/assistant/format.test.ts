@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allowanceLine, answerBlocks, askAdminLine, inlineParts, safeHref, toolLabel, trialMailto, trialRequestText } from "./format";
-import { teacherCodes } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
 
 const now = new Date("2026-10-25T12:00:00Z");
 

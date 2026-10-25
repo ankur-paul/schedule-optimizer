@@ -12,7 +12,8 @@ import { unplacedGroups, type RunOutcome } from "@/features/generate/generate";
 import { helpHref } from "@/help/helpLinks";
 import { canEdit } from "@/features/online/online";
 import type { AppData } from "@/store/useAppStore";
-import { maskTeachers, maskText, teacherCodes } from "./mask";
+import { maskTeachers, teacherCodes } from "@/domain/teacherCodes";
+import { maskText } from "./mask";
 import type { OnlineSnapshot } from "./onlineState";
 
 // The assistant's read-only tools (T37). The panel (T40) runs them when Claude asks, over the working copy, and sends

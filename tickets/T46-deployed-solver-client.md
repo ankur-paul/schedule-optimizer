@@ -1,5 +1,5 @@
 # T46 — Web client for a deployed solver
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** T45 · **Branch:** t46-deployed-solver-client
 
 ## Goal
@@ -42,7 +42,15 @@ server on another contract version is called out, and no teacher name or name-li
   `shared/contract.json` bumped and see the warning.
 
 ## Done when
-- [ ] Timeouts, check on open, contract warning and teacher codes as above
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] Help section, FEATURES.md bullet, PROGRESS.md line
-- [ ] Committed: `T46: client for a deployed solver`
+- [x] Timeouts, check on open, contract warning and teacher codes as above
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] Help section, FEATURES.md bullet, PROGRESS.md line
+- [x] Committed: `T46: client for a deployed solver`
+
+## Notes
+- No mapping back was needed: a result names sessions (from course ids), rooms and slots, never a teacher, so there is
+  no teacher id in placements, `unplaced` or `diagnosis` to translate, and no unknown code to treat as a server error.
+  The tests check that the coded input keeps every session id and that a result verifies the same as one for real ids.
+- Clicked through with the local server: the site checks `/health` once on step ①; step ③ opens already online;
+  Generate on the sample gave 0 clashes; stopping the server showed the banner within the poll; a server reporting
+  contract 2 showed the grey line and one console warning, and it went once the server was back on 1.

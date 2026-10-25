@@ -14,6 +14,15 @@ The exact solver runs on Lattice's server, and your browser can't reach it. Latt
 
 Your data stays in your browser either way, so nothing is lost while the solver is away.
 
+The solver sleeps when nobody has used it for a while and takes a few seconds to wake up. Lattice wakes it as soon as you open the site, so it's usually ready by step ③.
+
+## "The solver was updated at a different time from this page" {#solver-version}
+
+Step ③ shows this grey line when the solver on the server and the page in your browser come from different updates of Lattice. They may then disagree about the data they exchange.
+
+- **Reload the page.** You get the newest page, which matches the solver. Your data stays in your browser.
+- **If the line stays after a reload,** the solver is still being updated. You can still generate, but results may be wrong. Every timetable is checked again in your browser, and a broken rule shows on the result card.
+
 ## The email link didn't arrive {#email-link}
 
 The sign-in link usually arrives within a minute. If it doesn't:

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Teacher } from "@/domain/types";
 import { askText, MAX_UNPLACED } from "./askAbout";
-import { maskText, teacherCodes } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
+import { maskText } from "./mask";
 
 const teachers: Teacher[] = [{ id: "dr-anita-sharma", name: "Dr Anita Sharma", departmentId: "cse" } as Teacher];
 const code = teacherCodes(teachers).get("dr-anita-sharma")!;

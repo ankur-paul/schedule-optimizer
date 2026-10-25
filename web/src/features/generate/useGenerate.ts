@@ -87,7 +87,7 @@ export const runDraft = (reason: DraftReason) =>
 
 /** Step ④'s *Regenerate*, for callers without the polled server state (the assistant's cards, T44): the exact solver, or a quick draft while it is offline. */
 export async function regenerate(): Promise<RunEnd> {
-  return (await checkServer()) ? runExact() : runDraft("offline");
+  return (await checkServer()).online ? runExact() : runDraft("offline");
 }
 
 /**

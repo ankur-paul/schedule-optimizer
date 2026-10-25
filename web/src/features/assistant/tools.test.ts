@@ -7,7 +7,7 @@ import { expandSessions } from "@/domain/sessions";
 import type { SolveInput, SolveResult } from "@/domain/types";
 import type { RunOutcome } from "@/features/generate/generate";
 import { HELP_ANCHORS } from "@/help/anchors.gen";
-import { teacherCodes } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
 import type { OnlineSnapshot } from "./onlineState";
 import { FIND_LIMIT, PENALTY_LIMIT, RESULT_LIMIT, runTool, TOOL_DEFINITIONS, type ToolData, type ToolName } from "./tools";
 

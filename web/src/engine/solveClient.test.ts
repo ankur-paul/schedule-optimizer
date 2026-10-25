@@ -1,11 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
 import { sampleCollege } from "@/domain/sampleCollege";
 import { score } from "@/domain/score";
+import { expandSessions } from "@/domain/sessions";
 import { tinyCollege, tinyValid, tinyWith } from "@/domain/tinyCollege";
 import type { SolveInput, SolveResult } from "@/domain/types";
 import { solveHeuristic, type HeuristicOptions } from "./heuristic";
 import { runHeuristic } from "./runHeuristic";
-import { checkServer, generate, HEURISTIC_MAX_MS, makeDraft, verify, withoutPersonalData, type GenerateDeps } from "./solveClient";
+import { teacherCodes } from "@/domain/teacherCodes";
+import {
+  checkServer,
+  CONTRACT_VERSION,
+  contractMismatch,
+  generate,
+  HEALTH_TIMEOUT_MS,
+  HEURISTIC_MAX_MS,
+  makeDraft,
+  SOLVE_GRACE_MS,
+  verify,
+  withoutPersonalData,
+  type GenerateDeps,
+} from "./solveClient";
 
 const ZERO = { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0, lateFinish: 0 } };
 const cpsat = (patch: Partial<SolveResult> = {}): SolveResult => ({
@@ -24,7 +38,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 function server(opts: { health?: () => Response; solve?: () => Response }) {
   return vi.fn(async (url: string | URL | Request, _init?: RequestInit) => {
     const path = String(url);
-    if (path.endsWith("/health")) return (opts.health ?? (() => json({ ok: true })))();
+    if (path.endsWith("/health")) return (opts.health ?? (() => json({ ok: true, contract: CONTRACT_VERSION })))();
     if (path.endsWith("/solve")) return (opts.solve ?? (() => json(cpsat())))();
     throw new Error(`unexpected ${path}`);
   });
@@ -95,7 +109,7 @@ describe("generate: exact solver only", () => {
   it("timeout: the request outlived the limit plus the grace", async () => {
     const d = deps(server({ solve: () => { throw new DOMException("timed out", "TimeoutError"); } }));
     const out = await generate(tinyCollege, d);
-    expect(out.failure).toMatchObject({ kind: "timeout", message: expect.stringMatching(/did not answer within 15 s/) });
+    expect(out.failure).toMatchObject({ kind: "timeout", message: "The exact solver did not answer within 20 s." }); // 5 s limit + 15 s
     expect(d.runHeuristic).not.toHaveBeenCalled();
   });
 
@@ -113,28 +127,89 @@ describe("generate: exact solver only", () => {
   });
 });
 
+// Imported teachers: each id is a slug of the name, and one course has a teacher per batch.
+const IMPORTED_IDS: Record<string, string> = { t1: "dr-anita-sharma", t2: "ravi-gupta", t3: "s-rao" };
+const imported: SolveInput = {
+  ...tinyCollege,
+  teachers: [
+    { id: "dr-anita-sharma", name: "Dr. Anita Sharma", departmentId: "cse" },
+    { id: "ravi-gupta", name: "Ravi Gupta", departmentId: "ece" },
+    { id: "s-rao", name: "S. Rao", departmentId: "cse" },
+  ],
+  courses: tinyCollege.courses.map((c) => ({
+    ...c,
+    teacherId: IMPORTED_IDS[c.teacherId],
+    ...(c.batchTeacherIds ? { batchTeacherIds: c.batchTeacherIds.map((id) => IMPORTED_IDS[id]) } : {}),
+  })),
+};
+
 describe("withoutPersonalData", () => {
-  it("replaces each teacher's name with its id and leaves everything else as it was", () => {
-    const out = withoutPersonalData(sampleCollege);
-    expect(out.teachers.map((t) => t.name)).toEqual(sampleCollege.teachers.map((t) => t.id));
-    expect({ ...out, teachers: [] }).toEqual({ ...sampleCollege, teachers: [] });
-    expect(out.teachers.map(({ name: _, ...rest }) => rest)).toEqual(sampleCollege.teachers.map(({ name: _, ...rest }) => rest));
+  it("replaces each teacher's id and name with its code, in teachers and courses", () => {
+    const codes = teacherCodes(imported.teachers);
+    const out = withoutPersonalData(imported);
+    expect(out.teachers.map((t) => [t.id, t.name])).toEqual(imported.teachers.map((t) => [codes.get(t.id), codes.get(t.id)]));
+    const ds = out.courses.find((c) => c.id === "a-ds")!;
+    expect(ds.teacherId).toBe(codes.get("dr-anita-sharma"));
+    expect(ds.batchTeacherIds).toEqual([codes.get("dr-anita-sharma"), codes.get("ravi-gupta")]);
   });
 
-  it("leaves no teacher name anywhere in the serialised input", () => {
-    const body = JSON.stringify(withoutPersonalData(sampleCollege));
-    for (const t of sampleCollege.teachers) expect(body).not.toContain(t.name);
+  it("leaves no teacher id or name anywhere in the serialised input", () => {
+    const body = JSON.stringify(withoutPersonalData(imported)).toLowerCase();
+    for (const t of imported.teachers) {
+      expect(body).not.toContain(t.id);
+      expect(body).not.toContain(t.name.toLowerCase());
+    }
+    for (const word of ["anita", "sharma", "ravi", "gupta", "rao"]) expect(body).not.toContain(word);
+  });
+
+  it("changes nothing but the teachers and the courses' teacher fields", () => {
+    const out = withoutPersonalData(imported);
+    expect({ ...out, teachers: [], courses: [] }).toEqual({ ...imported, teachers: [], courses: [] });
+    const strip = ({ teacherId: _, batchTeacherIds: __, ...rest }: SolveInput["courses"][number]) => rest;
+    expect(out.courses.map(strip)).toEqual(imported.courses.map(strip));
+    expect(out.teachers.map((t) => t.departmentId)).toEqual(imported.teachers.map((t) => t.departmentId));
+  });
+
+  it("gives the same codes every time, whatever the teachers' order", () => {
+    const reordered = { ...imported, teachers: [...imported.teachers].reverse() };
+    const codeOf = (input: SolveInput) => new Map(withoutPersonalData(input).courses.map((c) => [c.id, c.teacherId]));
+    expect(codeOf(reordered)).toEqual(codeOf(imported));
+    expect(withoutPersonalData(imported)).toEqual(withoutPersonalData(imported));
+  });
+
+  it("keeps the session ids, so locks and results need no mapping back", () => {
+    const sessions = (input: SolveInput) => expandSessions(input).map((x) => x.id);
+    expect(sessions(withoutPersonalData(imported))).toEqual(sessions(imported));
   });
 
   it("does not mutate the input", () => {
-    const before = structuredClone(sampleCollege);
-    withoutPersonalData(sampleCollege);
-    expect(sampleCollege).toEqual(before);
+    const before = structuredClone(imported);
+    withoutPersonalData(imported);
+    expect(imported).toEqual(before);
   });
 
   it("works with no teachers", () => {
-    const input = { ...tinyCollege, teachers: [] };
+    const input = { ...tinyCollege, teachers: [], courses: [] };
     expect(withoutPersonalData(input)).toEqual(input);
+  });
+});
+
+describe("generate with teacher codes", () => {
+  it("verifies the result against the real data, the same as a result for real ids", async () => {
+    // The server sees only codes; its answer names sessions, rooms and slots, so the client checks it as it is.
+    const fetch = server({});
+    const out = await generate(imported, deps(fetch));
+    expect(out).toEqual(verify(imported, cpsat()));
+    expect(out.validation?.ok).toBe(true);
+    expect(JSON.parse(fetch.mock.calls[0][1]?.body as string)).toEqual(withoutPersonalData(imported));
+  });
+
+  it("an infeasible diagnosis names the real sessions", async () => {
+    const diagnosis = [{ kind: "noSlot" as const, ids: ["a-ds:P1:B2"], detail: "noRoom" }];
+    const solve = () => json(cpsat({ status: "infeasible", placements: [], diagnosis }));
+    const out = await generate(imported, deps(server({ solve })));
+    expect(out.failure?.diagnosis).toEqual(diagnosis);
+    expect(expandSessions(imported).find((x) => x.id === "a-ds:P1:B2")?.teacherId).toBe("ravi-gupta");
   });
 });
 
@@ -224,11 +299,51 @@ describe("verify", () => {
 });
 
 describe("checkServer", () => {
-  it("is true only for a 200 with { ok: true }", async () => {
-    expect(await checkServer(deps(server({})))).toBe(true);
-    expect(await checkServer(deps(server({ health: () => json({ ok: false }) })))).toBe(false);
-    expect(await checkServer(deps(server({ health: () => json({ ok: true }, 503) })))).toBe(false);
-    expect(await checkServer(deps(server({ health: () => new Response("not json") })))).toBe(false);
-    expect(await checkServer(deps(offline()))).toBe(false);
+  const offlineHealth = { online: false, contract: null };
+
+  it("is online only for a 200 with { ok: true }", async () => {
+    expect(await checkServer(deps(server({})))).toEqual({ online: true, contract: CONTRACT_VERSION });
+    expect(await checkServer(deps(server({ health: () => json({ ok: false }) })))).toEqual(offlineHealth);
+    expect(await checkServer(deps(server({ health: () => json({ ok: true }, 503) })))).toEqual(offlineHealth);
+    expect(await checkServer(deps(server({ health: () => new Response("not json") })))).toEqual(offlineHealth);
+    expect(await checkServer(deps(offline()))).toEqual(offlineHealth);
+  });
+
+  it("reads the server's contract version: matching, different or missing", async () => {
+    const health = (body: unknown) => checkServer(deps(server({ health: () => json(body) })));
+    expect(await health({ ok: true, contract: CONTRACT_VERSION })).toEqual({ online: true, contract: CONTRACT_VERSION });
+    expect(await health({ ok: true, contract: CONTRACT_VERSION + 1 })).toEqual({ online: true, contract: CONTRACT_VERSION + 1 });
+    expect(await health({ ok: true })).toEqual({ online: true, contract: null });
+    expect(await health({ ok: true, contract: "1" })).toEqual({ online: true, contract: null });
+  });
+
+  it("waits 5 s by default, long enough for a cold start", async () => {
+    expect(HEALTH_TIMEOUT_MS).toBe(5000);
+    const fetch = server({});
+    await checkServer(deps(fetch));
+    expect(fetch.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("is offline when the server doesn't answer within the timeout", async () => {
+    const hang = vi.fn(
+      (_url: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal!.reason))),
+    );
+    expect(await checkServer(deps(hang), 20)).toEqual(offlineHealth);
+  });
+});
+
+describe("contractMismatch", () => {
+  it("only when the server is online on another version, or doesn't say", () => {
+    expect(contractMismatch({ online: true, contract: CONTRACT_VERSION })).toBe(false);
+    expect(contractMismatch({ online: true, contract: CONTRACT_VERSION + 1 })).toBe(true);
+    expect(contractMismatch({ online: true, contract: null })).toBe(true);
+    expect(contractMismatch({ online: false, contract: null })).toBe(false);
+  });
+});
+
+describe("timeouts", () => {
+  it("gives a solve 15 s on top of its limit", () => {
+    expect(SOLVE_GRACE_MS).toBe(15000);
   });
 });

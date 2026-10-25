@@ -6,7 +6,7 @@ import type { RunEnd } from "@/features/generate/useGenerate";
 import { applyCard, type ApplyDeps } from "./applyCard";
 import { proposalOutcome, type Card } from "./chat";
 import { dryRun, type ChangeContext, type ChangeData, type OnlineChange, type OnlineRun } from "./changes";
-import { teacherCodes } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
 import { findCard, newChat, resetAssistant, useAssistant } from "./useAssistant";
 
 const college = (): ChangeData => {
