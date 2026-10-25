@@ -1,5 +1,5 @@
 # T49 — Privacy policy and Terms v4
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** D · **Prereqs:** — · **Branch:** t49-policy-v4
 
 ## Goal
