@@ -11,8 +11,8 @@ Before you pick, start or finish a ticket, read `tickets/README.md`. It has the 
 ## Testing
 
 - **Test everything you build, always.** Every new function or module gets tests in the same commit (Vitest next to the file in `web/src`, Pytest in `server/tests`). This goes beyond the ticket's minimum list: cover the main path plus the edge cases you thought about while writing it.
-- Run the full suite (`cd web && npm test`, `cd server && uv run pytest`) plus `npx tsc -b` before every commit; never commit with a failing test.
-- UI components: no component tests (PLAN.md §5), but pull logic out into pure functions and test those; click through the UI yourself before committing.
+- Run the full suite (`cd web && npm test`, `cd server && uv run pytest`) plus `npx tsc -b` before every major commit, like a feature done; never commit with a failing test.
+- UI components: no component tests (PLAN.md §5), but pull logic out into pure functions and test those; click through the UI yourself if required before committing.
 
 ## Committing
 
