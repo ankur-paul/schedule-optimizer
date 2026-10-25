@@ -3,7 +3,7 @@ export const HELP_ANCHORS = {
   index: [],
   start: ['load-sample', 'data-checks', 'generate', 'read-the-score', 'lock', 'print'],
   data: ['week', 'excel', 'import-errors', 'rooms', 'lab-batches', 'lunch-candidates', 'data-checks'],
-  generate: ['engines', 'time-limit', 'cant-be-built', 'no-room', 'lab-too-long', 'no-slot', 'bad-lock', 'locks', 'section-load', 'teacher-load', 'room-load', 'no-single-cause', 'couldnt-finish', 'partial', 'teacher-busy', 'section-busy', 'no-free-room', 'last-lunch', 'other-reasons'],
+  generate: ['aims', 'engines', 'time-limit', 'cant-be-built', 'no-room', 'lab-too-long', 'no-slot', 'bad-lock', 'locks', 'section-load', 'teacher-load', 'room-load', 'no-single-cause', 'couldnt-finish', 'partial', 'teacher-busy', 'section-busy', 'no-free-room', 'last-lunch', 'other-reasons'],
   timetable: ['views', 'score', 'locks', 'drag-and-drop', 'undo', 'print'],
   online: ['signing-in', 'institutes', 'saving-online', 'conflicts', 'versions', 'publishing', 'assistant', 'assistant-changes', 'leaving-and-deleting'],
   troubleshooting: ['solver-offline', 'solver-version', 'email-link', 'admin-only', 'changed-online', 'consent', 'import-rejected', 'short-limit'],

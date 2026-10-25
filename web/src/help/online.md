@@ -83,7 +83,8 @@ Nothing you enter goes online until an admin or editor clicks *Save online*. To 
 After that, **Save online** in the same menu saves your changes as a new version of that timetable.
 
 A save sends the week setup, departments, teachers with their names, rooms, sections, courses, locked classes, the
-generated timetable and the print heading. The step you're on and the time limit stay on your device. A timetable
+generated timetable, the print heading and the [What to aim for](/help/generate#aims) switches. The step you're on
+stays on your device. A timetable
 over 2 MB is too big to save online.
 
 ![The status menu of a saved, published timetable: Save online, Save as new timetable, Publish again, Versions, Open from GNDEC Ludhiana, Rename and Work on this device only](/help/online-menu.png)
@@ -228,8 +229,9 @@ It can propose:
 
 - **Your working copy:** add, change or remove departments, teachers, rooms, sections and courses; change the week
   (this clears the timetable and its locks, and the card says so); lock and unlock classes; move and swap classes,
-  which locks them in their new place as [drag and drop](/help/timetable#drag-and-drop) does; regenerate; load the
-  sample college; open a timetable from your institute.
+  which locks them in their new place as [drag and drop](/help/timetable#drag-and-drop) does; switch
+  [aims](/help/generate#aims) on or off, such as "Turn on: Finish each day as early as possible"; regenerate; load
+  the sample college; open a timetable from your institute.
 - **Online** (admin and editors): *Save online*, *Save as new timetable*, rename, publish and *Make live*.
 
 Every role can use it, since changes land in your own working copy. A viewer isn't offered online changes.
@@ -245,7 +247,8 @@ card says *Out of date: ask again* and nothing changes; an older card that still
 
 1. makes the working-copy changes;
 2. runs **Generate** if the card has it, exactly as the button does, and shows the score before and after under the
-   card, e.g. "Score 34 → 28 · 0 unplaced", or what went wrong with *See why*;
+   card, e.g. "Score 34 → 28 · 0 unplaced", or what went wrong with *See why*. If the card switched an aim, the two
+   scores count different rules, so the line says so: "Score 34 → 41 with Late finish on · 0 unplaced";
 3. makes the online changes, in order.
 
 If a step fails it stops there: the steps before it stay done, and the card marks the failed step and why. If

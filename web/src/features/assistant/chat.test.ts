@@ -311,4 +311,16 @@ describe("scoreLine", () => {
   it("gives just the new score without an earlier timetable", () => {
     expect(scoreLine(null, result(28, 1))).toBe("Score 28 · 1 unplaced");
   });
+
+  it("says which switches the card changed, since the scores count different rules", () => {
+    const on = { s1: true, s2: true, s3: true, s4: true, s5: true };
+    expect(scoreLine(result(34, 0), result(41, 0), { before: { ...on, s5: false }, after: on })).toBe("Score 34 → 41 with Late finish on · 0 unplaced");
+    expect(scoreLine(result(34, 0), result(20, 0), { before: on, after: { ...on, s2: false, s5: false } })).toBe(
+      "Score 34 → 20 with Teachers with long runs off and Late finish off · 0 unplaced",
+    );
+  });
+
+  it("adds nothing when the switches are the same, a missing one counting as its default", () => {
+    expect(scoreLine(result(34, 0), result(28, 0), { before: {}, after: { s1: true } })).toBe("Score 34 → 28 · 0 unplaced");
+  });
 });

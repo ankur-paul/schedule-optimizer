@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayInitials, LOAD_PREVIEW, loadRange, previewRows, roomUtilisation, SCORE_ROWS, scoreCount, sortLoads, teacherLoads } from "./stats";
+import { dayInitials, LOAD_PREVIEW, loadRange, previewRows, roomUtilisation, SCORE_ROWS, scoreCount, scoreTotalTip, sortLoads, teacherLoads } from "./stats";
 import { tinyCollege, tinyValid } from "./tinyCollege";
 
 // tinyValid: 2 days × 5 teaching periods, so each room has 10 slots.
@@ -116,5 +116,28 @@ describe("previewRows", () => {
 describe("dayInitials", () => {
   it("keeps two letters so Tue/Thu and Sat/Sun differ", () => {
     expect(dayInitials(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])).toEqual(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]);
+  });
+});
+
+describe("scoreTotalTip", () => {
+  const all = { subjectRepeat: 0, teacherOverload: 5, sectionGaps: 0, batchIdle: 18, lateFinish: 3 };
+
+  it("says all five rules count when every rule is on", () => {
+    expect(scoreTotalTip(all)).toMatch(/^Penalty points for all five soft rules\. Lower is better/);
+  });
+
+  it("lists the rules counted and the ones that are off", () => {
+    expect(scoreTotalTip({ ...all, lateFinish: null })).toBe(
+      "Penalty points for Same subject twice in a day, Teachers with long runs, Free periods between classes and Batches waiting during labs. " +
+        "Off: Late finish. Lower is better; 0 is perfect. Hard rules (no clashes) are never broken.",
+    );
+    expect(scoreTotalTip({ subjectRepeat: null, teacherOverload: null, sectionGaps: null, batchIdle: 6, lateFinish: null })).toMatch(
+      /^Penalty points for Batches waiting during labs\. Off: Same subject twice in a day, Teachers with long runs, Free periods between classes and Late finish\./,
+    );
+  });
+
+  it("says the score is 0 when every rule is off", () => {
+    const off = { subjectRepeat: null, teacherOverload: null, sectionGaps: null, batchIdle: null, lateFinish: null };
+    expect(scoreTotalTip(off)).toMatch(/^Every soft rule is off, so the score is 0\./);
   });
 });

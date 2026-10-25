@@ -14,7 +14,8 @@ import { supabaseOnlineApi } from "@/features/online/onlineApi";
 import { helpHref } from "@/help/helpLinks";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { initialData, useAppStore } from "@/store/useAppStore";
+import { fillSoftRules } from "@/domain/score";
+import { baselineBeforeFlip, initialData, useAppStore } from "@/store/useAppStore";
 import { applyCard, type ApplyDeps } from "./applyCard";
 import { runOnline, type ChangeData } from "./changes";
 import { ChangeCard } from "./ChangeCard";
@@ -97,9 +98,13 @@ function unsavedWork(): boolean {
   return hasUnsavedWork(state.online, docHash(state), EMPTY_HASH);
 }
 
-/** Just the working copy, for the store. */
-function setWorkingCopy({ settings, departments, teachers, rooms, sections, courses, result, locks }: ChangeData): void {
-  useAppStore.setState({ settings, departments, teachers, rooms, sections, courses, result, locks });
+/** Just the working copy, for the store. Switches a card changed show "Preferences changed" until the next run. */
+function setWorkingCopy({ settings, departments, teachers, rooms, sections, courses, result, locks, softRules }: ChangeData): void {
+  useAppStore.setState((s) => ({
+    settings, departments, teachers, rooms, sections, courses, result, locks,
+    softRules: fillSoftRules(softRules),
+    rulesAtRun: baselineBeforeFlip(s),
+  }));
 }
 
 function Panel({ client }: { client: SupabaseClient }) {

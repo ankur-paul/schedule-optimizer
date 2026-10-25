@@ -16,6 +16,8 @@ import {
   partialHow,
   regenerateFailedText,
   regenerateSummary,
+  rememberLimit,
+  TIME_LIMIT,
   unplacedGroups,
   type GenerateViewInput,
 } from "./generate";
@@ -26,7 +28,6 @@ const data: AppData = {
   result: null,
   locks: [lock],
   step: 2,
-  timeLimitSec: 20,
   printHeading: "",
   softRules: { s1: true, s2: false, s3: true, s4: true, s5: true },
 };
@@ -99,6 +100,23 @@ describe("nextTimeLimit", () => {
     expect(nextTimeLimit(5)).toBe(10);
     expect(nextTimeLimit(80)).toBe(120);
     expect(nextTimeLimit(120)).toBeNull();
+  });
+});
+
+describe("rememberLimit", () => {
+  it("keeps a retry's longer limit once it finishes with a timetable", () => {
+    expect(rememberLimit(TIME_LIMIT.default, 40, true)).toBe(40);
+    expect(rememberLimit(40, 80, true)).toBe(80);
+  });
+
+  it("keeps the old limit after a timeout or another failure", () => {
+    expect(rememberLimit(TIME_LIMIT.default, 40, false)).toBe(20);
+    expect(rememberLimit(40, 80, false)).toBe(40);
+  });
+
+  it("keeps it after a plain Generate, which has no retry limit", () => {
+    expect(rememberLimit(40, undefined, true)).toBe(40);
+    expect(rememberLimit(20, undefined, false)).toBe(20);
   });
 });
 

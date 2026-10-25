@@ -268,6 +268,34 @@ describe("score_details", () => {
     expect(s2).toContainEqual(expect.objectContaining({ rule: "S2", teacher: code("t-c1"), day: "Mon" }));
   });
 
+  it("says which rules are on; a rule that's off has null points and no penalties", () => {
+    const out = run("score_details", {}, { ...base, softRules: { s1: false, s5: false } });
+    expect(out.rules.map((r: { rule: string; on: boolean }) => [r.rule, r.on])).toEqual([
+      ["S1", false],
+      ["S2", true],
+      ["S3", true],
+      ["S4", true],
+      ["S5", false],
+    ]);
+    expect(out.rules[4].points).toBeNull();
+    expect(out.penalties.some((p: { rule: string }) => p.rule === "S1" || p.rule === "S5")).toBe(false);
+    const s5 = run("score_details", { rule: "S5" }, { ...base, softRules: { s5: false } });
+    expect(s5.rules).toEqual([expect.objectContaining({ rule: "S5", on: false, points: null })]);
+    expect(s5.penalties).toEqual([]);
+    expect(s5.switches).toBe("/help/generate#aims");
+  });
+
+  it("gives S5's penalties per section and per teacher, teachers by code", () => {
+    const out = run("score_details", { rule: "S5" }, { ...base, softRules: { s5: true } });
+    expect(out.rules[0]).toMatchObject({ rule: "S5", label: "Late finish", on: true });
+    const all = penalties({ ...sampleCollege, softRules: { ...sampleCollege.softRules, s5: true } }, timetable.placements).filter((p) => p.rule === "S5");
+    expect(out.penalties.length + (out.morePenalties ?? 0)).toBe(all.length);
+    const listed = out.penalties as { section?: string; teacher?: string }[];
+    expect(listed.some((p) => p.section && !p.teacher)).toBe(true);
+    expect(listed.some((p) => p.teacher && !p.section)).toBe(true);
+    expect(listed.filter((p) => p.teacher).every((p) => /^T-/.test(p.teacher!))).toBe(true);
+  });
+
   it("errors without a timetable", () => {
     expect(run("score_details", {}, { ...base, result: null }).error).toMatch(/no timetable/);
   });
@@ -314,7 +342,7 @@ describe("runTool", () => {
       ["schedule", { kind: "batch", id: "x" }, /"kind" must be one of section, teacher, room/],
       ["schedule", { kind: "section", id: 3 }, /"id" must be a string/],
       ["overview", { verbose: true }, /Unknown field "verbose"\. Fields: none/],
-      ["score_details", { rule: "S9" }, /must be one of S1, S2, S3, S4/],
+      ["score_details", { rule: "S9" }, /must be one of S1, S2, S3, S4, S5/],
       ["find", null, /must be an object/],
       ["find", ["x"], /must be an object/],
     ];

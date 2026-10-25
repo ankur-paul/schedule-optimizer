@@ -397,6 +397,59 @@ describe("regenerate and load_sample", () => {
   });
 });
 
+describe("set_soft_rules", () => {
+  const allOn = { s1: true, s2: true, s3: true, s4: true, s5: true };
+  const s5Off: ChangeData = { ...college(), softRules: { ...allOn, s5: false } };
+
+  it("turns rules on and off, naming them as aims; the switches it leaves out stay", () => {
+    const result = passed(run([{ op: "set_soft_rules", set: [{ rule: "S5", on: true }, { rule: "S2", on: false }] }], s5Off));
+    expect(result.lines[0]).toEqual({ op: "set_soft_rules", text: "Turn on: Finish each day as early as possible · Turn off: At most 3 periods in a row for a teacher" });
+    expect(result.data.softRules).toEqual({ ...allOn, s2: false });
+    expect(result.regenerate).toBe(false);
+  });
+
+  it("keeps the timetable and locks, re-scored under the new switches", () => {
+    const locked = passed(run([{ op: "lock", sessionId: "cse-a-ds:L1" }], s5Off)).data;
+    const data = dataOf([{ op: "set_soft_rules", set: [{ rule: "S5", on: true }] }], locked);
+    expect(data.result!.placements).toBe(locked.result!.placements);
+    expect(data.locks).toEqual(locked.locks);
+    expect(timetable.score.breakdown.lateFinish).toBeNull();
+    expect(data.result!.score.breakdown.lateFinish).toBeGreaterThan(0);
+    expect(data.result!.score.total).toBe(timetable.score.total + data.result!.score.breakdown.lateFinish!);
+    const off = dataOf([{ op: "set_soft_rules", set: [{ rule: "S5", on: false }] }], data);
+    expect(off.result!.score).toEqual(timetable.score);
+  });
+
+  it("works without a timetable, and from data with no switches (the defaults)", () => {
+    const data = dataOf([{ op: "set_soft_rules", set: [{ rule: "S1", on: false }] }], { ...college(), result: null });
+    expect(data.softRules).toEqual({ ...allOn, s5: false, s1: false });
+    expect(data.result).toBeNull();
+  });
+
+  it("goes before regenerate, which then runs with the new switches", () => {
+    const result = passed(run([{ op: "set_soft_rules", set: [{ rule: "S5", on: true }] }, { op: "regenerate" }], s5Off));
+    expect(result.regenerate).toBe(true);
+    expect(failed(run([{ op: "regenerate" }, { op: "set_soft_rules", set: [{ rule: "S5", on: true }] }], s5Off))).toMatch(/^Change 2: regenerate runs after/);
+  });
+
+  it("fails when nothing would change, so the model explains instead", () => {
+    expect(failed(run([{ op: "set_soft_rules", set: [{ rule: "S5", on: true }] }], { ...college(), softRules: allOn }))).toBe("Change 1: nothing changes: S5 is already on.");
+    expect(failed(run([{ op: "set_soft_rules", set: [{ rule: "S5", on: false }, { rule: "S1", on: true }] }], s5Off))).toBe(
+      "Change 1: nothing changes: S5 is already off, S1 is already on.",
+    );
+  });
+
+  it("checks the input against the definition", () => {
+    expect(failed(run([{ op: "set_soft_rules", set: [{ rule: "S6", on: true }] }]))).toMatch(/"set\[0\]\.rule" must be one of S1, S2, S3, S4, S5/);
+    expect(failed(run([{ op: "set_soft_rules", set: [{ rule: "S5", on: "yes" }] }]))).toMatch(/"set\[0\]\.on" must be true or false/);
+    expect(failed(run([{ op: "set_soft_rules", set: [] }]))).toMatch(/"set" needs at least 1 item/);
+  });
+
+  it("load_sample keeps the switches, as the store does", () => {
+    expect(dataOf([{ op: "load_sample" }], s5Off).softRules).toEqual(s5Off.softRules);
+  });
+});
+
 describe("new data checks", () => {
   it("lists checks the changes cause, with teachers as codes", () => {
     const result = passed(run([{ op: "update_course", id: "cse-a-ds", set: [{ field: "lecturesPerWeek", value: "40" }, { field: "subject", value: "" }] }]));

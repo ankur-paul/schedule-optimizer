@@ -93,12 +93,12 @@ An import is all or nothing: one bad row stops the whole file, so your current d
 
 Each message is explained in [Import errors](/help/data#import-errors).
 
-## Couldn't finish on a short time limit {#short-limit}
+## No timetable found in time {#short-limit}
 
-Step ③ says "No timetable found in time" and "The exact solver didn't find a timetable within 5 s."
+Step ③ says "No timetable found in time" and "The exact solver didn't find a timetable within 20 s."
 
 The exact solver needs a couple of seconds to set up before it finds its first timetable, and a large college needs longer. With a short time limit it can run out before it has anything to show.
 
-- Click **Try again with 10 s** (the button doubles the limit each time), or raise the slider under **Advanced: time limit**. The default 20 s is enough for the sample college.
+- Click **Try again with 40 s**. The button doubles the limit each time, up to 120 s. Once a longer search finishes, later runs use that limit until you reload the page. 20 s is enough for the sample college.
 - The solver stops as soon as it proves the best timetable, so a long limit doesn't always mean a long wait.
 - If it still runs out at 120 s, your data may be very tight. Look at the warnings in step ②'s [data checks](/help/data#data-checks), or click **Make a quick draft instead**.

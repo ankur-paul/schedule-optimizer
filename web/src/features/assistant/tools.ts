@@ -261,7 +261,7 @@ export function problems(data: ToolData): Result {
 
 // --- score_details ----------------------------------------------------------------------------------------------
 
-export function scoreDetails(data: ToolData, input: { rule?: "S1" | "S2" | "S3" | "S4" }): Result {
+export function scoreDetails(data: ToolData, input: { rule?: "S1" | "S2" | "S3" | "S4" | "S5" }): Result {
   const ctx = context(data);
   const result = ctx.data.result;
   if (!result) return NO_TIMETABLE;
@@ -272,7 +272,13 @@ export function scoreDetails(data: ToolData, input: { rule?: "S1" | "S2" | "S3" 
     .sort((a, b) => b.points - a.points);
   return {
     total: s.total,
-    rules: SCORE_ROWS.filter((r) => !input.rule || r.rule === input.rule).map((r) => ({ rule: r.rule, label: r.label, points: s.breakdown[r.key], how: r.tip })),
+    rules: SCORE_ROWS.filter((r) => !input.rule || r.rule === input.rule).map((r) => ({
+      rule: r.rule,
+      label: r.label,
+      on: s.breakdown[r.key] !== null,
+      points: s.breakdown[r.key],
+      how: r.tip,
+    })),
     penalties: list.slice(0, PENALTY_LIMIT).map((p) => ({
       rule: p.rule,
       points: p.points,
@@ -285,6 +291,7 @@ export function scoreDetails(data: ToolData, input: { rule?: "S1" | "S2" | "S3" 
     })),
     ...(list.length > PENALTY_LIMIT && { morePenalties: list.length - PENALTY_LIMIT }),
     help: helpHref("timetable", "score"),
+    switches: helpHref("generate", "aims"),
   };
 }
 

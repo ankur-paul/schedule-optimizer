@@ -122,8 +122,8 @@ def test_asks_before_spending(monkeypatch, capsys):
 
 
 def test_questions_cover_every_scenario_and_the_write_questions():
-    assert len(agent_eval.QUESTIONS) == 22
-    assert {s for s, _ in agent_eval.QUESTIONS} == {"built", "partial", "impossible"}
+    assert len(agent_eval.QUESTIONS) == 24
+    assert {s for s, _ in agent_eval.QUESTIONS} == {"built", "partial", "impossible", "lateFinishOff"}
     questions = [q for _, q in agent_eval.QUESTIONS]
     assert "Save this online." in questions and "Delete this timetable." in questions
 

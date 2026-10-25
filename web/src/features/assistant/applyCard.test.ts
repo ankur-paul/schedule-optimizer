@@ -87,6 +87,17 @@ describe("applyCard", () => {
     expect(w.data().locks).toEqual([expect.objectContaining({ sessionId: "cse-a-ds:L1", period: 0 })]);
   });
 
+  it("switches rules after an undo snapshot, and says so on the score line", async () => {
+    const w = world();
+    w.edit((d) => ({ ...d, softRules: { s1: true, s2: true, s3: true, s4: true, s5: false } }));
+    const before = w.data();
+    show([{ op: "set_soft_rules", set: [{ rule: "S5", on: true }] }, { op: "regenerate" }], w.data());
+    await applyCard(1, w.deps);
+    expect(w.log).toEqual(["undo: assistant changes #1", "set data", "regenerate"]);
+    expect(w.data().softRules).toEqual({ s1: true, s2: true, s3: true, s4: true, s5: true });
+    expect(card(1).after).toEqual({ text: `Score ${before.result!.score.total} → ${w.newResult.score.total} with Late finish on · 0 unplaced`, failed: false });
+  });
+
   it("shows the score before the card and after its regenerate", async () => {
     const w = world();
     const before = w.data().result!.score.total;

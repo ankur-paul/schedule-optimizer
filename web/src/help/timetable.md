@@ -26,11 +26,13 @@ Each soft rule adds points:
 | Batches waiting during labs | 3 per batch-period | A period where one batch of a split section is in a lab and another batch has nothing |
 | Late finish | 1 per free period | A free period before a section's or a teacher's last class of the day. One free lunch candidate doesn't count. Off unless switched on, so it shows "Off" and adds nothing. |
 
+Each rule has a switch in step ③'s [What to aim for](/help/generate#aims) card, all on to begin with. A rule that's off shows *Off* instead of points and isn't in the total; the ⓘ next to the total lists the rules it counts. Flipping a switch counts the score again at once, without changing the timetable.
+
 Step ③ shows the score with a box per rule, and step ④ shows it as one line of chips under the badge. A chip turns amber when its rule costs points. Each box or chip also says what was counted, such as "6 batch-periods".
 
 Things to know:
 
-- The sample college scores 18 at best: 6 periods where a batch waits during the other batch's lab. Some points are often unavoidable.
+- Some points are often unavoidable. In the sample college, 6 periods where a batch waits during the other batch's lab (18 points) can't be avoided.
 - The same score means the same thing whichever way the timetable was made, because your browser recounts it.
 - To lower the score, give the exact solver more time (**Try longer** in step ③), or look at what the points come from. Batch waiting time drops when the batches have labs of different subjects at the same time.
 

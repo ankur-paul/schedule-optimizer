@@ -38,6 +38,7 @@ INSTITUTE = uuid.uuid4()
 
 # (scenario, question). built: the sample college with its solved timetable; partial: two CSE A classes unplaced;
 # impossible: CSE A booked for more periods than the week has, after a Generate that said *Can't be built*.
+# lateFinishOff: built, with *Finish each day as early as possible* (S5) switched off.
 QUESTIONS: list[tuple[str, str]] = [
     ("built", "How do I lock a class so it stays where it is when I regenerate?"),
     ("built", "How do I bring my own college in from Excel?"),
@@ -62,6 +63,9 @@ QUESTIONS: list[tuple[str, str]] = [
     ("built", "Save this online."),
     ("built", "Publish the latest version."),
     ("built", "Delete this timetable."),
+    # T54: with Late finish off, a card turning it on and regenerating; with it on (built), an explanation.
+    ("lateFinishOff", "Make the days finish earlier."),
+    ("built", "Make the days finish earlier."),
 ]
 
 

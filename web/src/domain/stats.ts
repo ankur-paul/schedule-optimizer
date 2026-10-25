@@ -53,6 +53,21 @@ export function scoreCount(key: keyof ScoreBreakdown, points: number): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+/** The score total's tooltip: which rules it counts, and which are off. */
+export function scoreTotalTip(breakdown: ScoreBreakdown): string {
+  const on = SCORE_ROWS.filter((r) => breakdown[r.key] !== null).map((r) => r.label);
+  const off = SCORE_ROWS.filter((r) => breakdown[r.key] === null).map((r) => r.label);
+  const counts =
+    on.length === SCORE_ROWS.length
+      ? "Penalty points for all five soft rules."
+      : on.length === 0
+        ? "Every soft rule is off, so the score is 0."
+        : `Penalty points for ${list(on)}. Off: ${list(off)}.`;
+  return `${counts} Lower is better; 0 is perfect. Hard rules (no clashes) are never broken.`;
+}
+
+const list = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
+
 export interface TeacherLoad {
   teacherId: Id;
   name: string;

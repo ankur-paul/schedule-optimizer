@@ -1,7 +1,7 @@
 [
   {
     "name": "overview",
-    "description": "Counts of sections, teachers, rooms, courses and classes; whether a timetable exists (not generated, built, partial with unplaced classes, can't be built, couldn't finish); its score in total and per soft rule (S1-S4); and the number of locked classes. Start here.",
+    "description": "Counts of sections, teachers, rooms, courses and classes; whether a timetable exists (not generated, built, partial with unplaced classes, can't be built, couldn't finish); its score in total and per soft rule (S1-S5, null for a rule that's switched off); and the number of locked classes. Start here.",
     "strict": true,
     "input_schema": {
       "type": "object",
@@ -52,12 +52,12 @@
   },
   {
     "name": "score_details",
-    "description": "Where each soft-rule penalty in the score comes from: rule, section or teacher, day, periods and points. S1 same subject twice a day, S2 teacher more than 3 periods in a row, S3 idle periods in a section's day, S4 a batch idle during another batch's lab. Leave out rule for all four.",
+    "description": "Where each soft-rule penalty in the score comes from: rule, section or teacher, day, periods and points. S1 same subject twice a day, S2 teacher more than 3 periods in a row, S3 idle periods in a section's day, S4 a batch idle during another batch's lab, S5 free periods before a section's or teacher's last class of a day (one free lunch candidate excused). Also says which rules are on: a rule that's off has points null and no penalties. Leave out rule for all five.",
     "strict": true,
     "input_schema": {
       "type": "object",
       "properties": {
-        "rule": { "type": "string", "enum": ["S1", "S2", "S3", "S4"] }
+        "rule": { "type": "string", "enum": ["S1", "S2", "S3", "S4", "S5"] }
       },
       "required": [],
       "additionalProperties": false
@@ -89,7 +89,7 @@
   },
   {
     "name": "propose_changes",
-    "description": "Propose changes to the user's working copy. Nothing changes until the user clicks Apply on the card this shows, so never say a change is made. The browser first checks the whole set in order (later changes see earlier ones, e.g. add a room, then move a lab into it); if a check fails you get the errors back and can fix them. At most 100 changes. Teachers are referred to by their code; a new teacher gets an id you choose, which later changes in the same proposal use. Every field is required: use \"\" or [] for none where a field says so. Moves, swaps and locks must keep every hard rule (H1-H8); a moved or swapped class is locked in its new place. Data and settings changes may apply even when they cause new data-check problems, which the card lists. Changing settings clears the timetable and all locks. regenerate runs Generate after the other changes, keeping locks; put it after them. load_sample replaces the whole working copy with the demo college. Online changes (save_online, save_as_new, rename_online, publish, make_live) go after every working-copy change and after regenerate, and run in order once those are done; they are checked against the user's role and the online state (see online_status), and a viewer can't make them. open_online replaces the working copy with a timetable from the institute, so propose it on its own. These stay manual, so explain the steps and link the help instead of proposing them: deleting a timetable or the institute, leaving the institute, removing a member, inviting someone, cancelling an invite, changing a role or handing over the admin role, changing the institute's link name (handle), unpublishing, overwriting after a save conflict, and a save that would delete an old version (the server keeps the newest 20 plus the live one).",
+    "description": "Propose changes to the user's working copy. Nothing changes until the user clicks Apply on the card this shows, so never say a change is made. The browser first checks the whole set in order (later changes see earlier ones, e.g. add a room, then move a lab into it); if a check fails you get the errors back and can fix them. At most 100 changes. Teachers are referred to by their code; a new teacher gets an id you choose, which later changes in the same proposal use. Every field is required: use \"\" or [] for none where a field says so. Moves, swaps and locks must keep every hard rule (H1-H8); a moved or swapped class is locked in its new place. Data and settings changes may apply even when they cause new data-check problems, which the card lists. Changing settings clears the timetable and all locks. regenerate runs Generate after the other changes, keeping locks; put it after them. load_sample replaces the whole working copy with the demo college. set_soft_rules switches soft rules (S1-S5) on or off; it keeps the timetable and re-scores it, so add regenerate after it to get a timetable made for the new switches. Online changes (save_online, save_as_new, rename_online, publish, make_live) go after every working-copy change and after regenerate, and run in order once those are done; they are checked against the user's role and the online state (see online_status), and a viewer can't make them. open_online replaces the working copy with a timetable from the institute, so propose it on its own. These stay manual, so explain the steps and link the help instead of proposing them: deleting a timetable or the institute, leaving the institute, removing a member, inviting someone, cancelling an invite, changing a role or handing over the admin role, changing the institute's link name (handle), unpublishing, overwriting after a save conflict, and a save that would delete an old version (the server keeps the newest 20 plus the live one).",
     "strict": false,
     "input_schema": {
       "type": "object",
@@ -626,6 +626,36 @@
                   }
                 },
                 "required": ["op"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "set_soft_rules"
+                  },
+                  "set": {
+                    "type": "array",
+                    "description": "The switches to change; the others stay as they are.",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "rule": {
+                          "type": "string",
+                          "enum": ["S1", "S2", "S3", "S4", "S5"]
+                        },
+                        "on": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["rule", "on"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["op", "set"],
                 "additionalProperties": false
               },
               {
