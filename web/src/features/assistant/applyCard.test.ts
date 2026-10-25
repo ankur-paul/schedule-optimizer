@@ -87,12 +87,20 @@ describe("applyCard", () => {
     expect(w.data().locks).toEqual([expect.objectContaining({ sessionId: "cse-a-ds:L1", period: 0 })]);
   });
 
-  it("shows the score before and after a regenerate", async () => {
+  it("shows the score before the card and after its regenerate", async () => {
     const w = world();
     const before = w.data().result!.score.total;
     show([{ op: "regenerate" }], w.data());
     await applyCard(1, w.deps);
     expect(card(1).after).toEqual({ text: `Score ${before} → ${before - 4} · 0 unplaced`, failed: false });
+  });
+
+  it("compares with the timetable before the card, not the one its moves left", async () => {
+    const w = world();
+    const before = w.data().result!.score.total;
+    show([MOVE, { op: "regenerate" }], w.data());
+    await applyCard(1, w.deps);
+    expect(card(1).after!.text).toBe(`Score ${before} → ${w.newResult.score.total} · 0 unplaced`);
   });
 
   it("stops at a failed regenerate: the data changes stay, the online changes don't run", async () => {

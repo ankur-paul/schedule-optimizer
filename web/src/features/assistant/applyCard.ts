@@ -53,6 +53,8 @@ export async function applyCard(n: number, deps: ApplyDeps): Promise<void> {
       return;
     }
 
+    // The score line compares with the timetable the user had before the card, not the one its moves left.
+    const before = deps.data().result;
     if (changesWorkingCopy(card)) deps.pushUndo(`assistant changes #${n}`);
     // open_online is an online change that replaces the working copy, so it runs below, after the snapshot.
     if (local > 0) deps.setData(next);
@@ -63,7 +65,6 @@ export async function applyCard(n: number, deps: ApplyDeps): Promise<void> {
       update({ status: "stopped", steps: stepStates(count, step, step), failure: { step, reason: maskText(reason, deps.data().teachers), ...(conflict && { conflict }) } });
 
     if (card.regenerate) {
-      const before = deps.data().result;
       const end = await deps.regenerate();
       const after = deps.data().result;
       if (end?.kind !== "done" || !after) {
