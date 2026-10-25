@@ -1,5 +1,5 @@
 # T38 — Assistant endpoint
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** B · **Prereqs:** T36 · **Branch:** t38-agent-endpoint
 
 ## Goal

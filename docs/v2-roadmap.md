@@ -219,7 +219,9 @@ Collected by the passes above (env vars, services, public URLs needed):
   project that doesn't pause, or a keep-alive.
 - Agent (agent pass): server env `ANTHROPIC_API_KEY` (secret), `AGENT_MONTHLY_USD` (default 10), and
   `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret), now needed at runtime, not only in tests. Web env
-  `VITE_AGENT_URL` (defaults to `VITE_SOLVER_URL`).
+  `VITE_AGENT_URL` (defaults to `VITE_SOLVER_URL`). Optional: `AGENT_HELP_DIR` (default the repo's
+  `web/src/help`). `CORS_ORIGINS` (T38) lists the web app's origins, comma-separated; unset, the server allows any
+  localhost port, which only suits development.
 - The same container image runs as a second Lambda function (about 512 MB) serving `/agent`, so waiting on Anthropic
   isn't billed at the solver's memory size and chats don't use the solver's 10 concurrency slots. CORS allows the
   `Authorization` header from the web origin. The image includes `web/src/help/*.md` and `shared/agent-tools.json`.
