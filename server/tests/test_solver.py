@@ -12,7 +12,7 @@ CLASSROOM = {"id": "r1", "name": "R1", "type": "classroom", "departmentId": None
 @pytest.fixture(scope="module")
 def sample_result():
     inp = load_sample()
-    inp.options.time_limit_sec = 5
+    inp.options.time_limit_sec = 20  # 5 s ran out under load and on 4-vCPU CI runners (T48)
     return inp, solve(inp)
 
 
