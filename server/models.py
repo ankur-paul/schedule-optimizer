@@ -1,8 +1,12 @@
-"""Pydantic mirrors of the data contract in PLAN.md §3 (web/src/domain/types.ts). JSON is camelCase."""
+"""Pydantic mirrors of the data contract in PLAN.md §3 (web/src/domain/types.ts). JSON is camelCase.
+
+Bump the number in shared/contract.json (served by GET /health) when SolveInput, SolveResult or the /agent body
+changes in a way the other side must know about.
+"""
 
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 Id = str
@@ -71,7 +75,7 @@ class Placement(Model):
 
 
 class Options(Model):
-    time_limit_sec: float = 30
+    time_limit_sec: float = Field(30, gt=0, le=120)  # the UI's Advanced max is 120
     seed: Optional[int] = None
 
 

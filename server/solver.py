@@ -1,5 +1,6 @@
 """CP-SAT timetable solver. Rules H1–H8 / S1–S4 as in PLAN.md §2."""
 
+import os
 import time
 from collections import defaultdict
 
@@ -14,6 +15,15 @@ W_SECTION_GAPS = 2
 W_BATCH_IDLE = 3
 MAX_CONSECUTIVE = 3
 PROBE_TIME_LIMIT_SEC = 5.0  # locks probe, on top of the main time limit (the web client's SOLVE_GRACE_MS covers it)
+
+
+def solver_workers() -> int:
+    """CP-SAT's search workers: SOLVER_WORKERS from the environment; unset or not a positive whole number means 8."""
+    value = os.environ.get("SOLVER_WORKERS", "").strip()
+    return int(value) if value.isdigit() and int(value) > 0 else 8
+
+
+NUM_WORKERS = solver_workers()  # read once; the locks probe uses it too
 
 
 def valid_starts(inp: SolveInput, length: int) -> list[int]:
@@ -106,7 +116,7 @@ def solve(inp: SolveInput) -> SolveResult:
 def new_solver(inp: SolveInput, time_limit_sec: float) -> cp_model.CpSolver:
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_sec
-    solver.parameters.num_workers = 8
+    solver.parameters.num_workers = NUM_WORKERS
     if inp.options.seed is not None:
         solver.parameters.random_seed = inp.options.seed
     solver.parameters.cp_model_probing_level = 0  # probing costs ~5s of presolve on the sample for no gain

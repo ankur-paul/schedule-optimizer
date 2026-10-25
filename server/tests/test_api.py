@@ -1,8 +1,10 @@
 import json
+import logging
+import re
 
 from fastapi.testclient import TestClient
 
-from main import app
+from main import MAX_SOLVE_BYTES, app
 from tests.helpers import course, tiny
 from tests.test_sessions import FIXTURES
 
@@ -75,3 +77,80 @@ def test_solve_omits_unset_optional_fields():
     data = client.post("/solve", json=body).json()
     assert data["status"] in ("optimal", "feasible")
     assert "diagnosis" not in data and "message" not in data
+
+
+# ── Caps ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+def padded_body(size: int) -> bytes:
+    """A valid, quickly infeasible SolveInput padded with JSON whitespace to exactly `size` bytes."""
+    body = tiny(periods="T", courses=[course("c1", lectures=2)]).model_dump_json().encode()
+    return body + b" " * (size - len(body))
+
+
+def test_sample_college_is_far_below_the_body_cap():
+    assert len((FIXTURES / "sample-college.json").read_bytes()) < MAX_SOLVE_BYTES // 50  # ~22 KB vs 2 MB
+
+
+def test_solve_body_just_under_the_cap_is_solved():
+    res = client.post("/solve", content=padded_body(MAX_SOLVE_BYTES), headers={"Content-Type": "application/json"})
+    assert res.status_code == 200
+    assert res.json()["status"] == "infeasible"
+
+
+def test_solve_body_over_the_cap_is_413():
+    res = client.post("/solve", content=padded_body(MAX_SOLVE_BYTES + 1), headers={"Content-Type": "application/json"})
+    assert res.status_code == 413
+    assert res.json() == {"reason": "too_large"}
+
+
+def test_solve_body_over_the_cap_without_content_length_is_413():
+    body = padded_body(MAX_SOLVE_BYTES + 1)
+    chunks = (body[i : i + 65536] for i in range(0, len(body), 65536))  # streamed: no Content-Length
+    res = client.post("/solve", content=chunks, headers={"Content-Type": "application/json"})
+    assert res.status_code == 413
+    assert res.json() == {"reason": "too_large"}
+
+
+def test_solve_time_limit_over_120_is_422():
+    body = tiny().model_dump()
+    body["options"]["timeLimitSec"] = 121
+    res = client.post("/solve", json=body)
+    assert res.status_code == 422
+    assert res.json()["detail"][0]["loc"] == ["options", "timeLimitSec"]
+
+
+def test_solve_invalid_json_is_422():
+    assert client.post("/solve", content=b"{not json", headers={"Content-Type": "application/json"}).status_code == 422
+
+
+def test_solve_422_does_not_echo_the_input():
+    res = client.post("/solve", json={"settings": {"days": "SECRET-NAME"}})
+    assert res.status_code == 422
+    assert "SECRET-NAME" not in res.text
+
+
+# ── Request logs ────────────────────────────────────────────────────────────────────────────────────────
+
+
+def test_a_request_logs_one_line_without_its_body(capsys):
+    body = tiny(periods="T", courses=[course("c1", lectures=2)]).model_dump()
+    body["teachers"][0]["name"] = "SECRET-TEACHER"
+    capsys.readouterr()
+    client.post("/solve?probe=SECRET-QUERY", json=body, headers={"X-Note": "SECRET-HEADER"})
+    lines = capsys.readouterr().out.splitlines()
+    assert len(lines) == 1
+    assert re.fullmatch(r"POST /solve 200 \d+ms", lines[0])
+    assert "SECRET" not in lines[0] and "testclient" not in lines[0]
+
+
+def test_a_refused_request_logs_its_status(capsys):
+    capsys.readouterr()
+    client.post("/solve", json={"settings": {}})
+    client.get("/health")
+    lines = capsys.readouterr().out.splitlines()
+    assert [line.rsplit(" ", 1)[0] for line in lines] == ["POST /solve 422", "GET /health 200"]
+
+
+def test_uvicorn_access_log_is_off():
+    assert logging.getLogger("uvicorn.access").disabled

@@ -1,5 +1,5 @@
 # T45 — Server hardening for the deploy
-**Status:** TODO
+**Status:** DONE
 **Lane:** B · **Prereqs:** — · **Branch:** t45-server-hardening
 
 ## Goal
@@ -39,8 +39,8 @@ the first deploy*: [`docs/discussions/2026-10-25-deploy.md`](../docs/discussions
 - A request logs exactly one line with method, path, status and a duration, and none of a posted body's text.
 
 ## Done when
-- [ ] Caps, workers, contract version and request logs as above
-- [ ] PLAN.md §3 *Server API* updated
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T45: server hardening`
+- [x] Caps, workers, contract version and request logs as above
+- [x] PLAN.md §3 *Server API* updated
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T45: server hardening`

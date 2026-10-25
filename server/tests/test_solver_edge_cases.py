@@ -10,6 +10,7 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 from ortools.sat.python import cp_model
+from pydantic import ValidationError
 
 import main
 import solver as solver_module
@@ -682,11 +683,10 @@ class TestRunOptions:
         assert res.status == "error" and "found no solution in 0.3s" in res.message
         assert elapsed < 0.3 + 3  # model building is not counted by CP-SAT; allow for it
 
-    def test_zero_time_limit_means_the_default(self):
-        inp = tiny(courses=[course("c1", lectures=1)])
-        inp.options = Options(time_limit_sec=0)
-        res = solved(inp)
-        assert res.status == "optimal"
+    def test_zero_time_limit_is_refused(self):
+        # Before T45, 0 meant the default; now the time limit must be over 0 (and at most 120).
+        with pytest.raises(ValidationError):
+            Options(time_limit_sec=0)
 
     def test_same_seed_gives_the_same_optimal_score(self):
         inp = tiny(days=2, periods="TTTT", lunch=[2], courses=[course("a", lectures=3), course("b", lectures=3, teacher="t2")])
