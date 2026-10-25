@@ -47,6 +47,7 @@ def test_reference_scorer_matches_the_web(seed, i):
 
 def test_cases_cover_every_rule_and_switch():
     """Guard against the fixture drifting into timetables where a switch changes nothing."""
-    on = next(s for s in CASES[0]["scores"] if s["softRules"] == {})["score"]["breakdown"]
+    every = {f"s{i}": True for i in range(1, 6)}
+    on = next(s for s in CASES[0]["scores"] if s["softRules"] == every)["score"]["breakdown"]
     assert all(v > 0 for v in on.values()), on
-    assert {tuple(sorted(s["softRules"].items())) for s in CASES[0]["scores"]} >= {(("s1", False),), (("s5", False),), ()}
+    assert {tuple(sorted(s["softRules"].items())) for s in CASES[0]["scores"]} >= {(("s1", False),), (("s5", True),), ()}

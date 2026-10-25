@@ -5,6 +5,7 @@ the independent scorer (`reference_score`). Tests named in docs/cpsat-test-repor
 xfails until those bugs were fixed.
 """
 
+import json
 import time
 
 import pytest
@@ -14,12 +15,12 @@ from pydantic import ValidationError
 
 import main
 import solver as solver_module
-from models import Options, Placement, SolveInput
+from models import Options, Placement, SoftRules, SolveInput
 from sessions import expand_sessions
 from solver import duplicate_ids, h8_lunch_periods, score_placements, solve, teaching_runs, valid_starts
 from tests.helpers import course, hard_violations, tiny
 from tests.reference import reference_score
-from tests.test_sessions import load_sample
+from tests.test_sessions import FIXTURES, load_sample
 
 LAB = {"id": "lab1", "name": "Lab 1", "type": "lab", "departmentId": None}
 LAB2 = {"id": "lab2", "name": "Lab 2", "type": "lab", "departmentId": None}
@@ -41,6 +42,17 @@ def lock(session: str, day: int, period: int, room_id: str = "r1") -> dict:
 
 def placed(res):
     return {pl.session_id: pl for pl in res.placements}
+
+
+def rules_off(inp: SolveInput, *rules: str) -> SolveInput:
+    """A copy of `inp` with the named soft rules ("s1"…"s5") switched off."""
+    return inp.model_copy(update={"soft_rules": inp.soft_rules.model_copy(update={r: False for r in rules})})
+
+
+def raw(res, inp: SolveInput):
+    """The breakdown of `res` with every rule counted, to see a rule's penalty even when it was off."""
+    every = inp.model_copy(update={"soft_rules": SoftRules()})
+    return score_placements(every, {s.id: s for s in expand_sessions(inp)}, res.placements).breakdown
 
 
 def solved(inp: SolveInput, status: tuple[str, ...] = ("optimal",)):
@@ -545,7 +557,7 @@ class TestDiagnosis:
         assert set(x) == {(sid, 0, p, "r1") for sid in ("a:L1", "b:L1") for p in (0, 1)}
 
 
-# --- Soft rules (S1–S4) and optimality ---------------------------------------------------------------------------------
+# --- Soft rules (S1–S5), their switches and optimality ---------------------------------------------------------------------------------
 
 
 class TestSoftRules:
@@ -627,15 +639,95 @@ class TestSoftRules:
         assert solved(inp).score.breakdown.batch_idle == 0
 
     def test_weights_add_up_in_the_total(self):
-        # Force S1 (10) + S3 (2) with locks.
-        inp = tiny(days=1, periods="TTT", courses=[course("c1", lectures=2)], locks=[lock("c1:L1", 0, 0), lock("c1:L2", 0, 2)])
-        res = solved(inp)
-        assert (res.score.total, res.score.breakdown.subject_repeat, res.score.breakdown.section_gaps) == (12, 10, 2)
+        # Force S1 (10) + S3 (2) + S5 (1 for the section, 1 for t1) with locks.
+        inp = tiny(days=1, periods="TTT", courses=[course("c1", lectures=2)], locks=[lock("c1:L1", 0, 0), lock("c1:L2", 0, 2)],
+                   soft_rules={"s5": True})
+        score = solved(inp).score
+        b = score.breakdown
+        assert (score.total, b.subject_repeat, b.section_gaps, b.late_finish) == (14, 10, 2, 2)
 
     def test_unavoidable_penalty_does_not_bring_avoidable_ones(self):
         # 2 lectures of c1 on a 1-day, 3-period week: S1 = 10 is unavoidable, but the lectures sit side by side (no gap).
         res = solved(tiny(days=1, periods="TTT", courses=[course("c1", lectures=2)]))
         assert res.score.total == 10
+
+    def test_s5_starts_the_day_at_the_first_period(self):
+        # With S5 off any two periods score 0; with it on the section starts at P0 and only t2's free P0 is left.
+        courses = [course("a", lectures=1), course("b", lectures=1, teacher="t2")]
+        res = solved(tiny(periods="TTTT", courses=courses, soft_rules={"s5": True}))
+        assert {pl.period for pl in res.placements} == {0, 1} and res.score.total == 1
+        late = [lock("a:L1", 0, 2), lock("b:L1", 0, 3)]
+        assert solved(tiny(periods="TTTT", courses=courses, locks=late)).score.total == 0
+
+    def test_s5_counts_teachers_too(self):
+        # s1 has a (t1) and c (t2) in P0–P1 either way round; t1 is free at P1 or P0 because of s2 at P2. Only t2's
+        # day tells them apart: c goes first.
+        inp = tiny(periods="TTT", rooms=[ROOM, room("r2")], sections=[section("s1"), section("s2")],
+                   courses=[course("a", lectures=1), course("c", lectures=1, teacher="t2"),
+                            course("b", lectures=1, section="s2")],
+                   locks=[lock("b:L1", 0, 2, "r2")], soft_rules={"s5": True})
+        res = solved(inp)
+        assert (placed(res)["c:L1"].period, placed(res)["a:L1"].period) == (0, 1)
+        assert res.score.total == 3  # s2 free at P0 and P1, t1 at P0
+
+    def test_s5_excuses_one_free_lunch_candidate(self):
+        # H8 keeps P1 (the only candidate) free; three classes fill P0, P2, P3 and nothing is late.
+        courses = [course(c, lectures=1) for c in ("a", "b", "c")]
+        res = solved(tiny(periods="TTTT", lunch=[1], courses=courses, soft_rules={"s5": True}))
+        assert res.score.total == 0
+
+    def test_s5_excuses_only_one_lunch_candidate(self):
+        # Both candidates free before the last class: one is excused, the other counts (for s1 and for t1).
+        res = solved(tiny(periods="TTTT", lunch=[1, 2], courses=[course("a", lectures=1)], locks=[lock("a:L1", 0, 3)],
+                          soft_rules={"s5": True}))
+        assert res.score.breakdown.late_finish == 2 * 2
+
+    def test_s1_off_lets_a_subject_repeat(self):
+        # Spreading c1 puts its second lecture after t2's on day 2, so t1 starts late (S5: 1) instead of S1's 10.
+        courses = [course("c1", lectures=2), course("b", lectures=1, teacher="t2")]
+        inp = tiny(days=2, periods="TTT", courses=courses, locks=[lock("b:L1", 1, 0)], soft_rules={"s5": True})
+        assert raw(solved(inp), inp).subject_repeat == 0
+        assert raw(solved(rules_off(inp, "s1")), inp).subject_repeat == 10
+
+    def test_s2_off_lets_a_teacher_run_on(self):
+        # Four lectures by t1: a free period to break the run costs S3 2 + S5 2, less than S2's 5.
+        inp = tiny(periods="TTTTT", courses=[course(c, lectures=1) for c in ("a", "b", "c", "d")], soft_rules={"s5": True})
+        assert raw(solved(inp), inp).teacher_overload == 0
+        assert raw(solved(rules_off(inp, "s2")), inp).teacher_overload == 5
+
+    @staticmethod
+    def labs_or_gaps(other_lab: int) -> SolveInput:
+        """s1's batches can do their 1-period labs together only after s2's lab leaves lab2 (P1..`other_lab`), leaving
+        `other_lab` gaps after s1's P0 lecture; one after the other in lab1 costs S4 6 and no gaps. S5 is off (the default)."""
+        return tiny(periods="T" * (other_lab + 2), rooms=[ROOM, LAB, LAB2], teachers=5,
+                    sections=[section("s1", batches=2), section("s2")],
+                    courses=[course("a", lectures=1), course("lab", labs=1, lab_length=1, batchTeacherIds=["t2", "t3"]),
+                             course("m", labs=1, lab_length=other_lab, teacher="t4", section="s2", labRoomId="lab2")],
+                    locks=[lock("a:L1", 0, 0), lock("m:P1", 0, 1, "lab2")])
+
+    def test_s3_off_lets_gaps_in(self):
+        inp = self.labs_or_gaps(4)  # 4 gaps (S3 8) or S4 6
+        assert raw(solved(inp), inp).section_gaps == 0
+        assert raw(solved(rules_off(inp, "s3")), inp).section_gaps == 8
+
+    def test_s4_off_lets_batches_wait(self):
+        inp = self.labs_or_gaps(1)  # 1 gap (S3 2) or S4 6
+        assert raw(solved(inp), inp).batch_idle == 0
+        assert raw(solved(rules_off(inp, "s4")), inp).batch_idle == 6
+
+    def test_a_rule_that_is_off_adds_nothing_to_the_objective(self):
+        # The sample's saved timetable, every session locked: the objective is exactly the score, whatever is off.
+        inp = load_sample()
+        timetable = json.loads((FIXTURES / "sample-timetable.json").read_text())
+        inp.locks = [Placement.model_validate(p) for p in timetable["placements"]]
+        sessions = expand_sessions(inp)
+        inp.soft_rules = SoftRules(s5=True)
+        for off in [(), ("s1",), ("s2",), ("s3",), ("s4",), ("s5",), ("s1", "s3", "s5"), ("s1", "s2", "s3", "s4", "s5")]:
+            locked = rules_off(inp, *off)
+            m, _ = solver_module.build_model(locked, sessions)
+            cp = cp_model.CpSolver()
+            assert cp.solve(m) == cp_model.OPTIMAL
+            assert round(cp.objective_value) == reference_score(locked, inp.locks)["total"], off
 
 
 # --- Symmetry breaking -----------------------------------------------------------------------------------------------
@@ -725,7 +817,7 @@ class TestScorePlacements:
     def test_matches_the_reference_on_a_hand_made_timetable(self):
         # S1: 3 lectures of a on Monday (2 extra × 10); S4: B2 idles during B1's lab at P0 and B1 during B2's at P1 (2 × 3).
         # S5: t2 is free at P0 before their lab at P1, t3 at P0–P1 before lecturing P2–P4 (3 × 1).
-        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], teachers=3, soft_rules={},
+        inp = tiny(periods="TTTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], teachers=3, soft_rules={"s5": True},
                    courses=[course("a", lectures=3, teacher="t3"), course("lab", labs=1, lab_length=1, batchTeacherIds=["t1", "t2"])])
         placements = [Placement(session_id=sid, day=0, period=p, room_id=r) for sid, p, r in [
             ("lab:P1:B1", 0, "lab1"), ("lab:P1:B2", 1, "lab1"), ("a:L1", 2, "r1"), ("a:L2", 4, "r1"), ("a:L3", 3, "r1")]]
@@ -759,7 +851,7 @@ class TestScorePlacements:
         ("TTTTT", [], {}, (0, 0, 0)),  # a day with no classes
     ])
     def test_late_finish_hand_worked(self, periods, lunch, at, expected):
-        inp = tiny(periods=periods, lunch=lunch, soft_rules={},
+        inp = tiny(periods=periods, lunch=lunch, soft_rules={"s5": True},
                    courses=[course("c1", lectures=1), course("c2", lectures=1, teacher="t2")])
         placements = [Placement(session_id=sid, day=0, period=p, room_id="r1") for sid, p in at.items()]
         got = score_placements(inp, {s.id: s for s in expand_sessions(inp)}, placements)
@@ -768,7 +860,7 @@ class TestScorePlacements:
 
     def test_late_finish_counts_a_section_busy_while_one_batch_is(self):
         # B1's 2-period lab at P2–P3: the section and t1 are both free at P0–P1; B2 has nothing all day.
-        inp = tiny(periods="TTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], soft_rules={},
+        inp = tiny(periods="TTTT", rooms=[ROOM, LAB], sections=[section(batches=2)], soft_rules={"s5": True},
                    courses=[course("lab", labs=1, lab_length=2)])
         placements = [Placement(session_id="lab:P1:B1", day=0, period=2, room_id="lab1")]
         got = score_placements(inp, {s.id: s for s in expand_sessions(inp)}, placements)

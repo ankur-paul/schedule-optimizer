@@ -48,9 +48,9 @@ describe("softRules", () => {
     s.loadSample();
     s.setResult(result);
     s.setLocks([lock]);
-    s.setSoftRules({ ...DEFAULT_SOFT_RULES, s5: false });
+    s.setSoftRules({ ...DEFAULT_SOFT_RULES, s5: true });
     const after = useAppStore.getState();
-    expect(after.softRules.s5).toBe(false);
+    expect(after.softRules.s5).toBe(true);
     expect(after.result).toBe(result);
     expect(after.locks).toEqual([lock]);
   });

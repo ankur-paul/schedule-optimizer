@@ -161,6 +161,6 @@ def test_solve_accepts_partial_soft_rules_and_sends_off_rules_as_null():
     body["softRules"] = {"s1": False}
     data = client.post("/solve", json=body).json()
     assert data["score"]["breakdown"] == {
-        "subjectRepeat": None, "teacherOverload": 0, "sectionGaps": 0, "batchIdle": 0, "lateFinish": 0}
+        "subjectRepeat": None, "teacherOverload": 0, "sectionGaps": 0, "batchIdle": 0, "lateFinish": None}
     del body["softRules"]
     assert client.post("/solve", json=body).json()["score"]["breakdown"]["subjectRepeat"] == 0

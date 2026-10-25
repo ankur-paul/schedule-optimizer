@@ -86,7 +86,7 @@ class SoftRules(Model):
     s2: bool = True
     s3: bool = True
     s4: bool = True
-    s5: bool = True
+    s5: bool = False  # off by default: T53's measurement (tickets/T53-soft-rules-engines.md)
 
 
 DEFAULT_SOFT_RULES = SoftRules()

@@ -65,9 +65,9 @@ EMPTY = {"settings": {"days": [], "periods": [], "lunchCandidates": []},
 
 
 def test_soft_rules_default_when_missing_or_partial():
-    assert SolveInput.model_validate(EMPTY).soft_rules == DEFAULT_SOFT_RULES == SoftRules(s1=True, s2=True, s3=True, s4=True, s5=True)
+    assert SolveInput.model_validate(EMPTY).soft_rules == DEFAULT_SOFT_RULES == SoftRules(s1=True, s2=True, s3=True, s4=True, s5=False)
     partial = SolveInput.model_validate({**EMPTY, "softRules": {"s2": False}}).soft_rules
-    assert partial == SoftRules(s1=True, s2=False, s3=True, s4=True, s5=True)
+    assert partial == SoftRules(s1=True, s2=False, s3=True, s4=True, s5=False)
 
 
 def test_an_off_rule_serialises_as_null_even_when_nones_are_dropped():

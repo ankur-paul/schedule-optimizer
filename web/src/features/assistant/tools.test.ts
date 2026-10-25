@@ -229,8 +229,8 @@ describe("problems", () => {
 
 describe("score_details", () => {
   it("sums to the score, in total and per rule", () => {
-    const s = score(sampleCollege, timetable.placements);
-    const out = run("score_details", {}, { ...base, softRules: { ...DEFAULT_SOFT_RULES, s5: false } });
+    const s = score({ ...sampleCollege, softRules: { s5: true } }, timetable.placements);
+    const out = run("score_details", {}, { ...base, softRules: DEFAULT_SOFT_RULES });
     expect(out.total).toBe(s.total - s.breakdown.lateFinish!);
     expect(out.penalties.reduce((n: number, p: { points: number }) => n + p.points, 0)).toBe(out.total);
     for (const rule of ["S1", "S2", "S3", "S4"]) {
@@ -242,9 +242,11 @@ describe("score_details", () => {
   });
 
   it("lists the biggest PENALTY_LIMIT penalties and counts the rest", () => {
-    const all = penalties(sampleCollege, timetable.placements);
+    // With S5 on the sample timetable has more penalties than the limit.
+    const softRules = { ...DEFAULT_SOFT_RULES, s5: true };
+    const all = penalties({ ...sampleCollege, softRules }, timetable.placements);
     expect(all.length).toBeGreaterThan(PENALTY_LIMIT);
-    const out = run("score_details");
+    const out = run("score_details", {}, { ...base, softRules });
     expect(out.penalties).toHaveLength(PENALTY_LIMIT);
     expect(out.morePenalties).toBe(all.length - PENALTY_LIMIT);
     expect(out.penalties[0].points).toBe(Math.max(...all.map((p) => p.points)));

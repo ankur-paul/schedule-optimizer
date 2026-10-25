@@ -294,7 +294,7 @@ describe("verify", () => {
   it("does not list every session as unplaced for an engine error", () => {
     const out = verify(tinyCollege, cpsat({ status: "error", placements: [] }));
     expect(out.result.unplaced).toEqual([]);
-    expect(out.result.score).toEqual(ZERO);
+    expect(out.result.score).toEqual({ ...ZERO, breakdown: { ...ZERO.breakdown, lateFinish: null } }); // S5 is off by default
   });
 });
 
