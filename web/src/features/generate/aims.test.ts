@@ -53,6 +53,15 @@ describe("aimsSummary", () => {
     expect(aimsSummary(s5Off)).toMatch(/^4 of 5 count/);
     expect(aimsSummary({ s1: false, s2: false, s3: false, s4: false, s5: false })).toMatch(/^None count: Generate only follows the hard rules/);
   });
+
+  it("names the aims that are off, in S1–S5 order", () => {
+    expect(aimsSummary(s5Off)).toMatch(/Off: Finish each day as early as possible\.$/);
+    expect(aimsSummary({ ...allOn, s4: false, s1: false })).toMatch(
+      /^3 of 5 count .* Off: Spread each subject across the week, Keep a section's batches busy at the same time\.$/,
+    );
+    expect(aimsSummary(allOn)).not.toMatch(/Off:/);
+    expect(aimsSummary({})).toMatch(/Off: Finish each day/); // a missing switch is its default, and S5 starts off
+  });
 });
 
 describe("sameRules", () => {

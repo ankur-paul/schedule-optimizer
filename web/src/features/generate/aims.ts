@@ -40,12 +40,13 @@ export function aimRows(softRules: Partial<SoftRules>): (Aim & { on: boolean })[
   return AIMS.map((a) => ({ ...a, on: on[a.key] }));
 }
 
-/** The card's description: how many aims are on. */
+/** The card's description: how many aims are on, and which are off, since the switches start folded away. */
 export function aimsSummary(softRules: Partial<SoftRules>): string {
-  const n = AIMS.filter((a) => fillSoftRules(softRules)[a.key]).length;
-  if (n === AIMS.length) return "All five count towards the score, and Generate tries to keep them.";
-  if (n === 0) return "None count: Generate only follows the hard rules.";
-  return `${n} of ${AIMS.length} count towards the score, and Generate tries to keep them.`;
+  const on = fillSoftRules(softRules);
+  const off = AIMS.filter((a) => !on[a.key]).map((a) => a.label);
+  if (off.length === 0) return "All five count towards the score, and Generate tries to keep them.";
+  if (off.length === AIMS.length) return "None count: Generate only follows the hard rules.";
+  return `${AIMS.length - off.length} of ${AIMS.length} count towards the score, and Generate tries to keep them. Off: ${off.join(", ")}.`;
 }
 
 export const sameRules = (a: Partial<SoftRules>, b: Partial<SoftRules>) => {

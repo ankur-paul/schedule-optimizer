@@ -105,6 +105,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T54] Help screenshots retaken, with a new `aims-card.png` in *What to aim for*; the shots' `/health` stub now sends the contract version, so step ③ shots no longer show "The solver was updated at a different time". The help's sample-score lines no longer give a number (it depends on T53). (`cd web && npm run help:shots`; a second run changes nothing.)
 - [T55] *Request a trial coupon* opens a dialog: *Open in Gmail* (compose in the browser's first Google account, `/mail/u/0/…&tf=cm`), *Open email app* (the mailto, first on touch screens), and To/Subject/Message rows with their own *Copy* and ✓; the "No email app?" line is gone; help and privacy wording updated (signed in as an institute admin without assistant access, open the assistant and click *Request a trial coupon*)
 - [chore] Help screenshots retaken after merging T53 and T54: `timetable-ready.png` scores 18 with Late finish *Off*, `aims-card.png` shows that switch off (the three dialog shots changed only in the page behind them); `/help/generate#aims` now says S5 starts off and why. T54's "flip it off and watch the score drop" above now reads: flip it on and watch it rise. (`cd web && npm run help:shots`; a second run changes nothing.)
+- [chore] Step ③'s *What to aim for* switches start folded away; the card names the aims that are off and **Show aims** opens the list (step ③)
 
 ## Known issues / cuts
 

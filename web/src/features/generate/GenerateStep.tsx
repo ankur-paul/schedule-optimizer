@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ChevronDown, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpLink } from "@/components/HelpLink";
 import { AskAboutButton } from "@/features/assistant/AssistantPanel";
@@ -80,10 +80,14 @@ interface Actions {
   cancel: () => void;
 }
 
-/** The soft rules as aims, one switch each (T54). A flip keeps the timetable and re-scores it at once. */
+/**
+ * The soft rules as aims, one switch each (T54). A flip keeps the timetable and re-scores it at once. The switches
+ * start folded away; the description says which aims are off.
+ */
 function AimsCard({ running }: { running: boolean }) {
   const softRules = useAppStore((s) => s.softRules);
   const setSoftRules = useAppStore((s) => s.setSoftRules);
+  const [open, setOpen] = useState(false);
   return (
     <Card>
       <CardHeader>
@@ -95,26 +99,34 @@ function AimsCard({ running }: { running: boolean }) {
           </InfoTip>
         </CardTitle>
         <CardDescription>{aimsSummary(softRules)}</CardDescription>
+        <CardAction>
+          <Button variant="ghost" size="sm" aria-expanded={open} aria-controls="aims-switches" onClick={() => setOpen(!open)}>
+            {open ? "Hide aims" : "Show aims"}
+            <ChevronDown className={cn("transition-transform", open && "rotate-180")} />
+          </Button>
+        </CardAction>
       </CardHeader>
-      <CardContent>
-        <ul className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
-          {aimRows(softRules).map((aim) => (
-            <li key={aim.key} className="flex items-center gap-2">
-              <label className={cn("flex items-center gap-2.5", running ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer")}>
-                {/* The stock off track is near-white on a white card. */}
-                <Switch
-                  className="data-unchecked:bg-muted-foreground/35"
-                  checked={aim.on}
-                  disabled={running}
-                  onCheckedChange={(on) => setSoftRules({ ...softRules, [aim.key]: on })}
-                />
-                {aim.label}
-              </label>
-              <InfoTip more={helpHref("timetable", "score")}>{aim.tip}</InfoTip>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
+      {open && (
+        <CardContent>
+          <ul id="aims-switches" className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
+            {aimRows(softRules).map((aim) => (
+              <li key={aim.key} className="flex items-center gap-2">
+                <label className={cn("flex items-center gap-2.5", running ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer")}>
+                  {/* The stock off track is near-white on a white card. */}
+                  <Switch
+                    className="data-unchecked:bg-muted-foreground/35"
+                    checked={aim.on}
+                    disabled={running}
+                    onCheckedChange={(on) => setSoftRules({ ...softRules, [aim.key]: on })}
+                  />
+                  {aim.label}
+                </label>
+                <InfoTip more={helpHref("timetable", "score")}>{aim.tip}</InfoTip>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      )}
     </Card>
   );
 }

@@ -66,6 +66,7 @@ export const SHOTS: Shot[] = [
     start: "timetable",
     step: 2,
     solver: "online",
+    actions: [{ click: { role: "button", name: "Show aims" } }],
     capture: { css: '[data-slot="card"]', hasText: "What to aim for" },
   },
   {
