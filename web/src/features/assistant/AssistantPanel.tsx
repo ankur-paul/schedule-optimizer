@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Loader2, MessageSquarePlus, SendHorizontal, Sparkles, X } from "lucide-react";
+import { Copy, Loader2, MessageSquarePlus, SendHorizontal, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
 import { HelpLink } from "@/components/HelpLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -450,11 +451,34 @@ function Unlock({ api, instituteId, renew }: { api: AssistantApi; instituteId: s
       </div>
       {error && <p className="text-destructive">{error}</p>}
       {CONTACT_EMAIL && membership && (
-        <a href={trialMailto(CONTACT_EMAIL, membership)} className="text-xs text-primary underline underline-offset-2">
-          Request a trial coupon
-        </a>
+        <>
+          <a href={trialMailto(CONTACT_EMAIL, membership)} className="text-xs text-primary underline underline-offset-2">
+            Request a trial coupon
+          </a>
+          <ContactLine />
+        </>
       )}
     </form>
+  );
+}
+
+/** For admins without a mail app, where *Request a trial coupon* does nothing: the address to write to, with *Copy*. */
+function ContactLine() {
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(CONTACT_EMAIL);
+      toast.success("Address copied.");
+    } catch {
+      toast.error("Couldn't copy. Select the address and copy it yourself.");
+    }
+  };
+  return (
+    <p className="text-xs text-muted-foreground">
+      No email app? Write to <span className="select-all text-foreground">{CONTACT_EMAIL}</span> with your institute's name.{" "}
+      <button type="button" onClick={() => void copy()} className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline">
+        <Copy className="size-3" /> Copy
+      </button>
+    </p>
   );
 }
 

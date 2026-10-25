@@ -196,7 +196,8 @@ institute has access the panel says so:
 
 - **The admin** sees a coupon box. Type the trial coupon (`LTC-XXXX-XXXX-XXXX-XXXX`; case, spaces and dashes don't
   matter) and click **Unlock**. *Request a trial coupon* opens an email to us with your institute filled in; say what
-  you'll use it for. After 10 wrong coupons, wait an hour.
+  you'll use it for. If nothing opens because you have no email app, copy our address from the line below it and
+  write from your webmail, with your institute's name. After 10 wrong coupons, wait an hour.
 - **Editors and viewers** see who the admin is, to ask them.
 
 **The allowance.** A coupon gives the institute a number of questions and a number of days, such as 200 questions
