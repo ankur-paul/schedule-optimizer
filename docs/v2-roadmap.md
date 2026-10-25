@@ -24,7 +24,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | built: T41–T44 | 5 |
 | 6 | [Access by coupon](#6-access-by-coupon) | built with #5: T36, T40 | 1, 5 |
 | 7 | [First-login walkthrough](#7-first-login-walkthrough) | skipped (25 Oct) | the rest of the UI |
-| 8 | [Deploy the solver and the web app](#8-deploy-the-solver-and-the-web-app) | discussed, not planned | everything above |
+| 8 | [Deploy the solver and the web app](#8-deploy-the-solver-and-the-web-app) | planned: T45–T51 | everything above |
 
 Why this order:
 
@@ -194,16 +194,24 @@ Open questions:
 
 ## 8. Deploy the solver and the web app
 
-Original list: #6 and #7. Full discussion so far, covering AWS Lambda for the solver, Vercel Hobby for the web app
-and the code changes needed before any deploy: [`discussions/2026-10-22-deployment.md`](discussions/2026-10-22-deployment.md).
+Original list: #6 and #7. First discussed 22 Oct ([`discussions/2026-10-22-deployment.md`](discussions/2026-10-22-deployment.md):
+solve times, Lambda costs, hosts turned down); settled 25 Oct
+([`discussions/2026-10-25-deploy.md`](discussions/2026-10-25-deploy.md)). Summary:
+- **A public demo built properly, on free tiers plus the domain** `uselattice.app` (Name.com; nameservers move to
+  Cloudflare).
+- **Web:** Cloudflare Pages, built from `main` by a deploy hook once CI passes; no previews. Public settings
+  committed in `web/.env.production`.
+- **Server:** one x86_64 image in ECR, two Lambda functions in Mumbai on raw Function URLs: the solver at 3,008 MB
+  with 2 workers (raised when AWS approves more) and the agent at 512 MB. Deployed by GitHub Actions through OIDC;
+  secrets set by hand in the console, only on the agent. SHA-tagged images and a rollback workflow.
+- **Supabase:** a new free production project, migrations run from the operator's laptop, CI refuses to deploy
+  if one is missing, and a 3-day keep-alive doubles as the uptime check.
+- **Email:** Resend sends sign-in links as `no-reply@`; Cloudflare Email Routing forwards `privacy@`.
+- **Before deploying:** caps on `/solve`, `SOLVER_WORKERS`, a contract version on `/health`, request logs without
+  bodies, a 5 s health check, a 15 s grace, teacher codes (not name slugs) sent to `/solve`, a Dockerfile.
+- **Privacy:** policy v4 names AWS Mumbai, Cloudflare and Resend and 14-day logs; everyone accepts again.
 
-Open questions:
-- Cloudflare Pages or Vercel for the web app? Vercel Hobby is for non-commercial use only. That clashed with a paid
-  agent, but #6 became free trial coupons on 24 Oct, so it matters only if paid plans come back. Cloudflare Pages'
-  free plan allows commercial use.
-- ~~Where do the new APIs (auth, data, agent) run?~~ Auth and data are Supabase; the agent is a route on the FastAPI
-  app, deployed as a second Lambda function from the same image (agent pass).
-- Did the Lambda memory limit increase go through?
+Tickets T45–T51.
 
 Collected by the passes above (env vars, services, public URLs needed):
 - Supabase project in Mumbai (`ap-south-1`); a second one for production (auth pass).

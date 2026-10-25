@@ -1,6 +1,7 @@
 # Deploying the solver (discussion, 22 Oct 2026)
 
-Not started. Pick this up once the app is built (after T18). PLAN.md still says "Vercel deploy of frontend only", so update it when the plan below is final.
+Superseded on 25 Oct by [`2026-10-25-deploy.md`](2026-10-25-deploy.md), which settles the hosts, secrets and pipeline. The
+solve times, Lambda cost maths and the options considered below still hold.
 
 ## Plan so far
 

@@ -131,3 +131,10 @@ graph LR
 | [T42](T42-change-operations.md) | v2: assistant working-copy change operations | C | T40 | — |
 | [T43](T43-online-operations.md) | v2: assistant online operations and online_status | B | T42 | — |
 | [T44](T44-change-card.md) | v2: assistant change card in the panel | main | T41, T42, T43 | — |
+| [T45](T45-server-hardening.md) | v2: server hardening for the deploy | B | — | — |
+| [T46](T46-deployed-solver-client.md) | v2: web client for a deployed solver | C | T45 | — |
+| [T47](T47-server-image.md) | v2: server container image | B | — | — |
+| [T48](T48-ci.md) | v2: CI on GitHub Actions | C | — | — |
+| [T49](T49-policy-v4.md) | v2: privacy policy and terms v4 | D | — | — |
+| [T50](T50-deploy-pipeline.md) | v2: deploy pipeline | main | T45, T47, T48 | — |
+| [T51](T51-go-live.md) | v2: go live on uselattice.app | main | T46, T49, T50 | — |
