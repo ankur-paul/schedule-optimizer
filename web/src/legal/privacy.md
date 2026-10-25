@@ -92,8 +92,8 @@ room and course names are sent as they are.
 We don't store your chats. A chat stays in the open browser tab until you click *New chat* or close the tab. Our
 server passes it on and keeps none of it. We record only the usage numbers listed in the table above.
 
-To ask for a trial coupon, *Request a trial coupon* opens an email to us in your own email app, filled in with
-your institute's name and its link name (such as `gndec`). We receive it like any other email, and it stays in our
+To ask for a trial coupon, *Request a trial coupon* opens an email to us in Gmail or your own email app, or gives you
+the text to copy, filled in with your institute's name and its link name (such as `gndec`). We receive it like any other email, and it stays in our
 inbox until you ask us to delete it.
 
 ### Invites

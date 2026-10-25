@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowanceLine, answerBlocks, askAdminLine, inlineParts, safeHref, toolLabel, trialMailto, trialRequestText } from "./format";
+import { allowanceLine, answerBlocks, askAdminLine, inlineParts, safeHref, toolLabel, trialCopyRows, trialGmailUrl, trialMailto } from "./format";
 import { teacherCodes } from "@/domain/teacherCodes";
 
 const now = new Date("2026-10-25T12:00:00Z");
@@ -43,21 +43,54 @@ describe("trialMailto", () => {
   });
 });
 
-describe("trialRequestText", () => {
-  it("has the address, subject and the mailto's body, unencoded", () => {
-    expect(trialRequestText("ops+lattice@example.org", { name: "GNDEC & Co", handle: "gndec" })).toBe(
-      "To: ops+lattice@example.org\nSubject: Lattice assistant trial\n\nInstitute: GNDEC & Co\nHandle: gndec\n\nWhat will you use it for?\n",
-    );
+describe("trialGmailUrl", () => {
+  const institute = { name: "GNDEC & Co", handle: "gndec" };
+
+  it("opens a filled Gmail compose window", () => {
+    const url = new URL(trialGmailUrl("ops+lattice@example.org", institute));
+    expect(url.origin + url.pathname).toBe("https://mail.google.com/mail/");
+    expect(url.searchParams.get("view")).toBe("cm");
+    expect(url.searchParams.get("fs")).toBe("1");
+    expect(url.searchParams.get("to")).toBe("ops+lattice@example.org");
+    expect(url.searchParams.get("su")).toBe("Lattice assistant trial");
+    expect(url.searchParams.get("body")).toBe("Institute: GNDEC & Co\nHandle: gndec\n\nWhat will you use it for?\n");
+  });
+
+  it("encodes newlines as %0A and spaces as %20, never +", () => {
+    const href = trialGmailUrl("ops+lattice@example.org", institute);
+    expect(href).toContain("to=ops%2Blattice%40example.org");
+    expect(href).toContain("su=Lattice%20assistant%20trial");
+    expect(href).toContain("Handle%3A%20gndec%0A%0AWhat");
+    expect(href).not.toMatch(/\+/);
   });
 
   it("says when the link name isn't set", () => {
-    expect(trialRequestText("a@b.org", { name: "Tom's \"Institute\" #1?", handle: null })).toContain('Institute: Tom\'s "Institute" #1?\nHandle: (not set)\n');
+    const url = new URL(trialGmailUrl("a@b.org", { name: "Tom's \"Institute\" #1?", handle: null }));
+    expect(url.searchParams.get("body")).toBe('Institute: Tom\'s "Institute" #1?\nHandle: (not set)\n\nWhat will you use it for?\n');
   });
 
-  it("matches the body the mailto sends", () => {
-    const institute = { name: "Punjab Engg", handle: "pec" };
-    const body = new URL(trialMailto("a@b.org", institute)).searchParams.get("body")!;
-    expect(trialRequestText("a@b.org", institute).split("\n\n").slice(1).join("\n\n")).toBe(body);
+  it("picks the signed-in account only when one is given", () => {
+    expect(new URL(trialGmailUrl("a@b.org", institute)).searchParams.has("authuser")).toBe(false);
+    expect(new URL(trialGmailUrl("a@b.org", institute, "")).searchParams.has("authuser")).toBe(false);
+    expect(new URL(trialGmailUrl("a@b.org", institute, "asha+x@gndec.ac.in")).searchParams.get("authuser")).toBe("asha+x@gndec.ac.in");
+  });
+});
+
+describe("trialCopyRows", () => {
+  it("has the address, subject and message the mailto sends", () => {
+    const institute = { name: "Punjab Engg", handle: null };
+    const url = new URL(trialMailto("ops+lattice@example.org", institute));
+    expect(trialCopyRows("ops+lattice@example.org", institute)).toEqual([
+      { label: "To", value: decodeURIComponent(url.pathname) },
+      { label: "Subject", value: url.searchParams.get("subject") },
+      { label: "Message", value: url.searchParams.get("body") },
+    ]);
+  });
+
+  it("matches what Gmail is sent", () => {
+    const institute = { name: "GNDEC & Co", handle: "gndec" };
+    const url = new URL(trialGmailUrl("a@b.org", institute, "me@x.org"));
+    expect(trialCopyRows("a@b.org", institute).map((r) => r.value)).toEqual([url.searchParams.get("to"), url.searchParams.get("su"), url.searchParams.get("body")]);
   });
 });
 

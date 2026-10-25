@@ -1,5 +1,5 @@
 # T55 — Trial coupon request dialog
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** A · **Prereqs:** — · **Branch:** t55-trial-request-dialog
 
 ## Goal
@@ -57,7 +57,7 @@ small dialog: open the email in Gmail or in the mail app, or copy the address, s
   there), with *Open email app* first; editors and viewers still see the ask-your-admin line, not the dialog.
 
 ## Done when
-- [ ] Dialog, Gmail link and copy rows as above; "No email app?" line removed
+- [x] Dialog, Gmail link and copy rows as above; "No email app?" line removed
 - [ ] Tests above pass; full suite and `npx tsc -b` green
 - [ ] Help paragraph, privacy wording (or the T49 note), FEATURES.md, PROGRESS.md
 - [ ] Committed: `T55: trial coupon request dialog`

@@ -21,9 +21,9 @@ export function allowanceLine(access: Access, now: Date): { text: string; low: b
 
 type RequestingInstitute = { name: string; handle: string | null };
 
-const TRIAL_SUBJECT = "Lattice assistant trial";
+export const TRIAL_SUBJECT = "Lattice assistant trial";
 
-function trialBody(institute: RequestingInstitute): string {
+export function trialBody(institute: RequestingInstitute): string {
   return [`Institute: ${institute.name}`, `Handle: ${institute.handle ?? "(not set)"}`, "", "What will you use it for?", ""].join("\n");
 }
 
@@ -33,9 +33,30 @@ export function trialMailto(to: string, institute: RequestingInstitute): string 
   return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(TRIAL_SUBJECT)}&body=${encodeURIComponent(trialBody(institute))}`;
 }
 
-/** The same email as plain text, for *Copy* when there is no mail app to open: paste it into webmail. */
-export function trialRequestText(to: string, institute: RequestingInstitute): string {
-  return `To: ${to}\nSubject: ${TRIAL_SUBJECT}\n\n${trialBody(institute)}`;
+/**
+ * The same email as a Gmail compose window. `account` (the signed-in email) is Gmail's `authuser`, so it opens in
+ * that account when several are signed in.
+ */
+export function trialGmailUrl(to: string, institute: RequestingInstitute, account?: string): string {
+  const params: [string, string][] = [
+    ["view", "cm"],
+    ["fs", "1"],
+    ["to", to],
+    ["su", TRIAL_SUBJECT],
+    ["body", trialBody(institute)],
+  ];
+  if (account) params.push(["authuser", account]);
+  // encodeURIComponent, as for the mailto: Gmail shows a "+" from URLSearchParams as a plus.
+  return `https://mail.google.com/mail/?${params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&")}`;
+}
+
+/** The dialog's copy rows: the same email in three parts, to paste into any email. */
+export function trialCopyRows(to: string, institute: RequestingInstitute): { label: string; value: string }[] {
+  return [
+    { label: "To", value: to },
+    { label: "Subject", value: TRIAL_SUBJECT },
+    { label: "Message", value: trialBody(institute) },
+  ];
 }
 
 /** The locked screen's line for editors and viewers: whom to ask, with their email so they can. */
