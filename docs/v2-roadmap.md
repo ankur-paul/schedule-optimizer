@@ -21,9 +21,9 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | 3 | [Store institute data online](#3-store-institute-data-online) | built: T27–T31 | 1, 2 |
 | 4 | [Help page](#4-help-page) | built: T32–T35 | — |
 | 5 | [AI agent](#5-ai-agent) | built: T36–T40 | 1, 3, 4 |
-| 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | planned: T41–T44 | 5 |
+| 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | built: T41–T44 | 5 |
 | 6 | [Access by coupon](#6-access-by-coupon) | built with #5: T36, T40 | 1, 5 |
-| 7 | [First-login walkthrough](#7-first-login-walkthrough) | idea | the rest of the UI |
+| 7 | [First-login walkthrough](#7-first-login-walkthrough) | skipped (25 Oct) | the rest of the UI |
 | 8 | [Deploy the solver and the web app](#8-deploy-the-solver-and-the-web-app) | discussed, not planned | everything above |
 
 Why this order:
@@ -38,7 +38,7 @@ Why this order:
 - **Payments after the agent works.** There is nothing to charge for until then. (24 Oct: payments became trial
   coupons, built with the agent; see #6.)
 - **Walkthrough after the UI is done.** It tours the finished UI (login, consent, agent). If we build it earlier,
-  we redo it.
+  we redo it. (Skipped on 25 Oct.)
 - **Deploy at the end** (decided 22 Oct), once the app is built. To keep that step small, every pass follows the
   checklist below.
 
@@ -183,6 +183,8 @@ pricing real cost-per-question numbers.
 ## 7. First-login walkthrough
 
 Original list: #8. A guided tour the first time a user logs in.
+
+Skipped on 25 Oct: not built. The questions below are kept in case it comes back.
 
 Open questions:
 - The tour includes the assistant panel (#5).
