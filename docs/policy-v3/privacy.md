@@ -107,14 +107,11 @@ tells you to sign in. An unused invite stays until it's used or the admin cancel
   [subprocessors](https://supabase.com/legal/customer-resources/subprocessor-list).
 - **Google** handles sign-in if you choose *Sign in with Google*. We receive your name, email address and profile
   picture link, and use them only for the purposes in the table above.
-- **Anthropic**, a US company, runs the Claude model behind the assistant. It receives your questions and the
-  timetable details the assistant looks up, with teacher names replaced by codes, and processes them in the United
-  States. Under its [commercial terms](https://www.anthropic.com/legal/commercial-terms) it may not train its models
-  on them. It
-  [deletes them within 30 days](https://privacy.claude.com/en/articles/7996866-how-long-does-anthropic-store-my-organizations-data),
-  except that it may keep a request flagged by its safety checks as breaking its
-  [usage policy](https://www.anthropic.com/legal/aup) for up to 2 years, and keep data longer where the law requires
-  it.
+- **Anthropic**, a US company, runs the Claude model behind the assistant and receives what the assistant sends, as
+  described above. Its [commercial terms](https://www.anthropic.com/legal/commercial-terms) say it doesn't train its
+  models on this data, and its
+  [retention policy](https://privacy.claude.com/en/articles/7996866-how-long-does-anthropic-store-my-organizations-data)
+  says it deletes it within 30 days in most cases.
 - Our **server** receives timetable data for the solver and chats for the assistant, both without teacher names,
   and keeps nothing.
 
@@ -140,7 +137,7 @@ cookies and no analytics.
   it from the coupons it redeemed.
 - Wrong coupon tries: they count for an hour, and are deleted the next time you try a coupon after that, or with
   your account.
-- Assistant chats: we keep none. Anthropic keeps what it received for up to 30 days, with the exceptions above.
+- Assistant chats: we keep none. Anthropic keeps what it received under its retention policy, linked above.
 - Deleting is immediate. Copies in our database host's backups are erased within 7 days.
 
 ## Your rights
