@@ -88,7 +88,7 @@ function ConsentGate({ client, user }: { client: SupabaseClient; user: SessionUs
 }
 
 /** Unmounts on sign-in (the email link may land in another tab), so the dialog is closed again after a sign-out. */
-function SignInButton({ client }: { client: SupabaseClient }) {
+export function SignInButton({ client }: { client: SupabaseClient }) {
   const [open, setOpen] = useState(false);
   return (
     <>

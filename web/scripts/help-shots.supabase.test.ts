@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { parseConflict, toDoc } from "../src/features/online/online";
 import { initialData } from "../src/store/useAppStore";
-import { answer, INSTITUTE, PEOPLE, SESSION_KEY, storedSession, SUPABASE_URL, TIMETABLE } from "./help-shots.supabase";
+import { POLICY_VERSION } from "../src/legal/policy";
+import { AGENT_ACCESS, agentReply, answer, INSTITUTE, PEOPLE, SESSION_KEY, storedSession, SUPABASE_URL, TIMETABLE } from "./help-shots.supabase";
 
 const doc = toDoc(initialData());
 const get = (path: string) => answer({ method: "GET", url: `${SUPABASE_URL}${path}` }, doc);
@@ -62,6 +63,34 @@ describe("the pretend Supabase", () => {
   it("refuses writes no shot needs", () => {
     expect(rpc("delete_timetable", { timetable_id: TIMETABLE.id }).status).toBe(400);
     expect(answer({ method: "PATCH", url: `${SUPABASE_URL}/rest/v1/institutes?id=eq.${INSTITUTE.id}` }, doc).status).toBe(400);
+  });
+});
+
+describe("the pretend assistant", () => {
+  it("has every member accept the current policy, so no consent dialog covers a shot", () => {
+    const rows = get(`/rest/v1/consents?select=version&user_id=eq.${PEOPLE[0].id}`).json as { version: number }[];
+    expect(rows).toEqual([expect.objectContaining({ version: POLICY_VERSION })]);
+  });
+
+  it("gives the institute an allowance", () => {
+    expect(get(`/rest/v1/agent_access?select=questions_left,expires_at&institute_id=eq.${INSTITUTE.id}`).json).toEqual([
+      { institute_id: INSTITUTE.id, ...AGENT_ACCESS },
+    ]);
+  });
+
+  it("asks for a tool first, then answers once the result is back", () => {
+    const first = agentReply({ messages: [{ role: "user", content: "q" }] }) as { stop_reason: string; content: { type: string; id: string }[] };
+    expect(first.stop_reason).toBe("tool_use");
+    expect(first.content[0]).toMatchObject({ type: "tool_use", name: "score_details" });
+    const results = { role: "user", content: [{ type: "tool_result", tool_use_id: first.content[0].id, content: "{}" }] };
+    const second = agentReply({ messages: [{ role: "user", content: "q" }, { role: "assistant", content: first.content }, results] }) as {
+      stop_reason: string;
+      content: { type: string; text: string }[];
+      questions_left: number;
+    };
+    expect(second.stop_reason).toBe("end_turn");
+    expect(second.content[0].text).toContain("All 18 points");
+    expect(second.questions_left).toBe(AGENT_ACCESS.questions_left);
   });
 });
 

@@ -21,6 +21,8 @@ const useRun = create<{ controller: AbortController | null; kind: "exact" | "dra
 export const useGenerating = () => useRun((s) => s.controller !== null);
 export const useRunKind = () => useRun((s) => s.kind);
 export const useRunOutcome = () => useRun((s) => s.outcome);
+/** The last run's outcome outside React, for the assistant's tools. */
+export const runOutcome = () => useRun.getState().outcome;
 
 /** Switch step ③ between the last failure ("Back to the reasons") and the stored timetable. */
 export function showFailure(show: boolean) {

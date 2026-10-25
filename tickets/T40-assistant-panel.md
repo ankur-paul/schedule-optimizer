@@ -1,5 +1,5 @@
 # T40 — Assistant panel
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T37, T38, T39 · **Branch:** t40-assistant-panel
 
 ## Goal
@@ -84,9 +84,9 @@ user, Q8, Q24, Q25, Q29, Q31).
   - phone width.
 
 ## Done when
-- [ ] Panel, states, coupon box, loop, compaction and *Ask about this* work as above
-- [ ] Help section and links; link test green
-- [ ] `agent_eval.py` run once; cost per question in PROGRESS.md
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md assistant bullet and known limits
-- [ ] Committed: `T40: assistant panel`
+- [x] Panel, states, coupon box, loop, compaction and *Ask about this* work as above
+- [x] Help section and links; link test green
+- [x] `agent_eval.py` run once; cost per question in PROGRESS.md
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md assistant bullet and known limits
+- [x] Committed: `T40: assistant panel`

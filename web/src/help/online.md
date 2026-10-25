@@ -168,6 +168,52 @@ Anyone who has the link can open it, pass it on, copy the page or print it. Sear
 Unpublishing or deleting takes the page down at once, but it can't recall copies people already made, so publish
 only what your institution wants made public.
 
+## The assistant {#assistant}
+
+The **Assistant** button in the header opens a panel on the right (full screen on a phone) where you can ask
+questions in your own words, in any language:
+
+- about using Lattice: "How do I lock a class?"
+- about your own timetable: "Why can't this be built?", "Why is CSE-3A's lab unplaced?", "Where does the score of
+  34 come from?", "When is Dr. Meera Iyer free on Tuesday?"
+
+It looks at your working copy as it is now, unsaved changes included, and lists what it looked at while it works
+("Looked at CSE-3A's week"). Its answers link to the help sections they rely on. It declines questions that aren't
+about Lattice or your timetables.
+
+![The assistant panel: "143 questions left · until 23 Nov", the question "Where does the score of 18 come from?", "Looked at the score", and an answer naming the batches waiting during labs in ECE A and ME A](/help/assistant-panel.png)
+
+**It only reads.** The assistant can't change your data, move classes, lock anything or generate a timetable; it
+tells you what to do and where. **Its answers can be wrong**, so check them against the timetable before acting.
+
+**Ask about this.** Signed in, the problem cards in step ③ (each *Can't be built* reason, *Couldn't finish*, each
+group of unplaced classes) and each data check in step ② have an *Ask about this* link. It opens the panel and asks
+about that card, with its details.
+
+**Who can use it.** Any member of an institute (admin, editor or viewer) once the institute has access. The panel
+uses the institute your working copy is linked to; otherwise the one picked at the top of the panel. Until the
+institute has access the panel says so:
+
+- **The admin** sees a coupon box. Type the trial coupon (`LTC-XXXX-XXXX-XXXX-XXXX`; case, spaces and dashes don't
+  matter) and click **Unlock**. *Request a trial coupon* opens an email to us with your institute filled in; say what
+  you'll use it for. After 10 wrong coupons, wait an hour.
+- **Editors and viewers** see who the admin is, to ask them.
+
+**The allowance.** A coupon gives the institute a number of questions and a number of days, such as 200 questions
+over 30 days, shared by all its members. The panel's header shows what's left, e.g. "143 questions left · until 23
+Nov", in amber under 20 questions or 3 days. Each question you type counts once, however many things the assistant
+looks up to answer it. A second coupon adds its questions and keeps the later end date. When the questions or the
+days run out, the panel locks again and your chat stays on screen. If it says *paused until next month*, the
+service's monthly limit was reached for everyone.
+
+**The chat** stays in this browser tab only and is gone when you reload. **New chat** clears it. In a long chat,
+the assistant summarises the earlier part every 20 questions so it can keep going; you still see the whole chat.
+Enter sends, Shift+Enter adds a new line, Esc closes the panel.
+
+**Privacy.** Your questions and what the assistant looks up are sent to Anthropic, which runs the AI model, with
+teachers' names replaced by codes; a misspelt name in a question isn't replaced. Chats aren't stored. See the
+[Privacy Policy](/privacy).
+
 ## Leaving and deleting
 
 **Delete a timetable (admin).** With it open, click the status line, then **Delete…**, and type its name. This

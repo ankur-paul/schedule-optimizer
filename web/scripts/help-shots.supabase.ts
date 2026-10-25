@@ -2,6 +2,7 @@
 // answered the way PostgREST and the database functions would. Pure, so Vitest can check it without a browser.
 import type { Role } from "../src/features/account/institutes";
 import { docHash } from "../src/features/online/online";
+import { POLICY_VERSION } from "../src/legal/policy";
 import type { OnlineLink, WorkingCopy } from "../src/store/useAppStore";
 
 /** The URL the screenshot build uses for Supabase. Every request to it is answered by `answer`. */
@@ -27,6 +28,38 @@ export const PEOPLE: Person[] = [
   { id: "user-simran", name: "Simran Kaur", email: "simran@gndec.ac.in", role: "viewer" },
   { id: "user-hod", name: null, email: "hod.ece@gndec.ac.in", role: "viewer" },
 ];
+
+/** The institute's assistant allowance (T40), as in the help's example line. */
+export const AGENT_ACCESS = { questions_left: 143, expires_at: "2026-11-23T18:00:00+05:30" };
+
+/** The question the assistant screenshot asks, and its answer: true of the fixed timetable (score 18, all S4). */
+export const AGENT_QUESTION = "Where does the score of 18 come from?";
+const AGENT_ANSWER = [
+  "All 18 points come from one soft rule, **Batches waiting during labs** ([how the score works](/help/timetable#score)): 3 points for each period one batch is in a lab while the other batch has nothing.",
+  "",
+  "- **ECE A**: batch 2 waits on Mon P4–P5 and batch 1 on Fri P1–P2 (12 points).",
+  "- **ME A**: batch 1 waits on Wed P3 and batch 2 on Thu P5 (6 points).",
+  "",
+  "The other three rules score 0. The exact solver proved 18 is the best possible with this data.",
+].join("\n");
+
+/**
+ * What the pretend `POST /agent` answers: a `score_details` call to a new question, then the answer once the tool
+ * result comes back, the way the real server replies (server/agent.py).
+ */
+export function agentReply(body: { messages: { role: string; content: unknown }[] }): unknown {
+  const last = body.messages.at(-1)?.content;
+  const answered = Array.isArray(last) && last.some((b: { type?: string }) => b.type === "tool_result");
+  return {
+    question_id: "q-help-shots",
+    content: answered
+      ? [{ type: "text", text: AGENT_ANSWER }]
+      : [{ type: "tool_use", id: "tu-help-shots", name: "score_details", input: {} }],
+    stop_reason: answered ? "end_turn" : "tool_use",
+    questions_left: AGENT_ACCESS.questions_left,
+    expires_at: AGENT_ACCESS.expires_at,
+  };
+}
 
 const INVITES = [{ email: "jaspreet@gndec.ac.in", role: "editor" }];
 
@@ -112,7 +145,8 @@ function tables(doc: WorkingCopy): Record<string, Row[]> {
     institutes: { name: INSTITUTE.name, handle: INSTITUTE.handle },
   });
   return {
-    consents: PEOPLE.map((p) => ({ user_id: p.id, version: 2 })),
+    consents: PEOPLE.map((p) => ({ user_id: p.id, version: POLICY_VERSION })),
+    agent_access: [{ institute_id: INSTITUTE.id, ...AGENT_ACCESS }],
     memberships: PEOPLE.map(membership),
     profiles: PEOPLE.map((p) => ({ user_id: p.id, name: p.name, email: p.email })),
     invites: INVITES.map((i) => ({ institute_id: INSTITUTE.id, ...i })),
