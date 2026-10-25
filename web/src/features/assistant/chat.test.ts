@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { SolveResult } from "@/domain/types";
 import {
   answered,
   applySummary,
+  changesWorkingCopy,
   commit,
   commitFailed,
   compactRequest,
@@ -9,18 +11,24 @@ import {
   EMPTY_CHAT,
   errorOutcome,
   needsCompaction,
+  outcomeNote,
+  proposalOutcome,
   replyText,
+  scoreLine,
   sentHistory,
   skipCompaction,
+  stepStates,
   summaryMessage,
   toolResultsMessage,
   toolUses,
   turnRequest,
+  withOutcomes,
   type AgentReply,
   type Block,
   type Chat,
   type Message,
 } from "./chat";
+import type { ChangeData, DryRun } from "./changes";
 
 const ask = (text: string): Message => ({ role: "user", content: text });
 const thinking: Block = { type: "thinking", thinking: "", signature: "sig==" };
@@ -199,5 +207,108 @@ describe("errorOutcome", () => {
 
   it("says the server can't be reached when nothing answered", () => {
     expect(errorOutcome(0, null).message).toMatch(/Couldn't reach/);
+  });
+});
+
+// --- change cards ---------------------------------------------------------------------------------------------
+
+describe("proposalOutcome", () => {
+  const data = { teachers: [{ id: "t1", name: "Asha", departmentId: "cse" }] } as ChangeData;
+  const passed: DryRun = {
+    ok: true,
+    summary: "Move DS off Monday",
+    lines: [
+      { op: "move", text: "Move CSE A DS from Mon P1 to Tue P2 · R1 · locked" },
+      { op: "regenerate", text: "Regenerate, keeping 1 lock" },
+      { op: "save_online", text: "Save online as version 8 of “CSE odd”" },
+    ],
+    warnings: [{ level: "warning", text: "CSE A has 31 of 35 periods booked." }],
+    regenerate: true,
+    online: [{ op: "save_online" }],
+    data,
+  };
+
+  it("shows a passed proposal as a numbered card, every step pending", () => {
+    const input = { summary: "Move DS off Monday", changes: [] };
+    const { output, card } = proposalOutcome(passed, 3, input);
+    expect(output).toEqual({ content: "Shown to the user as changes #3; they will apply or discard it.", isError: false });
+    expect(card).toEqual({
+      n: 3,
+      input,
+      summary: "Move DS off Monday",
+      lines: passed.lines,
+      warnings: passed.warnings,
+      regenerate: true,
+      online: true,
+      teachers: data.teachers,
+      status: "proposed",
+      steps: ["pending", "pending", "pending"],
+    });
+  });
+
+  it("sends a failed one back as an error result, with no card", () => {
+    const { output, card } = proposalOutcome({ ok: false, errors: ["Change 1: no room with id X.", "Change 2: …"] }, 1, {});
+    expect(card).toBeNull();
+    expect(output).toEqual({ content: JSON.stringify({ error: "Change 1: no room with id X.\nChange 2: …" }), isError: true });
+  });
+
+  it("marks a card without online changes", () => {
+    expect(proposalOutcome({ ...passed, online: [] }, 1, {}).card!.online).toBe(false);
+  });
+});
+
+describe("changesWorkingCopy", () => {
+  const card = (...ops: string[]) => ({ lines: ops.map((op) => ({ op, text: op })) }) as Parameters<typeof changesWorkingCopy>[0];
+
+  it("is true for data changes, moves, regenerate and opening a timetable", () => {
+    for (const op of ["add_room", "move", "set_settings", "regenerate", "load_sample", "open_online"]) expect(changesWorkingCopy(card(op))).toBe(true);
+    expect(changesWorkingCopy(card("move", "save_online"))).toBe(true);
+  });
+
+  it("is false when every change is online only", () => {
+    expect(changesWorkingCopy(card("save_online", "publish"))).toBe(false);
+    expect(changesWorkingCopy(card("save_as_new", "rename_online", "make_live"))).toBe(false);
+  });
+});
+
+describe("stepStates", () => {
+  it("marks steps done up to a point, then the failed one", () => {
+    expect(stepStates(4, 0)).toEqual(["pending", "pending", "pending", "pending"]);
+    expect(stepStates(4, 2)).toEqual(["done", "done", "pending", "pending"]);
+    expect(stepStates(4, 2, 2)).toEqual(["done", "done", "failed", "pending"]);
+    expect(stepStates(2, 2)).toEqual(["done", "done"]);
+  });
+});
+
+describe("outcome notes", () => {
+  it("says what happened to a card", () => {
+    expect(outcomeNote({ n: 3, status: "applied" })).toBe("Applied changes #3");
+    expect(outcomeNote({ n: 3, status: "discarded" })).toBe("Discarded changes #3");
+    expect(outcomeNote({ n: 3, status: "outOfDate" })).toBe("Changes #3 are out of date and weren't applied");
+    expect(outcomeNote({ n: 3, status: "stopped", failure: { step: 4, reason: "Someone saved…", conflict: true } })).toBe("Applied changes #3 up to step 5: save conflict");
+    expect(outcomeNote({ n: 2, status: "stopped", failure: { step: 0, reason: "No connection." } })).toBe("Applied changes #2 up to step 1: No connection.");
+  });
+
+  it("has nothing to say while a card waits or runs", () => {
+    expect(outcomeNote({ n: 1, status: "proposed" })).toBeNull();
+    expect(outcomeNote({ n: 1, status: "applying" })).toBeNull();
+  });
+
+  it("puts every note before the question, or leaves it alone", () => {
+    expect(withOutcomes("And now?", [])).toBe("And now?");
+    expect(withOutcomes("And now?", ["Applied changes #1", "Discarded changes #2"])).toBe("[Applied changes #1]\n[Discarded changes #2]\n\nAnd now?");
+  });
+});
+
+describe("scoreLine", () => {
+  const result = (total: number, unplaced: number) => ({ score: { total } as SolveResult["score"], unplaced: Array.from({ length: unplaced }, (_, i) => ({ sessionId: `s${i}`, reason: "" })) });
+
+  it("gives the score before and after, and the unplaced count", () => {
+    expect(scoreLine(result(34, 2), result(28, 0))).toBe("Score 34 → 28 · 0 unplaced");
+    expect(scoreLine(result(10, 0), result(12, 3))).toBe("Score 10 → 12 · 3 unplaced");
+  });
+
+  it("gives just the new score without an earlier timetable", () => {
+    expect(scoreLine(null, result(28, 1))).toBe("Score 28 · 1 unplaced");
   });
 });

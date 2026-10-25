@@ -1,5 +1,4 @@
 import definitions from "../../../../shared/agent-tools.json";
-import changeDefinitions from "../../../../shared/agent-change-tool.json";
 import { buildGrid, sessionLabel, type Cell, type PlacedSession } from "@/domain/grid";
 import { penalties, score } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
@@ -42,8 +41,6 @@ export interface ToolDefinition {
 }
 // The JSON import types optional properties as `undefined`; the test checks the file has this shape.
 export const TOOL_DEFINITIONS = definitions as unknown as ToolDefinition[];
-/** Tools the panel runs that aren't sent to Claude yet: `online_status` joins `agent-tools.json` in T44. */
-const PENDING_DEFINITIONS = (changeDefinitions as unknown as ToolDefinition[]).filter((d) => d.name === "online_status");
 
 /** Results longer than this many characters are cut (with a note). */
 export const RESULT_LIMIT = 8000;
@@ -412,7 +409,7 @@ export function inputProblem(schema: ToolDefinition["input_schema"], input: unkn
 
 /** Run one tool for the model. Never throws: an unknown tool, a bad input or an unknown id comes back as `{ error }`. */
 export function runTool(name: string, input: unknown, data: ToolData): ToolOutput {
-  const definition = [...TOOL_DEFINITIONS, ...PENDING_DEFINITIONS].find((d) => d.name === name);
+  const definition = TOOL_DEFINITIONS.find((d) => d.name === name);
   if (!definition || !isToolName(name)) {
     return output({ error: `No tool named ${name}. The tools are ${TOOL_DEFINITIONS.map((d) => d.name).join(", ")}.` }, null);
   }

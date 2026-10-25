@@ -526,9 +526,10 @@ describe("the tool definition", () => {
     ...(schema.anyOf ?? []).flatMap(objects),
   ];
 
-  it("is strict, with every field required: strict tools share a budget of 24 optional fields", () => {
+  it("is not strict, but closed with every field required, so parseProposal checks what strict mode would", () => {
     expect(CHANGE_TOOL.name).toBe("propose_changes");
-    expect(CHANGE_TOOL.strict).toBe(true);
+    // Strict, the API refuses it: "The compiled grammar is too large" (T44). parseProposal enforces the schema instead.
+    expect(CHANGE_TOOL.strict).toBe(false);
     for (const o of objects(CHANGE_TOOL.input_schema)) {
       expect(o.additionalProperties).toBe(false);
       expect([...(o.required ?? [])].sort()).toEqual(Object.keys(o.properties ?? {}).sort());

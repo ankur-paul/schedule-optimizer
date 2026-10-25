@@ -1,8 +1,11 @@
+import type { SolveResult, Teacher } from "@/domain/types";
+import type { ChangeLine, DryRun, NewCheck } from "./changes";
 import type { ToolOutput } from "./tools";
 import type { Blocked } from "./panelState";
 
 // The chat's pure logic (T40): what is kept, what each /agent request carries, and what an error means. The browser
-// drives the loop (useAssistant.ts); the server (server/agent.py) makes one Claude call per request.
+// drives the loop (useAssistant.ts); the server (server/agent.py) makes one Claude call per request. T44 adds the
+// change cards: what a `propose_changes` call shows, and the outcome notes sent with the next message.
 
 /** A content block as the API sends it: text, thinking, tool_use, tool_result… Kept as received. */
 export type Block = { type: string } & Record<string, unknown>;
@@ -139,6 +142,96 @@ export function replyText(content: Block[]): string {
     .map((b) => b.text as string)
     .join("\n\n")
     .trim();
+}
+
+// --- change cards (T44) -----------------------------------------------------------------------------------------
+
+/** Where a card stands: shown, being applied, applied in full, stopped at a failed step, discarded, or out of date on *Apply*. */
+export type CardStatus = "proposed" | "applying" | "applied" | "stopped" | "discarded" | "outOfDate";
+
+export type StepState = "pending" | "done" | "failed";
+
+/** A `propose_changes` call that passed its dry run, as the panel shows it. Lines and reasons carry teacher codes. */
+export interface Card {
+  /** "changes #3": numbered from 1 in each chat. */
+  n: number;
+  /** The tool input, checked again on *Apply*. */
+  input: unknown;
+  summary: string;
+  lines: ChangeLine[];
+  warnings: NewCheck[];
+  regenerate: boolean;
+  /** Has online changes, which Undo won't take back. */
+  online: boolean;
+  /** The teachers as the proposal leaves them, so a new teacher's code shows as the typed name. */
+  teachers: Teacher[];
+  status: CardStatus;
+  /** One per line. */
+  steps: StepState[];
+  /** The failed step (0-based) and why. */
+  failure?: { step: number; reason: string; conflict?: boolean };
+  /** After a regenerate: "Score 34 → 28 · 0 unplaced", or what Generate said instead (`failed`). */
+  after?: { text: string; failed: boolean };
+}
+
+/** The tool result and, when the proposal passed, the card it shows as number `n`. */
+export function proposalOutcome(dry: DryRun, n: number, input: unknown): { output: ToolOutput; card: Card | null } {
+  if (!dry.ok) return { output: { content: JSON.stringify({ error: dry.errors.join("\n") }), isError: true }, card: null };
+  const card: Card = {
+    n,
+    input,
+    summary: dry.summary,
+    lines: dry.lines,
+    warnings: dry.warnings,
+    regenerate: dry.regenerate,
+    online: dry.online.length > 0,
+    teachers: dry.data.teachers,
+    status: "proposed",
+    steps: dry.lines.map(() => "pending"),
+  };
+  return { output: { content: `Shown to the user as changes #${n}; they will apply or discard it.`, isError: false }, card };
+}
+
+/** Online ops that leave the working copy alone (`open_online` replaces it). */
+const ONLINE_ONLY = new Set<ChangeLine["op"]>(["save_online", "save_as_new", "rename_online", "publish", "make_live"]);
+
+/** The card changes the working copy, so *Apply* takes an undo snapshot first. */
+export function changesWorkingCopy(card: Pick<Card, "lines">): boolean {
+  return card.lines.some((l) => !ONLINE_ONLY.has(l.op));
+}
+
+/** Steps before `upTo` done, `failed` (if given) failed, the rest pending. */
+export function stepStates(count: number, upTo: number, failed?: number): StepState[] {
+  return Array.from({ length: count }, (_, i) => (i === failed ? "failed" : i < upTo ? "done" : "pending"));
+}
+
+/** What the model hears about a card at the start of the user's next message, or null while nothing has happened to it. */
+export function outcomeNote(card: Pick<Card, "n" | "status" | "failure">): string | null {
+  switch (card.status) {
+    case "applied":
+      return `Applied changes #${card.n}`;
+    case "stopped": {
+      const f = card.failure!;
+      return `Applied changes #${card.n} up to step ${f.step + 1}: ${f.conflict ? "save conflict" : f.reason}`;
+    }
+    case "discarded":
+      return `Discarded changes #${card.n}`;
+    case "outOfDate":
+      return `Changes #${card.n} are out of date and weren't applied`;
+    default:
+      return null;
+  }
+}
+
+/** The user's next message with the outcomes since the last one first, in square brackets so they read as notes. */
+export function withOutcomes(text: string, notes: string[]): string {
+  return notes.length === 0 ? text : `${notes.map((n) => `[${n}]`).join("\n")}\n\n${text}`;
+}
+
+/** The line under a card after its regenerate: "Score 34 → 28 · 0 unplaced" ("Score 28 · …" without an earlier timetable). */
+export function scoreLine(before: Pick<SolveResult, "score"> | null, after: Pick<SolveResult, "score" | "unplaced">): string {
+  const score = before ? `${before.score.total} → ${after.score.total}` : `${after.score.total}`;
+  return `Score ${score} · ${after.unplaced.length} unplaced`;
 }
 
 // --- errors -----------------------------------------------------------------------------------------------------

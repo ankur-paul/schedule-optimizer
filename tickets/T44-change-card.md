@@ -1,5 +1,5 @@
 # T44 — Change card in the panel
-**Status:** TODO
+**Status:** DONE
 **Lane:** main · **Prereqs:** T41, T42, T43 · **Branch:** t44-change-card
 
 ## Goal
@@ -62,9 +62,9 @@ of What changes for the user, Q12–Q15, Q19, Q20).
   a card, an out-of-date card, a viewer asking to save, phone width.
 
 ## Done when
-- [ ] Change card, apply run, outcome notes and system prompt work as above
-- [ ] Help sections; link test green
-- [ ] `agent_eval.py` run once; cost per question in PROGRESS.md
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md assistant bullet and known limits
-- [ ] Committed: `T44: change card in the panel`
+- [x] Change card, apply run, outcome notes and system prompt work as above
+- [x] Help sections; link test green
+- [x] `agent_eval.py` run once; cost per question in PROGRESS.md
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line; FEATURES.md assistant bullet and known limits
+- [x] Committed: `T44: change card in the panel`

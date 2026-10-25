@@ -1,4 +1,4 @@
-import definitions from "../../../../shared/agent-change-tool.json";
+import definitions from "../../../../shared/agent-tools.json";
 import { eligibleRooms } from "@/domain/eligibility";
 import { buildGrid, sessionLabel, slotLabel } from "@/domain/grid";
 import { sampleCollege } from "@/domain/sampleCollege";
@@ -125,7 +125,7 @@ const MAX_ERRORS = 10;
 
 // --- the tool definition --------------------------------------------------------------------------------------
 
-/** The JSON-schema subset `agent-change-tool.json` uses. */
+/** The JSON-schema subset `propose_changes` uses. */
 export interface Schema {
   type?: "object" | "array" | "string" | "integer";
   const?: string;
@@ -143,8 +143,6 @@ export interface ChangeToolDefinition { name: string; description: string; stric
 
 const DEFINITIONS = definitions as unknown as ChangeToolDefinition[];
 export const CHANGE_TOOL = DEFINITIONS.find((d) => d.name === "propose_changes")!;
-/** `online_status`, which joins the other read tools in `agent-tools.json` in T44. */
-export const ONLINE_STATUS_TOOL = DEFINITIONS.find((d) => d.name === "online_status")!;
 
 /** Each operation's schema by its `op`. */
 const OP_SCHEMAS = new Map((CHANGE_TOOL.input_schema.properties!.changes.items!.anyOf ?? []).map((s) => [s.properties!.op.const!, s]));

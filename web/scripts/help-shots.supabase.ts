@@ -43,18 +43,31 @@ const AGENT_ANSWER = [
   "The other three rules score 0. The exact solver proved 18 is the best possible with this data.",
 ].join("\n");
 
+/** The change card screenshot's question (T44): a move the fixed timetable allows, then a save online. */
+export const AGENT_CHANGE_QUESTION = "Move CSE A's Data Structures lecture to Tue P1 and save it online.";
+const AGENT_CHANGES = {
+  summary: "Move CSE A's Data Structures lecture to Tuesday P1, then save it online.",
+  changes: [{ op: "move", sessionId: "cse-a-ds:L1", day: "Tue", period: "P1", roomId: "" }, { op: "save_online" }],
+};
+const AGENT_CHANGE_ANSWER = "Here are the changes. Check the card and click **Apply** to make them.";
+
 /**
- * What the pretend `POST /agent` answers: a `score_details` call to a new question, then the answer once the tool
- * result comes back, the way the real server replies (server/agent.py).
+ * What the pretend `POST /agent` answers: a tool call to a new question (`score_details`, or `propose_changes` for
+ * the change question), then the answer once the tool result comes back, the way the real server replies
+ * (server/agent.py).
  */
 export function agentReply(body: { messages: { role: string; content: unknown }[] }): unknown {
   const last = body.messages.at(-1)?.content;
   const answered = Array.isArray(last) && last.some((b: { type?: string }) => b.type === "tool_result");
+  const question = body.messages.findLast((m) => m.role === "user" && typeof m.content === "string")?.content;
+  const change = question === AGENT_CHANGE_QUESTION;
   return {
     question_id: "q-help-shots",
     content: answered
-      ? [{ type: "text", text: AGENT_ANSWER }]
-      : [{ type: "tool_use", id: "tu-help-shots", name: "score_details", input: {} }],
+      ? [{ type: "text", text: change ? AGENT_CHANGE_ANSWER : AGENT_ANSWER }]
+      : change
+        ? [{ type: "tool_use", id: "tu-help-shots", name: "propose_changes", input: AGENT_CHANGES }]
+        : [{ type: "tool_use", id: "tu-help-shots", name: "score_details", input: {} }],
     stop_reason: answered ? "end_turn" : "tool_use",
     questions_left: AGENT_ACCESS.questions_left,
     expires_at: AGENT_ACCESS.expires_at,

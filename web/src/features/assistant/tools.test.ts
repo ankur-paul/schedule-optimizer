@@ -411,16 +411,17 @@ describe("online_status", () => {
 });
 
 describe("shared/agent-tools.json", () => {
-  // online_status is defined in agent-change-tool.json until T44 moves it here.
-  const handled: ToolName[] = ["overview", "schedule", "free_periods", "problems", "score_details", "find"];
+  const handled: ToolName[] = ["overview", "schedule", "free_periods", "problems", "score_details", "find", "online_status"];
+  // The one write tool: the panel's loop runs it (chat.ts `proposalOutcome`), and changes.test.ts checks its schema.
+  const reads = TOOL_DEFINITIONS.filter((d) => d.name !== "propose_changes");
 
-  it("has a handler for every tool and a definition for every handler", () => {
-    expect(TOOL_DEFINITIONS.map((d) => d.name).sort()).toEqual([...handled].sort());
+  it("has a handler for every read tool and a definition for every handler, then propose_changes", () => {
+    expect(TOOL_DEFINITIONS.map((d) => d.name)).toEqual([...handled, "propose_changes"]);
     for (const name of handled) expect(JSON.parse(runTool(name, {}, base).content).error ?? "").not.toMatch(/No tool named/);
   });
 
-  it("makes every schema strict", () => {
-    for (const d of TOOL_DEFINITIONS) {
+  it("makes every read tool's schema strict", () => {
+    for (const d of reads) {
       expect(d.strict).toBe(true);
       expect(d.description.length).toBeGreaterThan(20);
       expect(d.input_schema.type).toBe("object");
