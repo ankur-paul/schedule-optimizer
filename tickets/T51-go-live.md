@@ -1,5 +1,5 @@
 # T51 — Go live on uselattice.app
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main · **Prereqs:** T46, T49, T50 · **Branch:** t51-go-live
 
 ## Goal
