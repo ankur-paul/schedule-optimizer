@@ -1,5 +1,5 @@
 # T49 — Privacy policy and Terms v4
-**Status:** BLOCKED (needs human: approve drafts)
+**Status:** IN PROGRESS
 **Lane:** D · **Prereqs:** — · **Branch:** t49-policy-v4
 
 ## Goal
@@ -57,6 +57,8 @@ Plan, *Privacy policy v4* and Q15:
     Resend, a US company, sends the sign-in emails."
   - "Our server logs each request's time, address, result and duration, with no timetable data or IP address, and
     deletes the logs after 14 days."
+- **Approved 25 Oct 2026** as drafted, with both `POLICY_CHANGES[4]` lines. The migration was pushed to dev by the
+  user (the auto-mode check refused `db push`).
 
 ## Tests
 - `legalText.test.ts` and the consent tests pass with version 4.
@@ -64,8 +66,8 @@ Plan, *Privacy policy v4* and Q15:
 - Click through: a user who accepted v3 sees the re-accept dialog with the v4 lines, accepts, and can save.
 
 ## Done when
-- [ ] Drafts approved by the user
-- [ ] Policy, terms, `policy.ts` and the migration committed together; the migration pushed to dev
+- [x] Drafts approved by the user
+- [x] Policy, terms, `policy.ts` and the migration committed together; the migration pushed to dev
 - [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] FEATURES.md (if the privacy bullet names the providers), PROGRESS.md line
+- [x] FEATURES.md (if the privacy bullet names the providers), PROGRESS.md line
 - [ ] Committed: `T49: policy v4`

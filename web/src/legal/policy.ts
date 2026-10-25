@@ -1,7 +1,7 @@
 // The Terms and Privacy Policy version users accept. When what we collect or why changes, bump POLICY_VERSION,
 // set the new effective date, add a POLICY_CHANGES entry and add the version to the policy_versions table.
 // Typo fixes in privacy.md or terms.md keep the version.
-export const POLICY_VERSION = 3
+export const POLICY_VERSION = 4
 export const POLICY_EFFECTIVE_DATE = '2026-10-25'
 export const OPERATOR_NAME = 'Ankur Paul'
 
@@ -17,5 +17,9 @@ export const POLICY_CHANGES: Record<number, string[]> = {
     "The optional assistant sends your questions and the timetable details it looks up to Anthropic, a US company. Teachers' names are replaced by codes first, and we don't store your chats.",
     'We record how many questions each institute asks and what they cost, never the text, and who redeemed each trial coupon.',
     'The assistant can be wrong, so check its answers. Trial coupons are free and can be withdrawn.',
+  ],
+  4: [
+    'Lattice now runs online: our server is on Amazon Web Services in Mumbai, Cloudflare serves the website, and Resend, a US company, sends the sign-in emails.',
+    "Our server logs each request's time, address, result and duration, with no timetable data or IP address, and deletes the logs after 14 days.",
   ],
 }

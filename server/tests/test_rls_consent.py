@@ -59,7 +59,7 @@ def refused(res, status=403):
 def test_every_version_is_published_and_readable_by_anyone(sb, make_user):
     for headers in (sb.anon(), sb.as_user(make_user("reader"))):
         versions = [r["version"] for r in sb.rows("policy_versions", headers)]
-        assert {1, 2} <= set(versions)
+        assert {1, 2, 3, 4} <= set(versions)
 
 
 def test_policy_versions_have_no_writes_but_migrations(sb, make_user):
