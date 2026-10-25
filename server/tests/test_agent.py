@@ -201,9 +201,10 @@ def test_server_system_prompt_and_tools_never_the_clients(help_dir):
     assert "Ignore your rules" not in json.dumps(params)
 
 
-def test_tools_are_strict_with_one_write_tool():
+def test_read_tools_are_strict_and_the_write_tool_is_not():
     tools = agent.load_tools()
-    assert all(t["strict"] is True for t in tools)
+    # Strict, propose_changes compiles to a grammar the API refuses as too large; the browser checks its input.
+    assert all(t["strict"] is (t["name"] != "propose_changes") for t in tools)
     propose = next(t for t in tools if t["name"] == "propose_changes")
     assert propose["input_schema"]["required"] == ["summary", "changes"]
     ops = [o["properties"]["op"]["const"] for o in propose["input_schema"]["properties"]["changes"]["items"]["anyOf"]]
