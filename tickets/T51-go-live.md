@@ -1,5 +1,5 @@
 # T51 — Go live on uselattice.app
-**Status:** IN PROGRESS
+**Status:** BLOCKED (needs human: run scripts/go-live-wizard.sh, stages 1–21)
 **Lane:** main · **Prereqs:** T46, T49, T50 · **Branch:** t51-go-live
 
 ## Goal
