@@ -11,6 +11,7 @@ import { resolve } from "node:path";
 import { chromium, type BrowserContext, type Locator, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import type { SolveResult } from "../src/domain/types";
+import { CONTRACT_VERSION } from "../src/engine/solveClient";
 import { toDoc } from "../src/features/online/online";
 import { SHOTS, type Action, type Shot, type Target } from "./help-shots.config";
 import { captureTargets, DEFAULT_PADDING, MAX_PNG_BYTES, persistedState, shotData, shotProblems, unionClip } from "./help-shots.lib";
@@ -82,7 +83,8 @@ async function take(context: BrowserContext, origin: string, shot: Shot): Promis
     const url = route.request().url();
     if (url.startsWith(SITE)) return route.fulfill({ response: await route.fetch({ url: origin + url.slice(SITE.length) }) });
     if (url === `${SOLVER_URL}/health`) {
-      return shot.solver === "online" ? route.fulfill({ json: { ok: true } }) : route.abort("connectionrefused");
+      // The page's own contract version, so step ③ shows no "solver was updated" line.
+      return shot.solver === "online" ? route.fulfill({ json: { ok: true, contract: CONTRACT_VERSION } }) : route.abort("connectionrefused");
     }
     if (url === `${SOLVER_URL}/agent`) {
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });

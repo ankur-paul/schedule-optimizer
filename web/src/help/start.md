@@ -39,7 +39,7 @@ If the dot says *offline*, the button reads **Make a quick draft** instead. Clic
 
 When the run ends, a green card says *Timetable ready*.
 
-![The Timetable ready card: "The best possible timetable, found by the exact solver", the badge "Timetable ready · 0 clashes (independently checked)", and a score of 18, all from Batches waiting during labs](/help/timetable-ready.png)
+![The Timetable ready card: "The best possible timetable, found by the exact solver", the badge "Timetable ready · 0 clashes (independently checked)", and the score with its points per rule](/help/timetable-ready.png)
 
 - **The badge** says there are 0 clashes. Lattice checked the timetable again in your browser against every hard rule.
 - **"The best possible timetable"** means the solver proved nothing better exists. If it ran out of time first, the card says "best found in 20 s" and offers **Try longer**.
@@ -56,7 +56,7 @@ Step ④ shows the CSE A timetable. Use **Section**, **Teacher** and **Room** at
 
 ![The CSE A timetable with the Database Systems lecture on Monday P2 locked](/help/grid-locked-class.png)
 
-The solver builds a new timetable around the locked class, and a message says how it went, such as "New timetable: 210 sessions placed · score 18". The locked class hasn't moved. Use locks for the classes that must stay where they are, then let Lattice arrange the rest. See [Locks and Regenerate](/help/timetable#locks).
+The solver builds a new timetable around the locked class, and a message says how it went: how many sessions were placed and the new score. The locked class hasn't moved. Use locks for the classes that must stay where they are, then let Lattice arrange the rest. See [Locks and Regenerate](/help/timetable#locks).
 
 ## Print
 

@@ -117,7 +117,7 @@ Each soft rule can be switched off (`softRules` in the working copy, saved with 
 
 ## Known limits
 
-- Late finish (S5) is counted in the score but neither engine aims for it yet (T53), so scores are much higher than before: the sample's best timetable scores 417 (18 of it batches waiting, 399 late finish). The help pages' screenshots and "scores 18" text predate it.
+- Late finish (S5) is counted in the score but neither engine aims for it yet (T53), so scores are much higher than before: the sample's best timetable scores 417 (18 of it batches waiting, 399 late finish). The help's *Timetable ready* screenshot shows that 417.
 - The heuristic runs until its time limit unless it reaches score 0, and its results vary slightly between runs.
 - The exact solver needs about 2 s before its first solution on the sample, so very short limits end in *Couldn't finish*; heavily over-booked data can also take longer than 5 s to prove impossible.
 - A *Can't be built* or *Couldn't finish* card stays until the next run, even after the data is fixed.

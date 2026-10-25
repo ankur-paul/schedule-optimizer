@@ -14,6 +14,8 @@ The first card in step ③ lists five aims, one switch each. They are the soft r
 | Keep a section's batches busy at the same time | Batches waiting during labs |
 | Finish each day as early as possible | Late finish |
 
+![The What to aim for card: five switches, all on, each with an ⓘ](/help/aims-card.png)
+
 All five are on to begin with. The ⓘ next to each says how many points it costs.
 
 - **Flipping a switch keeps your timetable and its locks.** The score is counted again at once under the new switches, and "Preferences changed: regenerate to use them" appears next to the main button. Generate again to get a timetable made for them. The line goes away after the next run, or if you flip the switches back.

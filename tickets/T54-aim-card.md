@@ -1,5 +1,5 @@
 # T54 — "What to aim for" card, no time-limit slider
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** A · **Prereqs:** T52 · **Branch:** t54-aim-card
 
 ## Goal
@@ -58,7 +58,28 @@ the assistant can switch them, and the time-limit slider is gone. Plan, *What ch
   days earlier; phone width.
 
 ## Done when
-- [ ] Card, score panel, slider removal and assistant change as above
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] Help sections and screenshots, FEATURES.md, PROGRESS.md
-- [ ] Committed: `T54: what to aim for card, no time-limit slider`
+- [x] Card, score panel, slider removal and assistant change as above
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] Help sections and screenshots, FEATURES.md, PROGRESS.md
+- [x] Committed: `T54: what to aim for card, no time-limit slider`
+
+## Notes
+
+- **`set_soft_rules` takes `set: [{ rule: "S5", on: true }]`,** not optional `s1…s5` keys: `propose_changes` keeps every
+  field required (strict tools share 24 optional fields, T42), and a list of `{ rule, on }` fits the `update_*` ops'
+  `set`. A proposal that changes nothing fails its dry run, so the model explains instead of showing an empty card.
+- **"Preferences changed"** compares the switches with `rulesAtRun`, the ones the stored timetable was made with (set
+  by a run, or by the first flip since a reload or an opened version). So flipping a switch back clears the line too.
+- **The remembered limit** is set by *Try longer: 40 s* as well as *Try again with 40 s*: both are retries with a
+  longer limit that finished with a timetable.
+- **Eval:** two questions, not one: "Make the days finish earlier." with S5 off (a new `lateFinishOff` scenario,
+  expecting a card) and on (`built`, expecting an explanation). Not run: it spends API credit.
+- **Help screenshots:** the shots' `/health` stub now sends the contract version; without it every step ③ shot showed
+  T46's "solver was updated at a different time" line. The sample timetable still scores 417 (S5 isn't optimised until
+  T53), so `timetable-ready.png` shows that; T53 retakes it. The help's "scores 18" lines no longer give a total.
+- **Clicked through** (dev server, local solver): flipping each kind of switch re-scores without losing the timetable,
+  *Off* in the breakdown, the line set and cleared by Regenerate, switches disabled while running, *Try longer: 40 s*
+  then Regenerate running "of up to 40 s", a reload back to 20 s with no `timeLimitSec` stored, and phone width (one
+  column, no sideways scroll at the narrowest window, 509 px). **Not clicked:** a real timeout on a large college
+  (the same code path as *Try longer*, covered by `rememberLimit`'s tests) and asking the live assistant (needs a
+  signed-in account with assistant access; the card, dry run and score line are covered by tests and the eval script).

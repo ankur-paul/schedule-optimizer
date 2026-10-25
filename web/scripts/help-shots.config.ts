@@ -62,6 +62,13 @@ export const SHOTS: Shot[] = [
     capture: { css: '[data-slot="card"]', hasText: "Busiest sections" },
   },
   {
+    name: "aims-card",
+    start: "timetable",
+    step: 2,
+    solver: "online",
+    capture: { css: '[data-slot="card"]', hasText: "What to aim for" },
+  },
+  {
     name: "generate-card",
     start: "sample",
     step: 2,

@@ -32,7 +32,7 @@ Step ③ shows the score with a box per rule, and step ④ shows it as one line 
 
 Things to know:
 
-- The sample college scores 18 at best: 6 periods where a batch waits during the other batch's lab. Some points are often unavoidable.
+- Some points are often unavoidable. In the sample college, 6 periods where a batch waits during the other batch's lab (18 points) can't be avoided.
 - The same score means the same thing whichever way the timetable was made, because your browser recounts it.
 - To lower the score, give the exact solver more time (**Try longer** in step ③), or look at what the points come from. Batch waiting time drops when the batches have labs of different subjects at the same time.
 
