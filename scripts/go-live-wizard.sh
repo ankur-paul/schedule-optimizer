@@ -257,8 +257,8 @@ say "Cloudflare will run DNS for $DOMAIN, serve the site and forward privacy@. T
 say "registered at Name.com."
 open_url "$CF/add-site"
 step "Sign up or log in. Enter $DOMAIN, pick the Free plan, Continue."
-step "On the DNS records it found: delete Name.com's parking A record (and any other parking"
-step "records). Nothing else should be there; the domain had no mail records."
+step "Review your DNS records: delete Name.com's three parking A records (*, $DOMAIN and www)."
+step "Nothing else should be there; the domain had no mail records. Pages and stage 3 add what's needed."
 step "Continue until Cloudflare shows two nameservers (like ada.ns.cloudflare.com). Keep that tab open."
 pause "Press Enter when you can see the two nameservers."
 }

@@ -37,7 +37,7 @@ Needs `dig`, `curl`, `aws` (2.32 or newer, for `aws login`), `gh` logged in, `np
 
 | # | Stage | What it sets up |
 |---|---|---|
-| 1–2 | Cloudflare, Name.com | the zone (parking record deleted); Cloudflare's nameservers at Name.com, DNSSEC off there, auto-renew on |
+| 1–2 | Cloudflare, Name.com | the zone (Name.com's three parking `A` records, `*`, apex and `www`, deleted); Cloudflare's nameservers at Name.com, DNSSEC off there, auto-renew on |
 | 3 | `www` | a proxied `AAAA www 100::` placeholder and a 301 redirect rule `www` → apex, keeping path and query |
 | 4 | `privacy@` | Email Routing: `privacy@` → the operator's inbox (verified); Cloudflare's MX and SPF on the apex; catch-all off |
 | 5 | Resend | the domain verified: its MX and SPF on `send.uselattice.app`, DKIM on `resend._domainkey`; `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:privacy@uselattice.app` |
