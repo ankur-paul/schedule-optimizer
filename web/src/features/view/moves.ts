@@ -3,7 +3,7 @@ import { buildGrid, slotLabel, type Cell } from "@/domain/grid";
 import { score } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
 import type { Id, Placement, Session, SolveInput, SolveResult } from "@/domain/types";
-import { validate } from "@/domain/validator";
+import { validate, type RuleId } from "@/domain/validator";
 import type { ViewData } from "./layout";
 
 export type MoveTarget =
@@ -121,20 +121,22 @@ export function applyMove(
 
 /**
  * The validator's last word on a move. `problem` is set if the moved timetable breaks a hard rule that involves the
- * moved session, or has more violations than before (so a result that was already broken can still be edited).
- * `violations` counts everything left after the move. `input.locks` must be the locks after the move.
+ * moved session, or has more violations than before (so a result that was already broken can still be edited);
+ * `rule` is the rule it breaks. `violations` counts everything left after the move. `input.locks` must be the locks
+ * after the move. A swap passes both sessions.
  */
 export function checkMove(
   input: SolveInput,
   before: Placement[],
   after: Placement[],
-  sessionId: Id,
-): { problem: string | null; violations: number } {
-  const was = validate({ ...input, locks: input.locks.filter((l) => l.sessionId !== sessionId) }, before).violations.length;
+  sessionId: Id | Id[],
+): { problem: string | null; rule: RuleId | null; violations: number } {
+  const moved = new Set(Array.isArray(sessionId) ? sessionId : [sessionId]);
+  const was = validate({ ...input, locks: input.locks.filter((l) => !moved.has(l.sessionId)) }, before).violations.length;
   const { violations } = validate(input, after);
-  const own = violations.find((v) => v.sessionIds.includes(sessionId));
-  const problem = own?.message ?? (violations.length > was ? violations[violations.length - 1].message : null);
-  return { problem, violations: violations.length };
+  const own = violations.find((v) => v.sessionIds.some((id) => moved.has(id)));
+  const broken = own ?? (violations.length > was ? violations[violations.length - 1] : undefined);
+  return { problem: broken?.message ?? null, rule: broken?.rule ?? null, violations: violations.length };
 }
 
 /** A result edited by hand is no longer known to be optimal; everything else about it stays. */

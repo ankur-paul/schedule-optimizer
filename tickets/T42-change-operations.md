@@ -1,5 +1,5 @@
 # T42 — Working-copy change operations
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** C · **Prereqs:** T40 · **Branch:** t42-change-operations
 
 ## Goal
@@ -50,7 +50,13 @@ it's built, Q7, Q8, Q16, Q17, Q18).
 - The tool definition is strict, and every `op` in it has a handler and every handler an `op`.
 
 ## Done when
-- [ ] Schema, `dryRun` and `applyChanges` for every working-copy operation above
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T42: working-copy change operations`
+- [x] Schema, `dryRun` and `applyChanges` for every working-copy operation above
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T42: working-copy change operations`
+
+## Notes
+- Added on request: the read tools never showed class ids, so `schedule` cells and the unplaced classes in
+  `problems` now carry `session`, the id `move`, `swap` and `lock` take.
+- Every field is required (strict tools share 24 optional fields per request): `""`/`[]` mean none, updates are
+  `set: [{ field, value }]` with values as text. `move`'s `roomId: ""` keeps its room if free, else the first free one.

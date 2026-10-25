@@ -161,24 +161,37 @@ describe("checkMove", () => {
   it("passes a valid move, with the new lock in place", () => {
     const moved = at("b-m:L1", TUE, 0, "cr2");
     const after = tinyWith({ "b-m:L1": [TUE, 0, "cr2"] });
-    expect(checkMove({ ...input, locks: [moved] }, tinyValid, after, "b-m:L1")).toEqual({ problem: null, violations: 0 });
+    expect(checkMove({ ...input, locks: [moved] }, tinyValid, after, "b-m:L1")).toEqual({ problem: null, rule: null, violations: 0 });
   });
 
   it("reports a clash the move creates", () => {
     const after = tinyWith({ "a-m:L1": [MON, 0, "cr1"] });
-    expect(checkMove(input, tinyValid, after, "a-m:L1").problem).toMatch(/^Section CSE-2A double-booked Mon P1/);
+    const check = checkMove(input, tinyValid, after, "a-m:L1");
+    expect(check.problem).toMatch(/^Section CSE-2A double-booked Mon P1/);
+    expect(check.rule).toBe("H2");
   });
 
   it("allows a clean move in a timetable that already had an unrelated clash, and counts what is left", () => {
     const broken = tinyWith({ "a-ds:L2": [TUE, 2, "cr2"] }); // CR-2 double-booked Tue P3
     const after = broken.map((p) => (p.sessionId === "b-m:L1" ? at("b-m:L1", TUE, 0, "cr2") : p));
-    expect(checkMove(input, broken, after, "b-m:L1")).toEqual({ problem: null, violations: 1 });
+    expect(checkMove(input, broken, after, "b-m:L1")).toEqual({ problem: null, rule: null, violations: 1 });
+  });
+
+  it("checks several moved sessions at once (a swap), ignoring their old locks", () => {
+    const [m, b] = [at("b-m:L1", TUE, 0, "cr2"), at("a-m:L1", TUE, 3, "cr1")];
+    const after = tinyWith({ "b-m:L1": [TUE, 0, "cr2"], "a-m:L1": [TUE, 3, "cr1"] });
+    expect(checkMove({ ...input, locks: [m, b] }, tinyValid, after, ["b-m:L1", "a-m:L1"])).toEqual({ problem: null, rule: null, violations: 0 });
+    // Only the second one clashes: it is still reported.
+    const clash = tinyWith({ "b-m:L1": [TUE, 0, "cr2"], "a-m:L1": [MON, 0, "cr1"] });
+    expect(checkMove(input, tinyValid, clash, ["b-m:L1", "a-m:L1"]).rule).toBe("H2");
   });
 
   it("catches a lock left at the old slot (locks passed in must be the ones after the move)", () => {
     const lock = at("b-m:L1", MON, 1, "cr2");
     const after = tinyWith({ "b-m:L1": [TUE, 0, "cr2"] });
-    expect(checkMove({ ...input, locks: [lock] }, tinyValid, after, "b-m:L1").problem).toMatch(/^Locked ECE-2B Maths/);
+    const check = checkMove({ ...input, locks: [lock] }, tinyValid, after, "b-m:L1");
+    expect(check.problem).toMatch(/^Locked ECE-2B Maths/);
+    expect(check.rule).toBe("LOCK");
   });
 });
 
