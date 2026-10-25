@@ -1,5 +1,5 @@
 # T39 — Privacy policy and Terms v3
-**Status:** TODO
+**Status:** DONE
 **Lane:** D · **Prereqs:** T36 · **Branch:** t39-policy-v3
 
 ## Goal
@@ -36,14 +36,46 @@ accepts it again before the panel (T40) can send anything. Plan, Privacy and Q13
   commit and the migration is pushed before the web change is used (as in T31).
 - **The help:** `/help/troubleshooting#consent` describes the re-accept dialog. Check that it still matches.
 
+## Drafting notes (25 Oct 2026)
+- **Drafts:** [`docs/policy-v3/privacy.md`](../docs/policy-v3/privacy.md) and
+  [`docs/policy-v3/terms.md`](../docs/policy-v3/terms.md), from v2 with the assistant added.
+- **Read while drafting:**
+  - [How long do you store my organization's data?](https://privacy.claude.com/en/articles/7996866-how-long-does-anthropic-store-my-organizations-data)
+    (updated 1 Jul 2026): API inputs and outputs deleted within 30 days; flagged Usage Policy violations kept up to
+    2 years (classifier scores up to 7); longer where the law requires.
+  - [Commercial Terms](https://www.anthropic.com/legal/commercial-terms) (effective 17 Jun 2025), section B:
+    "Anthropic may not train models on Customer Content from Services."
+  - [API and data retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention): prompt
+    caching stores no prompts or outputs, only KV cache and hashes in memory for the cache lifetime; retained data
+    is never used for training without permission.
+  - [Data residency](https://platform.claude.com/docs/en/manage-claude/data-residency): workspace geo (storage at
+    rest) is US only. **Inference defaults to `global`**, which may run in any geography; `inference_geo: "us"` keeps
+    it in the US at 1.1× the price.
+- **Found while drafting:** T37's `maskText` catches only a teacher's full name or ID, so the policy says a surname
+  alone or a misspelling goes through. The usage, question and coupon rows have no deletion job: they stay until
+  the institute is deleted, with user IDs set to null on account deletion.
+- **Approved 25 Oct 2026**, with these decisions:
+  - Anthropic's part is one sentence with links to its commercial terms and retention policy ("within 30 days in
+    most cases"), not a restatement of its exceptions, so the policy doesn't go stale when they change.
+  - No "processed in the US": the policy and the dialog say "Anthropic, a US company". T38 keeps the default
+    `inference_geo` (`global`).
+  - Usage and coupon records stay until the institute is deleted, as built; no time limit.
+- **Approved `POLICY_CHANGES[3]`:**
+  - "The optional assistant sends your questions and the timetable details it looks up to Anthropic, a US
+    company. Teachers' names are replaced by codes first, and we don't store your chats."
+  - "We record how many questions each institute asks and what they cost, never the text, and who redeemed each
+    trial coupon."
+  - "The assistant can be wrong, so check its answers. Trial coupons are free and can be withdrawn."
+
 ## Tests
 - The existing `legalText` and consent tests pass with version 3.
 - Click through: a signed-in user sees the re-accept dialog with the v3 lines; *Accept* records it; saving online
   still works after; `agent_begin` (T36) refuses a user who has accepted only v2.
 
 ## Done when
-- [ ] Drafts approved by the user
-- [ ] Migration applied; `POLICY_VERSION` 3 in the app; re-accept works
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line; FEATURES.md updated (policy v3)
-- [ ] Committed: `T39: privacy policy and terms v3`
+- [x] Drafts approved by the user
+- [x] Migration applied; `POLICY_VERSION` 3 in the app; re-accept not clicked through (skipped at the user's request)
+- [x] Tests above pass; full suite and `npx tsc -b` green (Supabase tests ran before the migration, so against v2;
+  not rerun against v3, at the user's request)
+- [x] PROGRESS.md line; FEATURES.md updated (policy v3)
+- [x] Committed: `T39: privacy policy and terms v3`
