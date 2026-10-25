@@ -50,6 +50,13 @@ jobs:
           registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com"
           image="$registry/$REPOSITORY:$GITHUB_SHA"
           aws ecr get-login-password | docker login --username AWS --password-stdin "$registry"
+          # The Lambda adapter comes from ECR Public, whose anonymous pulls share a per-IP cap with everyone on the
+          # runner's address (429 "Data limit exceeded"). Signed in, the cap is this account's. ECR Public signs in
+          # only through us-east-1.
+          if aws ecr-public get-login-password --region us-east-1 |
+            docker login --username AWS --password-stdin public.ecr.aws; then :
+          else echo "::warning::Couldn't sign in to ECR Public (scripts/aws-setup.sh grants it); pulling anonymously"
+          fi
           # No provenance attestation: Lambda refuses an image index.
           docker build --platform linux/amd64 --provenance=false -t "$image" .
           docker push "$image"

@@ -91,12 +91,14 @@ for f in "${FUNCTIONS[@]}"; do fn_arns+="\"arn:aws:lambda:$REGION:$ACCOUNT:funct
 aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy --policy-document "{
   \"Version\":\"2012-10-17\",\"Statement\":[
   {\"Effect\":\"Allow\",\"Action\":\"ecr:GetAuthorizationToken\",\"Resource\":\"*\"},
+  {\"Effect\":\"Allow\",\"Action\":[\"ecr-public:GetAuthorizationToken\",\"sts:GetServiceBearerToken\"],
+    \"Resource\":\"*\"},
   {\"Effect\":\"Allow\",\"Action\":[\"ecr:BatchCheckLayerAvailability\",\"ecr:InitiateLayerUpload\",
     \"ecr:UploadLayerPart\",\"ecr:CompleteLayerUpload\",\"ecr:PutImage\",\"ecr:BatchGetImage\",
     \"ecr:GetDownloadUrlForLayer\",\"ecr:DescribeImages\"],\"Resource\":\"$REPO_ARN\"},
   {\"Effect\":\"Allow\",\"Action\":[\"lambda:UpdateFunctionCode\",\"lambda:GetFunction\"],
     \"Resource\":[${fn_arns%,}]}]}"
-did "may push to $REPOSITORY and update the two functions' code, nothing else"
+did "may push to $REPOSITORY, pull from ECR Public signed in, and update the two functions' code, nothing else"
 DEPLOY_ROLE_ARN=$(aws iam get-role --role-name "$DEPLOY_ROLE" --query Role.Arn)
 
 # An image to create the functions from: the newest in the repository, or one built from this checkout.
