@@ -13,6 +13,9 @@ workflow for the deploy (a push to `main` runs it only through `deploy.yml`, so 
 - `web`: `npm ci`, `npm test`, `npx tsc -b`, `npm run build` on Node 24.
 - `server`: `uv sync --frozen`, `uv run pytest`, including the `supabase` tests against the **dev** project.
 
+A pull request from a branch in this repository shows the checks of the push run; its own `pull_request` run skips
+both jobs (shown as skipped), so each commit is tested once. A pull request from a fork runs them itself.
+
 Only one `server` job runs at a time (concurrency group `supabase-dev`): the tests share the dev project, and the
 agent budget test reads the month's spend across every run. GitHub keeps one waiting run per group, so if a third
 push comes in while one runs and one waits, the waiting one is cancelled (it shows as cancelled, not failed).
