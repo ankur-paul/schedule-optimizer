@@ -233,7 +233,13 @@ describe("moveSummary", () => {
     expect(moveSummary(tinyCollege, session, at("a-ds:P1:B1", TUE, 2, "lab1"), { before: 18, after: 20 }, 0)).toEqual({
       title: "Moved DS lab (B1) to Tue P3 · Lab-1 · locked",
       description: "Score 18 → 20 · ✓ Verified: 0 clashes",
+      label: "move CSE-2A DS lab (B1) to Tue P3",
     });
+  });
+
+  it("labels a lecture move for the undo stack with its section and slot", () => {
+    const session = expandSessions(tinyCollege).find((s) => s.id === "b-m:L1")!;
+    expect(moveSummary(tinyCollege, session, at("b-m:L1", TUE, 0, "cr2"), { before: 5, after: 5 }, 0).label).toBe("move ECE-2B Maths to Tue P1");
   });
 
   it("does not claim a clean check when earlier violations remain", () => {

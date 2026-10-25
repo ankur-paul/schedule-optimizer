@@ -1,5 +1,5 @@
 # T41 — Undo stack
-**Status:** TODO
+**Status:** DONE
 **Lane:** A · **Prereqs:** — · **Branch:** t41-undo-stack
 
 ## Goal
@@ -41,7 +41,7 @@ and Redo, Q3, Q15).
   reload clears the buttons.
 
 ## Done when
-- [ ] Undo stack, header buttons and shortcuts work as above; drag moves use it
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] Help section, FEATURES.md bullet, PROGRESS.md line
-- [ ] Committed: `T41: undo stack`
+- [x] Undo stack, header buttons and shortcuts work as above; drag moves use it
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] Help section, FEATURES.md bullet, PROGRESS.md line
+- [x] Committed: `T41: undo stack`

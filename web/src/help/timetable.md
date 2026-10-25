@@ -58,7 +58,7 @@ You can move a class by hand in the **Section** view.
 
 1. Drag a class card. Slots it could move to turn green and show how the score would change. The rest turn red, and the card you're dragging says why, such as "Dr. Meera Iyer teaches CSE B Database Systems at Tue P3".
 2. Drop it on a green slot. The class moves there and is locked, and the score updates.
-3. To put it back, click **Undo** in the message that appears.
+3. To put it back, click **Undo** in the message that appears, or the Undo arrow at the top of the page. See [Undo and Redo](#undo).
 
 Things to know:
 
@@ -66,6 +66,22 @@ Things to know:
 - Classes that couldn't be placed are listed under the grid of their section. Drag them onto a green slot the same way.
 - Every drop is checked against the hard rules, so the badge above the grid still says 0 clashes.
 - Dragging works with a mouse, in the Section view only. With a keyboard, use **Lock here** and **Regenerate** instead.
+
+## Undo and Redo {#undo}
+
+Once you have moved a class, an Undo arrow appears at the top of the page, next to **Start over**. Hover over it to see what it will undo, such as "Undo: move CSE A Operating Systems to Mon P8".
+
+- Click it, or press **Ctrl+Z** (**⌘Z** on a Mac), to put things back as they were before that change. A message says what was undone.
+- After an undo, a Redo arrow appears. Click it, or press **Ctrl+Shift+Z** (**⇧⌘Z**), to make the change again.
+- You can go back up to 20 changes. Making a new change after an undo clears Redo.
+
+Things to know:
+
+- Drag-and-drop moves go on the list. Edits in the step ② tables, changes to the week in step ①, and **Generate** don't, so you can't undo them on their own.
+- An undo puts back the whole timetable, data and locks as they were before the change. A table edit you made after that change is undone with it.
+- Ctrl+Z inside a text box undoes your typing there, as usual, not the last change.
+- The list is lost when you reload the page.
+- If the timetable is saved online, Undo changes only the copy in your browser. The status at the top then shows unsaved changes until you save again.
 
 ## Print and CSV {#print}
 

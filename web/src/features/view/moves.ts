@@ -166,12 +166,15 @@ export function moveSummary(
   moved: Placement,
   score: { before: number; after: number },
   violations: number,
-): { title: string; description: string } {
+): { title: string; description: string; label: string } {
   const room = data.rooms.find((r) => r.id === moved.roomId)?.name ?? moved.roomId;
   const check = violations === 0 ? "✓ Verified: 0 clashes" : `${violations} earlier rule violation${violations === 1 ? "" : "s"} still to fix`;
+  const slot = slotLabel(data, moved.day, moved.period);
   return {
-    title: `Moved ${describe(data, session)} to ${slotLabel(data, moved.day, moved.period)} · ${room} · locked`,
+    title: `Moved ${describe(data, session)} to ${slot} · ${room} · locked`,
     description: `Score ${score.before} → ${score.after} · ${check}`,
+    // The undo stack's label; the header tooltip has no grid around it, so it names the section too.
+    label: `move ${sectionNameOf(data, session)} ${describe(data, session)} to ${slot}`,
   };
 }
 

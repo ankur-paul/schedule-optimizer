@@ -21,6 +21,7 @@ import { generateFooterNote } from '@/features/generate/generate'
 import { useGenerating } from '@/features/generate/useGenerate'
 import { settingsErrors, setupFooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
+import { UndoButtons } from '@/features/undo/UndoButtons'
 import { useAppStore, type Step } from '@/store/useAppStore'
 
 const STEPS: { title: string; hint: string; help: string }[] = [
@@ -80,6 +81,7 @@ function App() {
               <h1 className="text-base leading-tight font-semibold">Lattice</h1>
               <p className="text-xs text-muted-foreground">Clash-free weekly class timetables for any college</p>
             </div>
+            <UndoButtons />
             <Button
               variant="ghost"
               size="sm"
