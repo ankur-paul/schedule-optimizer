@@ -14,14 +14,14 @@ The first card in step ③ lists five aims, one switch each. They are the soft r
 | Keep a section's batches busy at the same time | Batches waiting during labs |
 | Finish each day as early as possible | Late finish |
 
-![The What to aim for card: five switches, all on, each with an ⓘ](/help/aims-card.png)
+![The What to aim for card: five switches, the first four on and Finish each day as early as possible off, each with an ⓘ](/help/aims-card.png)
 
-All five are on to begin with. The ⓘ next to each says how many points it costs.
+The first four are on to begin with, and *Finish each day as early as possible* is off. The ⓘ next to each says how many points it costs.
 
 - **Flipping a switch keeps your timetable and its locks.** The score is counted again at once under the new switches, and "Preferences changed: regenerate to use them" appears next to the main button. Generate again to get a timetable made for them. The line goes away after the next run, or if you flip the switches back.
 - An aim that's off reads *Off* in the score, not 0, and adds nothing to the total.
 - The switches are saved with your data, in your browser and in [online versions](/help/online), so another editor who opens the timetable regenerates it the same way. **Undo** brings back switches that the assistant changed; a switch you flip yourself has no undo step, so flip it back.
-- Turning an aim off can let Generate do better on the others. For example, with *Finish each day as early as possible* off, Generate doesn't mind a section starting late or a teacher waiting for a last class.
+- Turning an aim off can let Generate do better on the others, which is why *Finish each day as early as possible* starts off: with it on, the exact solver does much worse on the other four in 20 s. With it off, Generate doesn't mind a section starting late or a teacher waiting for a last class.
 - The switches are greyed out while a run is going.
 
 ## The exact solver and the quick draft {#engines}
