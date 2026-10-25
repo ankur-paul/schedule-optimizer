@@ -32,6 +32,13 @@ export function trialMailto(to: string, institute: { name: string; handle: strin
   return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent("Lattice assistant trial")}&body=${encodeURIComponent(body)}`;
 }
 
+/** The locked screen's line for editors and viewers: whom to ask, with their email so they can. */
+export function askAdminLine(admin: { name: string | null; email: string | null } | null): string {
+  const name = admin?.name?.trim();
+  const who = name && admin?.email ? `${name} (${admin.email})` : name || admin?.email;
+  return who ? `Your institute's admin, ${who}, can unlock it.` : "Your institute's admin can unlock it.";
+}
+
 type Names = { sections: Pick<Section, "id" | "name">[]; rooms: Pick<Room, "id" | "name">[]; teachers: Pick<Teacher, "id" | "name">[] };
 
 /** A section, room or teacher (by code) as the user knows it; the id itself when it isn't found. */
@@ -77,7 +84,13 @@ export type Inline =
   | { kind: "code"; text: string }
   | { kind: "link"; text: string; href: string };
 
-export type AnswerBlock = { kind: "p"; parts: Inline[] } | { kind: "ul" | "ol"; items: Inline[][] };
+/** A list item, with the indented bullets under it (one level). */
+export interface ListItem {
+  parts: Inline[];
+  sub: Inline[][];
+}
+
+export type AnswerBlock = { kind: "p"; parts: Inline[] } | { kind: "ul" | "ol"; items: ListItem[] };
 
 /** Links the panel opens: the app's own pages, or https. Anything else stays text. */
 export function safeHref(href: string): string | null {
@@ -113,13 +126,13 @@ export function inlineParts(text: string): Inline[] {
   return parts;
 }
 
-const BULLET = /^\s*[-*•]\s+(.*)$/;
-const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
+const BULLET = /^(\s*)[-*•]\s+(.*)$/;
+const NUMBERED = /^(\s*)\d+[.)]\s+(.*)$/;
 const HEADING = /^\s*#{1,6}\s+(.*)$/;
 
 /**
- * The model's markdown, the little of it the panel shows: paragraphs, bullet and numbered lists, headings as bold
- * lines, bold, code and links. Rendered as React elements, never as HTML.
+ * The model's markdown, the little of it the panel shows: paragraphs, bullet and numbered lists (an indented item
+ * nests under the one before), headings as bold lines, bold, code and links. Rendered as React elements, never as HTML.
  */
 export function answerBlocks(text: string): AnswerBlock[] {
   const blocks: AnswerBlock[] = [];
@@ -134,11 +147,13 @@ export function answerBlocks(text: string): AnswerBlock[] {
     const heading = HEADING.exec(line);
     if (bullet || numbered) {
       flush();
-      const kind = bullet ? "ul" : "ol";
-      const item = inlineParts((bullet ?? numbered)![1]);
+      const [, indent, body] = (bullet ?? numbered)!;
+      const parts = inlineParts(body);
       const last = blocks.at(-1);
-      if (last && last.kind === kind) last.items.push(item);
-      else blocks.push({ kind, items: [item] });
+      const kind = bullet ? "ul" : "ol";
+      if (indent.length >= 2 && last && last.kind !== "p") last.items.at(-1)!.sub.push(parts);
+      else if (last && last.kind === kind) last.items.push({ parts, sub: [] });
+      else blocks.push({ kind, items: [{ parts, sub: [] }] });
     } else if (heading) {
       flush();
       blocks.push({ kind: "p", parts: [{ kind: "bold", text: heading[1].replace(/\*\*/g, "") }] });

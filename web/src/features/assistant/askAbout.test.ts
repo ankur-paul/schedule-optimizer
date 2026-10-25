@@ -40,6 +40,12 @@ describe("askText", () => {
     expect(maskText(text, teachers)).not.toMatch(/Anita/);
   });
 
+  it("counts repeated reasons instead of listing them again", () => {
+    const text = askText({ kind: "unplaced", cause: "teacher", label: "Teacher busy", reasons: ["same", "same", "same", "other"] });
+    expect(text).toContain("(4):\n- same (3 classes)\n- other\n");
+    expect(text).not.toContain("more");
+  });
+
   it("has no 'more' line when every class fits", () => {
     expect(askText({ kind: "unplaced", cause: "other", label: "Other", reasons: ["a"] })).not.toContain("more");
   });

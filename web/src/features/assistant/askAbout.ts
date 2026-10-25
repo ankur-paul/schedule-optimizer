@@ -6,7 +6,7 @@ import { helpHref } from "@/help/helpLinks";
 // *Ask about this* (T40): the question a problem card starts, with the card's details and its help link. It goes
 // through maskText like any question, so teacher names in the details become codes.
 
-/** An unplaced group lists at most this many of its classes. */
+/** An unplaced group lists at most this many different reasons (repeats are counted, not listed again). */
 export const MAX_UNPLACED = 10;
 
 export type AskCard =
@@ -32,8 +32,11 @@ export function askText(card: AskCard): string {
         "What should I do?",
       ].join("\n");
     case "unplaced": {
-      const shown = card.reasons.slice(0, MAX_UNPLACED).map((r) => `- ${r}`);
-      const more = card.reasons.length - shown.length;
+      const counts = new Map<string, number>();
+      for (const r of card.reasons) counts.set(r, (counts.get(r) ?? 0) + 1);
+      const distinct = [...counts];
+      const shown = distinct.slice(0, MAX_UNPLACED).map(([r, n]) => (n > 1 ? `- ${r} (${n} classes)` : `- ${r}`));
+      const more = distinct.slice(MAX_UNPLACED).reduce((sum, [, n]) => sum + n, 0);
       return [
         `Some classes weren't placed. The reason given: "${card.label}" (${card.reasons.length}):`,
         ...shown,

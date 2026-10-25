@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowanceLine, answerBlocks, inlineParts, safeHref, toolLabel, trialMailto } from "./format";
+import { allowanceLine, answerBlocks, askAdminLine, inlineParts, safeHref, toolLabel, trialMailto } from "./format";
 import { teacherCodes } from "./mask";
 
 const now = new Date("2026-10-25T12:00:00Z");
@@ -123,13 +123,32 @@ describe("inlineParts", () => {
 });
 
 describe("answerBlocks", () => {
+  const item = (text: string) => ({ parts: [{ kind: "text" as const, text }], sub: [] });
+
   it("splits paragraphs, lists and headings", () => {
     expect(answerBlocks("## Why\nThe lab needs\ntwo periods.\n\n- one\n- **two**\n\n1. first\n2) second")).toEqual([
       { kind: "p", parts: [{ kind: "bold", text: "Why" }] },
       { kind: "p", parts: [{ kind: "text", text: "The lab needs\ntwo periods." }] },
-      { kind: "ul", items: [[{ kind: "text", text: "one" }], [{ kind: "bold", text: "two" }]] },
-      { kind: "ol", items: [[{ kind: "text", text: "first" }], [{ kind: "text", text: "second" }]] },
+      { kind: "ul", items: [item("one"), { parts: [{ kind: "bold", text: "two" }], sub: [] }] },
+      { kind: "ol", items: [item("first"), item("second")] },
     ]);
+  });
+
+  it("nests indented bullets under the item before", () => {
+    expect(answerBlocks("- **S1: 70 points.** Seven sections:\n  - CSE A\n    - CSE B\n- S3: 6 points")).toEqual([
+      {
+        kind: "ul",
+        items: [
+          { parts: [{ kind: "bold", text: "S1: 70 points." }, { kind: "text", text: " Seven sections:" }], sub: [[{ kind: "text", text: "CSE A" }], [{ kind: "text", text: "CSE B" }]] },
+          item("S3: 6 points"),
+        ],
+      },
+    ]);
+  });
+
+  it("nests indented bullets under a numbered item, and keeps an indented first bullet at the top", () => {
+    expect(answerBlocks("1. Open step ②\n   - Courses tab")).toEqual([{ kind: "ol", items: [{ ...item("Open step ②"), sub: [[{ kind: "text", text: "Courses tab" }]] }] }]);
+    expect(answerBlocks("  - alone")).toEqual([{ kind: "ul", items: [item("alone")] }]);
   });
 
   it("starts a new list when the kind changes", () => {
@@ -138,5 +157,21 @@ describe("answerBlocks", () => {
 
   it("returns nothing for empty text", () => {
     expect(answerBlocks("\n\n")).toEqual([]);
+  });
+});
+
+describe("askAdminLine", () => {
+  it("names the admin with their email", () => {
+    expect(askAdminLine({ name: "Asha Admin", email: "asha@example.org" })).toBe("Your institute's admin, Asha Admin (asha@example.org), can unlock it.");
+  });
+
+  it("uses whichever of name and email there is", () => {
+    expect(askAdminLine({ name: null, email: "asha@example.org" })).toBe("Your institute's admin, asha@example.org, can unlock it.");
+    expect(askAdminLine({ name: " Asha ", email: null })).toBe("Your institute's admin, Asha, can unlock it.");
+  });
+
+  it("falls back when the admin isn't known", () => {
+    expect(askAdminLine(null)).toBe("Your institute's admin can unlock it.");
+    expect(askAdminLine({ name: "", email: null })).toBe("Your institute's admin can unlock it.");
   });
 });

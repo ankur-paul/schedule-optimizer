@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AccountButton } from '@/features/account/AccountButton'
+import { AssistantButton, AssistantPanel, PANEL_PAD } from '@/features/assistant/AssistantPanel'
+import { useAssistant } from '@/features/assistant/useAssistant'
 import { helpHref } from '@/help/helpLinks'
 import { HelpLink } from '@/components/HelpLink'
 import { LatticeMark } from '@/components/LatticeMark'
@@ -44,6 +46,7 @@ function App() {
   const generating = useGenerating()
   const reset = useAppStore((s) => s.reset)
   const data = useCollegeData()
+  const assistantOpen = useAssistant((s) => s.open)
 
   // Each step starts at its top, not wherever the previous step was scrolled to.
   useEffect(() => {
@@ -66,7 +69,8 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-muted/40 text-foreground print:min-h-0 print:bg-white">
+      {/* The assistant panel sits on the right on wide screens; the page makes room so the steps stay usable. */}
+      <div className={cn('min-h-screen bg-muted/40 text-foreground print:min-h-0 print:bg-white print:pr-0', assistantOpen && PANEL_PAD)}>
         <header className="border-b bg-background print:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-4">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -85,6 +89,7 @@ function App() {
             >
               <RotateCcw /> Start over
             </Button>
+            <AssistantButton />
             <OnlineStatus />
             <AccountButton />
           </div>
@@ -140,6 +145,7 @@ function App() {
           </a>
         </footer>
       </div>
+      <AssistantPanel />
       <Toaster theme="light" position="bottom-right" />
     </TooltipProvider>
   )

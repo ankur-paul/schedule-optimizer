@@ -3,6 +3,7 @@ import { AlertTriangle, Building2, CheckCircle2, Download, FileDown, FileSpreads
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { HelpLink } from "@/components/HelpLink";
+import { AskAboutButton } from "@/features/assistant/AssistantPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { helpHref } from "@/help/helpLinks";
@@ -263,7 +264,9 @@ function ProblemList({ tone, title, items }: { tone: "error" | "warning"; title:
       </div>
       <ul className="ml-6 list-disc text-xs">
         {items.slice(0, MAX_PROBLEMS_SHOWN).map((e) => (
-          <li key={e}>{e}</li>
+          <li key={e}>
+            {e} <AskAboutButton card={{ kind: "dataCheck", tone, text: e }} className="ml-1 text-muted-foreground hover:text-foreground" />
+          </li>
         ))}
         {items.length > MAX_PROBLEMS_SHOWN && <li className="text-muted-foreground">…and {items.length - MAX_PROBLEMS_SHOWN} more</li>}
       </ul>

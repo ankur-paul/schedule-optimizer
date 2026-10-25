@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpLink } from "@/components/HelpLink";
+import { AskAboutButton } from "@/features/assistant/AssistantPanel";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -260,7 +261,8 @@ function openLink(link: CauseLink) {
   } else setStep(3);
 }
 
-function CauseItem({ cause }: { cause: Cause }) {
+/** `askable`: a *Can't be built* reason, which gets *Ask about this* (the warnings before a run don't). */
+function CauseItem({ cause, askable = false }: { cause: Cause; askable?: boolean }) {
   return (
     <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
       <span className="min-w-0 flex-1 basis-72">
@@ -268,6 +270,12 @@ function CauseItem({ cause }: { cause: Cause }) {
         <HelpLink href={causeHelpHref(cause)} className="text-muted-foreground hover:text-foreground">
           What this means
         </HelpLink>
+        {askable && (
+          <>
+            {" "}
+            <AskAboutButton card={{ kind: "cause", cause }} className="ml-2 text-muted-foreground hover:text-foreground" />
+          </>
+        )}
       </span>
       <Button variant="outline" size="sm" onClick={() => openLink(cause.link)}>
         {cause.fix} →
@@ -311,7 +319,7 @@ function ImpossibleCard({ view, actions }: { view: Extract<GenerateView, { state
             <p className="mb-2 font-medium">Why, most likely first</p>
             <ul className="grid gap-2">
               {(showAll ? causes : shown).map((c, i) => (
-                <CauseItem key={i} cause={c} />
+                <CauseItem key={i} cause={c} askable />
               ))}
             </ul>
             {more > 0 && (
@@ -388,6 +396,7 @@ function CouldntFinishCard({ view, actions }: { view: Extract<GenerateView, { st
           <HelpLink href={helpHref("generate", "couldnt-finish")} className="ml-1 text-muted-foreground hover:text-foreground">
             What this means
           </HelpLink>
+          <AskAboutButton card={{ kind: "couldntFinish", title, body }} className="ml-1 text-muted-foreground hover:text-foreground" />
         </div>
       </CardContent>
     </Card>
@@ -499,9 +508,10 @@ function UnplacedList({ result }: { result: SolveResult }) {
           <summary className="cursor-pointer font-medium text-amber-900 select-none">
             {g.label} <span className="font-normal tabular-nums">({g.items.length})</span>
           </summary>
-          <HelpLink href={unplacedHelpHref(g.cause)} className="mt-1 text-xs text-amber-900">
-            What this means
-          </HelpLink>
+          <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-amber-900">
+            <HelpLink href={unplacedHelpHref(g.cause)}>What this means</HelpLink>
+            <AskAboutButton card={{ kind: "unplaced", cause: g.cause, label: g.label, reasons: g.items.map((u) => u.reason) }} />
+          </span>
           <ul className="mt-1 grid max-h-60 gap-1 overflow-auto text-amber-900/80">
             {g.items.map((u) => (
               <li key={u.sessionId}>{u.reason}</li>
