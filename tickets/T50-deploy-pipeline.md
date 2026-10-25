@@ -1,5 +1,5 @@
 # T50 — Deploy pipeline
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main · **Prereqs:** T45, T47, T48 · **Branch:** t50-deploy-pipeline
 
 ## Goal
