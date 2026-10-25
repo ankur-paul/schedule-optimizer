@@ -1,5 +1,5 @@
 # T40 — Assistant panel
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main · **Prereqs:** T37, T38, T39 · **Branch:** t40-assistant-panel
 
 ## Goal
