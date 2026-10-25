@@ -302,7 +302,8 @@ scripts/smoke.sh migrations       # production's schema_version() against supaba
 scripts/smoke.sh wait-web <sha>   # until /version.txt is <sha> (WAIT_WEB_SEC, default 900)
 ```
 
-- **server:** each Function URL's `/health` answers within 10 s (one retry, for a cold start) with the contract
+- **server:** each Function URL's `/health` answers within 30 s (one retry). The first start on a new image
+  takes about 15 s: it outruns Lambda's 10 s init limit, and Lambda starts it again inside the request with the contract
   version in `shared/contract.json`.
 - **web:** `/privacy` answers 200 and shows `Version <POLICY_VERSION>` from `web/src/legal/policy.ts`.
 
@@ -322,7 +323,7 @@ rev-parse HEAD`; `vite-plugin-version.ts`).
 
 **Server:** Actions → Rollback → Run workflow (on `main`), with the full SHA of a commit deployed in the last 10.
 It checks ECR has that image, points both functions at it, waits, and runs `scripts/smoke.sh server` against that
-commit's contract version.
+commit's contract version. The smoke script itself comes from `main`, so a fix to it applies to every rollback.
 
 **Web app:** in the Pages dashboard, Deployments → the deployment to go back to → Rollback to this deployment.
 

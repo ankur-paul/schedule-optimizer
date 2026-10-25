@@ -2,7 +2,7 @@
 # Checks production after a deploy (T50); deploy.yml, rollback.yml and keepalive.yml run it.
 #
 #   scripts/smoke.sh                 # server + web
-#   scripts/smoke.sh server          # /health on both functions: answers within 10 s, on this commit's contract
+#   scripts/smoke.sh server          # /health on both functions: answers within 30 s, on this commit's contract
 #   scripts/smoke.sh web             # /privacy answers 200 with this commit's policy version
 #   scripts/smoke.sh migrations      # production's schema_version() is the newest file in supabase/migrations
 #   scripts/smoke.sh wait-web <sha>  # waits (up to WAIT_WEB_SEC, default 900) until /version.txt is <sha>
@@ -36,12 +36,13 @@ POLICY=$(sed -n 's/^export const POLICY_VERSION = \([0-9]*\).*/\1/p' "$REPO/web/
 [[ -n $CONTRACT ]] || fail "no version in shared/contract.json"
 [[ -n $POLICY ]] || fail "no POLICY_VERSION in web/src/legal/policy.ts"
 
-# One function's /health: within 10 s, one retry for a cold start, and on this commit's contract.
+# One function's /health: within 30 s, one retry, and on this commit's contract. The first start on a new image
+# outruns Lambda's 10 s init limit, so Lambda starts it again inside the request: about 15 s (first deploy).
 health() {
   local name=$1 url=${2%/} body=""
   for attempt in 1 2; do
-    body=$(curl -sf --max-time 10 "$url/health") && break
-    [[ $attempt == 1 ]] && echo "$name: no answer within 10 s, trying once more (cold start)"
+    body=$(curl -sf --max-time 30 "$url/health") && break
+    [[ $attempt == 1 ]] && echo "$name: no answer within 30 s, trying once more (cold start)"
   done
   [[ -n $body ]] || fail "$name: $url/health didn't answer"
   [[ $body =~ \"contract\":\ *([0-9]+) ]] || fail "$name: no contract in $body"

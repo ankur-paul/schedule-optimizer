@@ -29,11 +29,17 @@ jobs:
       contents: read
       id-token: write
     steps:
-      # The commit rolled back to, so the smoke check compares /health with that commit's contract.
+      # main's scripts (an older commit's smoke check may predate a fix), with the contract of the commit rolled back
+      # to, so the smoke check compares /health with that.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.sha }}
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: That commit's contract
+        env:
+          SHA: ${{ inputs.sha }}
+        run: git checkout "$SHA" -- shared/contract.json
 
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
