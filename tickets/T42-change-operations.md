@@ -1,5 +1,5 @@
 # T42 — Working-copy change operations
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** C · **Prereqs:** T40 · **Branch:** t42-change-operations
 
 ## Goal
