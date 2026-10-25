@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Copy, Loader2, MessageSquarePlus, SendHorizontal, Sparkles, X } from "lucide-react";
-import { toast } from "sonner";
+import { Check, Copy, Loader2, MessageSquarePlus, SendHorizontal, Sparkles, X } from "lucide-react";
 import { HelpLink } from "@/components/HelpLink";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SignInButton } from "@/features/account/AccountButton";
 import { useAccount } from "@/features/account/useAccount";
@@ -21,7 +21,7 @@ import { runOnline, type ChangeData } from "./changes";
 import { ChangeCard } from "./ChangeCard";
 import { postAgent, supabaseAssistantApi, type AssistantApi } from "./agentClient";
 import { askText, type AskCard } from "./askAbout";
-import { allowanceLine, answerBlocks, askAdminLine, trialMailto, trialRequestText, type Inline } from "./format";
+import { allowanceLine, answerBlocks, askAdminLine, trialCopyRows, trialGmailUrl, trialMailto, type Inline } from "./format";
 import { unmaskText } from "./mask";
 import { loadOnlineSnapshot } from "./onlineState";
 import { chooseInstitute, panelState, type PanelState } from "./panelState";
@@ -499,35 +499,106 @@ function Unlock({ api, instituteId, renew }: { api: AssistantApi; instituteId: s
       </div>
       {error && <p className="text-destructive">{error}</p>}
       {CONTACT_EMAIL && membership && (
-        <>
-          <a href={trialMailto(CONTACT_EMAIL, membership)} className="text-xs text-primary underline underline-offset-2">
-            Request a trial coupon
-          </a>
-          <ContactLine institute={membership} />
-        </>
+        <TrialRequest institute={membership} />
       )}
     </form>
   );
 }
 
-/** For admins without a mail app, where *Request a trial coupon* does nothing: the same email to copy into webmail. */
-function ContactLine({ institute }: { institute: { name: string; handle: string | null } }) {
-  const copy = async () => {
+/**
+ * *Request a trial coupon*: a dialog to send the request from Gmail or the mail app, or copy it into any email, since
+ * a bare mailto: does nothing on PCs without a mail app.
+ */
+function TrialRequest({ institute }: { institute: { name: string; handle: string | null } }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  // On a phone, mailto: hands off to its mail app reliably and Gmail on the web is clumsy.
+  const touch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
+
+  const copy = async (label: string, value: string) => {
     try {
-      await navigator.clipboard.writeText(trialRequestText(CONTACT_EMAIL, institute));
-      toast.success("Request copied. Paste it into an email to us.");
+      await navigator.clipboard.writeText(value);
+      setCopyFailed(false);
+      setCopied(label);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(null), 2000);
     } catch {
-      toast.error("Couldn't copy. Write to the address yourself, with your institute's name.");
+      setCopyFailed(true);
     }
   };
+
+  const gmail = (
+    <a
+      key="gmail"
+      href={trialGmailUrl(CONTACT_EMAIL, institute)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={buttonVariants({ variant: touch ? "outline" : "default" })}
+    >
+      Open in Gmail
+    </a>
+  );
+  const mailApp = (
+    <a key="mail" href={trialMailto(CONTACT_EMAIL, institute)} className={buttonVariants({ variant: touch ? "default" : "outline" })}>
+      Open email app
+    </a>
+  );
+
   return (
-    <p className="text-xs text-muted-foreground">
-      No email app? Copy the request and send it from your webmail to{" "}
-      <span className="select-all text-foreground">{CONTACT_EMAIL}</span>.{" "}
-      <button type="button" onClick={() => void copy()} className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline">
-        <Copy className="size-3" /> Copy
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="justify-self-start text-xs text-primary underline underline-offset-2">
+        Request a trial coupon
       </button>
-    </p>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) setCopyFailed(false);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request a trial coupon</DialogTitle>
+            <DialogDescription>Send us this email and we&apos;ll reply with a coupon.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-wrap gap-2">{touch ? [mailApp, gmail] : [gmail, mailApp]}</div>
+          <div className="grid gap-2">
+            <p className="text-muted-foreground">Or copy it into any email:</p>
+            {/* On a phone the label and Copy share a line, with the value full width under them. */}
+            {trialCopyRows(CONTACT_EMAIL, institute).map(({ label, value }) => (
+              <div key={label} className="grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-1 sm:grid-cols-[4.5rem_1fr_auto] sm:items-start">
+                <span className="text-muted-foreground sm:pt-1.5">{label}</span>
+                <span className="col-span-2 min-w-0 rounded-md border bg-muted/40 px-2 py-1 break-words whitespace-pre-wrap select-all sm:col-span-1">
+                  {value.trimEnd()}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void copy(label, value)}
+                  aria-label={`Copy ${label.toLowerCase()}`}
+                  className="col-start-2 row-start-1 sm:col-start-3"
+                >
+                  {copied === label ? (
+                    <>
+                      <Check /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy /> Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+            ))}
+            {copyFailed && <p className="text-destructive">Couldn&apos;t copy. Select the text and copy it yourself (Ctrl+C).</p>}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

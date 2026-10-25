@@ -21,9 +21,9 @@ export function allowanceLine(access: Access, now: Date): { text: string; low: b
 
 type RequestingInstitute = { name: string; handle: string | null };
 
-const TRIAL_SUBJECT = "Lattice assistant trial";
+export const TRIAL_SUBJECT = "Lattice assistant trial";
 
-function trialBody(institute: RequestingInstitute): string {
+export function trialBody(institute: RequestingInstitute): string {
   return [`Institute: ${institute.name}`, `Handle: ${institute.handle ?? "(not set)"}`, "", "What will you use it for?", ""].join("\n");
 }
 
@@ -33,9 +33,30 @@ export function trialMailto(to: string, institute: RequestingInstitute): string 
   return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(TRIAL_SUBJECT)}&body=${encodeURIComponent(trialBody(institute))}`;
 }
 
-/** The same email as plain text, for *Copy* when there is no mail app to open: paste it into webmail. */
-export function trialRequestText(to: string, institute: RequestingInstitute): string {
-  return `To: ${to}\nSubject: ${TRIAL_SUBJECT}\n\n${trialBody(institute)}`;
+/**
+ * The same email as a Gmail compose window, in the browser's first Google account (`/u/0/`). Not the signed-in
+ * email's account (`/u/<email>/`): Gmail answers "account temporarily unavailable" when that email isn't a Google
+ * account signed in there. `tf=cm` opens the compose window; the older `view=cm&fs=1` no longer does.
+ */
+export function trialGmailUrl(to: string, institute: RequestingInstitute): string {
+  const params: [string, string][] = [
+    ["to", to],
+    ["su", TRIAL_SUBJECT],
+    ["body", trialBody(institute)],
+    ["tf", "cm"],
+  ];
+  // encodeURIComponent, as for the mailto: Gmail shows a "+" from URLSearchParams as a plus.
+  const query = params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
+  return `https://mail.google.com/mail/u/0/?${query}`;
+}
+
+/** The dialog's copy rows: the same email in three parts, to paste into any email. */
+export function trialCopyRows(to: string, institute: RequestingInstitute): { label: string; value: string }[] {
+  return [
+    { label: "To", value: to },
+    { label: "Subject", value: TRIAL_SUBJECT },
+    { label: "Message", value: trialBody(institute) },
+  ];
 }
 
 /** The locked screen's line for editors and viewers: whom to ask, with their email so they can. */
