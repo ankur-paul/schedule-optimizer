@@ -1,4 +1,4 @@
-import definition from "../../../../shared/agent-change-tool.json";
+import definitions from "../../../../shared/agent-change-tool.json";
 import { eligibleRooms } from "@/domain/eligibility";
 import { buildGrid, sessionLabel, slotLabel } from "@/domain/grid";
 import { sampleCollege } from "@/domain/sampleCollege";
@@ -10,13 +10,21 @@ import { nextId } from "@/features/data/dataEdit";
 import { regenerateLabel } from "@/features/lock/locks";
 import { periodErrors, settingsErrors } from "@/features/setup/periods";
 import { applyMove, checkMove, editedResult } from "@/features/view/moves";
-import type { AppData } from "@/store/useAppStore";
+import type { Role } from "@/features/account/institutes";
+import { canEdit, MAX_TIMETABLE_NAME } from "@/features/online/online";
+import { SaveConflict, type OnlineApi } from "@/features/online/onlineApi";
+import { createOnline, openOnline, pointLink, renameOnline, saveVersion, useOnline } from "@/features/online/useOnline";
+import { currentInstitute, failureMessage, useInstitutes } from "@/features/account/useInstitutes";
+import { useAppStore, type AppData } from "@/store/useAppStore";
 import { maskTeachers, maskText, teacherCodes } from "./mask";
+import { saveAsInstitute, type OnlineSnapshot } from "./onlineState";
 
 // The assistant's working-copy changes (T42): the `propose_changes` tool's operations as pure functions. `dryRun`
 // checks a whole proposal on a copy, in order, so later changes see earlier ones; `applyChanges` runs the same steps
 // for the store. Teachers are referred to by their codes (mask.ts) and resolved here; lines, errors and data checks
 // carry codes too, so they are safe to send back to the model, and the panel unmasks them for display (T44).
+// The online changes (T43) are checked here against the user's role and an `OnlineSnapshot`, then made one by one
+// with `runOnline` after the working-copy changes and regenerate.
 
 /** What a change can touch: the working copy without the print heading, step or time limit. */
 export type ChangeData = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks">;
@@ -24,6 +32,11 @@ export type ChangeData = Pick<AppData, "settings" | "departments" | "teachers" |
 export interface ChangeContext {
   /** Replacing the working copy would lose work (`hasUnsavedWork` in features/online). */
   hasUnsavedWork: boolean;
+  /**
+   * Where the working copy stands online, for checking online changes. Without it they are checked only for their
+   * order (`applyChanges`, which leaves them to `runOnline`).
+   */
+  online?: OnlineSnapshot;
 }
 
 interface FieldSet<F extends string> { field: F; value: string }
@@ -62,9 +75,23 @@ export type Change =
   | { op: "lock"; sessionId: Id }
   | { op: "unlock"; sessionId: Id }
   | { op: "regenerate" }
-  | { op: "load_sample" };
+  | { op: "load_sample" }
+  | OnlineChange;
+
+/** The changes made online, by `runOnline`. A `version` of 0 means the newest, after any save before it. */
+export type OnlineChange =
+  | { op: "open_online"; timetableId: string; version: number }
+  | { op: "save_online" }
+  | { op: "save_as_new"; name: string }
+  | { op: "rename_online"; name: string }
+  | { op: "publish"; version: number }
+  | { op: "make_live"; version: number };
 
 export type ChangeOp = Change["op"];
+
+const ONLINE_OPS = new Set<ChangeOp>(["open_online", "save_online", "save_as_new", "rename_online", "publish", "make_live"]);
+
+export const isOnlineChange = (change: Change): change is OnlineChange => ONLINE_OPS.has(change.op);
 
 /** The tool's input. */
 export interface Proposal { summary: string; changes: Change[] }
@@ -82,8 +109,10 @@ export type DryRun =
       lines: ChangeLine[];
       /** New data-check errors and warnings. They don't stop *Apply*: the tables accept bad data by hand too. */
       warnings: NewCheck[];
-      /** The proposal ends with Generate, which the panel runs after applying the rest. */
+      /** The proposal has Generate, which the panel runs after the working-copy changes. */
       regenerate: boolean;
+      /** The online changes, in order, for `runOnline` after the rest. */
+      online: OnlineChange[];
       /** The working copy after the changes. */
       data: ChangeData;
     }
@@ -112,7 +141,10 @@ export interface Schema {
 
 export interface ChangeToolDefinition { name: string; description: string; strict: boolean; input_schema: Schema }
 
-export const CHANGE_TOOL = definition as unknown as ChangeToolDefinition;
+const DEFINITIONS = definitions as unknown as ChangeToolDefinition[];
+export const CHANGE_TOOL = DEFINITIONS.find((d) => d.name === "propose_changes")!;
+/** `online_status`, which joins the other read tools in `agent-tools.json` in T44. */
+export const ONLINE_STATUS_TOOL = DEFINITIONS.find((d) => d.name === "online_status")!;
 
 /** Each operation's schema by its `op`. */
 const OP_SCHEMAS = new Map((CHANGE_TOOL.input_schema.properties!.changes.items!.anyOf ?? []).map((s) => [s.properties!.op.const!, s]));
@@ -204,18 +236,37 @@ interface Env {
   aliases: Map<string, Id>;
   /** Index of the `regenerate` change, once seen. */
   regenerateAt: number | null;
+  /** Index of the first online change, once seen. */
+  onlineAt: number | null;
+  /** How many changes the proposal has. */
+  count: number;
+  /** The online state as the changes so far leave it; `null` when there is no snapshot to check against. */
+  online: OnlineSim | null;
 }
 
 type Step = { data: ChangeData; line: Omit<ChangeLine, "op"> };
 
 /** Run the proposal on `data`. The first change that fails stops it. */
 function run(proposal: Proposal, data: ChangeData, ctx: ChangeContext): DryRun {
-  const env: Env = { ctx, codes: teacherCodes(data.teachers), aliases: new Map(), regenerateAt: null };
+  const env: Env = {
+    ctx,
+    codes: teacherCodes(data.teachers),
+    aliases: new Map(),
+    regenerateAt: null,
+    onlineAt: null,
+    count: proposal.changes.length,
+    online: ctx.online ? simulate(ctx.online) : null,
+  };
   let state = data;
   const lines: ChangeLine[] = [];
   for (const [i, change] of proposal.changes.entries()) {
     try {
-      if (env.regenerateAt !== null) fail("regenerate runs after the other changes are made, so put it last.");
+      if (isOnlineChange(change)) env.onlineAt ??= i;
+      else {
+        if (env.onlineAt !== null) fail(`put online changes last: ${change.op} comes after ${proposal.changes[env.onlineAt].op}, and online changes run once the working copy is done.`);
+        if (env.regenerateAt !== null) fail("regenerate runs after the other working-copy changes are made, so put it after them; only online changes may follow it.");
+        if (env.online) env.online.dirty = true;
+      }
       const step = STEPS[change.op](state, change as never, env, i);
       state = step.data;
       lines.push({ op: change.op, ...step.line });
@@ -224,7 +275,8 @@ function run(proposal: Proposal, data: ChangeData, ctx: ChangeContext): DryRun {
       return { ok: false, errors: [maskText(`Change ${i + 1}: ${why}`, state.teachers)] };
     }
   }
-  return { ok: true, summary: proposal.summary, lines, warnings: newChecks(data, state, env.codes), regenerate: env.regenerateAt !== null, data: state };
+  const online = proposal.changes.filter(isOnlineChange);
+  return { ok: true, summary: proposal.summary, lines, warnings: newChecks(data, state, env.codes), regenerate: env.regenerateAt !== null, online, data: state };
 }
 
 /** Check a proposal on a copy of the working copy. Never throws: a bad input or a failing change comes back as errors. */
@@ -384,6 +436,208 @@ const placementOf = (data: ChangeData, id: Id) => timetable(data).placements.fin
 
 /** "CSE A Data Structures Lab (B1)". */
 const label = (input: SolveInput, s: Session) => sessionLabel(input, s);
+
+// --- online ---------------------------------------------------------------------------------------------------
+
+/** `save_timetable` keeps the newest this many versions, plus the live one. */
+export const KEPT_VERSIONS = 20;
+
+/** The online state as the changes so far leave it. */
+interface OnlineSim {
+  snap: OnlineSnapshot;
+  link: { name: string; institute: string; role: Role | null; handle: string | null } | null;
+  /** `null` when the linked timetable couldn't be read. */
+  versions: { latest: number; live: number | null; kept: number[] } | null;
+  /** The version the next save builds on. */
+  base: number;
+  dirty: boolean;
+}
+
+function simulate(snap: OnlineSnapshot): OnlineSim {
+  const t = snap.timetable;
+  return {
+    snap,
+    link: snap.link && { name: snap.link.name, institute: snap.linkedInstitute?.name ?? snap.link.instituteName, role: snap.role, handle: snap.linkedInstitute?.handle ?? null },
+    versions: t && { latest: t.latestVersion, live: t.liveVersion, kept: t.versions.map((v) => v.version) },
+    base: snap.link?.version ?? 0,
+    dirty: snap.dirty,
+  };
+}
+
+function signedIn(sim: OnlineSim, verb: string): void {
+  if (!sim.snap.signedIn) fail(`the user is signed out, so you can't ${verb}. They sign in with the account button.`);
+}
+
+/** The linked timetable, if the user may change it online. */
+function editableLink(sim: OnlineSim, verb: string, notLinked: string): NonNullable<OnlineSim["link"]> {
+  signedIn(sim, verb);
+  const link = sim.link ?? fail(notLinked);
+  if (link.role === null) fail(`the user is no longer a member of ${link.institute}, so you can't ${verb}.`);
+  if (!canEdit(link.role)) fail(`the user is a viewer in ${link.institute}: their role can't ${verb}, ask an editor.`);
+  return link;
+}
+
+function keptVersions(sim: OnlineSim): NonNullable<OnlineSim["versions"]> {
+  return sim.versions ?? fail(`the linked timetable's versions couldn't be read (${sim.snap.problems.join(" ") || "no answer"}). Ask again in a moment.`);
+}
+
+function timetableName(text: string): string {
+  const name = text.trim();
+  if (!name) fail("give the timetable a name.");
+  if (name.length > MAX_TIMETABLE_NAME) fail(`the name is ${name.length} characters long; at most ${MAX_TIMETABLE_NAME}.`);
+  return name;
+}
+
+const NOT_SAVED = "this working copy isn't saved online yet.";
+const versionList = (kept: number[]) => [...kept].sort((a, b) => b - a).join(", ");
+
+/** `publish` and `make_live`: the version the public link will show. */
+function pointAt(sim: OnlineSim, version: number, mode: "publish" | "make_live"): { link: NonNullable<OnlineSim["link"]>; version: number; warning?: string } {
+  const link = editableLink(sim, mode === "publish" ? "publish" : "change the live version", `${NOT_SAVED} Use save_as_new first, then publish.`);
+  if (!link.handle) {
+    fail(
+      link.role === "admin"
+        ? "the institute has no link name yet, which a public link needs. The user sets it by hand: Publish in the status menu asks for it."
+        : "the institute has no link name yet, which a public link needs. Only the admin can set it, so ask the admin.",
+    );
+  }
+  const v = keptVersions(sim);
+  if (mode === "publish" && v.live !== null) fail(`it's already published, showing version ${v.live}. Use make_live to show another version.`);
+  if (mode === "make_live" && v.live === null) fail("it isn't published yet. Use publish.");
+  const n = version === 0 ? v.latest : version;
+  if (!v.kept.includes(n)) fail(`version ${n} isn't kept online. Kept versions: ${versionList(v.kept)}.`);
+  if (n === v.live) fail(`version ${n} is already live.`);
+  sim.versions = { ...v, live: n };
+  const warning = n === v.latest && sim.dirty ? `Unsaved changes aren't in version ${n}: save online before this to include them.` : undefined;
+  return { link, version: n, ...(warning && { warning }) };
+}
+
+/** An online step: checked against the snapshot when there is one, else just a line. */
+function online<O extends OnlineChange["op"]>(
+  check: (sim: OnlineSim, change: Extract<Change, { op: O }>, env: Env) => Omit<ChangeLine, "op">,
+  unchecked: (change: Extract<Change, { op: O }>) => string,
+): Handler<O> {
+  return (data, change, env) => ({ data, line: env.online ? check(env.online, change, env) : { text: unchecked(change) } });
+}
+
+const ONLINE_STEPS: { [O in OnlineChange["op"]]: Handler<O> } = {
+  open_online: (data, c, env) => {
+    if (env.count > 1) fail("open_online replaces the working copy with the opened timetable, so propose it on its own; propose further changes once it's open.");
+    return online<"open_online">(
+      (sim, c, env) => {
+        signedIn(sim, "open timetables from the institute");
+        const active = sim.snap.active ?? fail("the user has no institute to open from.");
+        const t = active.timetables.find((x) => x.id === c.timetableId.trim()) ?? fail(`no timetable with id ${c.timetableId} in ${active.name}. Use online_status to see them.`);
+        if (c.version < 0 || c.version > t.latestVersion) fail(`“${t.name}” has versions up to ${t.latestVersion}. Give one of those, or 0 for the latest.`);
+        const warning = env.ctx.hasUnsavedWork ? "Your unsaved changes will be lost: the opened timetable replaces the data, locks and timetable." : undefined;
+        return { text: `Open “${t.name}”${c.version ? ` (version ${c.version})` : ""} from ${active.name}`, ...(warning && { warning }) };
+      },
+      (c) => `Open timetable ${c.timetableId}`,
+    )(data, c, env, 0);
+  },
+  save_online: online(
+    (sim) => {
+      const link = editableLink(sim, "save online", `${NOT_SAVED} Use save_as_new to save it as a new timetable.`);
+      const v = keptVersions(sim);
+      if (sim.base < v.latest) fail(`version ${v.latest} was saved online after this copy's version ${sim.base}, so saving would conflict. Save by hand.`);
+      const next = v.latest + 1;
+      const dropped = v.kept.filter((k) => k <= next - KEPT_VERSIONS && k !== v.live).sort((a, b) => a - b);
+      if (dropped.length > 0) fail(`this save would delete ${dropped.length === 1 ? "version" : "versions"} ${dropped.join(", ")}. Save by hand.`);
+      sim.versions = { ...v, latest: next, kept: [...v.kept, next] };
+      sim.base = next;
+      sim.dirty = false;
+      return { text: `Save online as version ${next} of “${link.name}”` };
+    },
+    () => "Save online",
+  ),
+  save_as_new: online(
+    (sim, c) => {
+      signedIn(sim, "save online");
+      const into = sim.snap.saveAsInto ?? fail("the user is a viewer in every institute they belong to: their role can't save a new timetable, ask an editor.");
+      const name = timetableName(c.name);
+      sim.link = { name, institute: into.name, role: into.role, handle: into.handle };
+      sim.versions = { latest: 1, live: null, kept: [1] };
+      sim.base = 1;
+      sim.dirty = false;
+      return { text: `Save as a new timetable “${name}” in ${into.name}` };
+    },
+    (c) => `Save as a new timetable “${c.name.trim()}”`,
+  ),
+  rename_online: online(
+    (sim, c) => {
+      const link = editableLink(sim, "rename the timetable", `${NOT_SAVED} Use save_as_new with the name instead.`);
+      const name = timetableName(c.name);
+      sim.link = { ...link, name };
+      return { text: `Rename “${link.name}” to “${name}” online` };
+    },
+    (c) => `Rename the timetable to “${c.name.trim()}”`,
+  ),
+  publish: online(
+    (sim, c) => {
+      const { link, version, warning } = pointAt(sim, c.version, "publish");
+      return { text: `Publish version ${version} of “${link.name}”: the public link shows it`, ...(warning && { warning }) };
+    },
+    (c) => `Publish version ${c.version || "latest"}`,
+  ),
+  make_live: online(
+    (sim, c) => {
+      const { link, version, warning } = pointAt(sim, c.version, "make_live");
+      return { text: `Make version ${version} of “${link.name}” live on the public link`, ...(warning && { warning }) };
+    },
+    (c) => `Make version ${c.version || "latest"} live`,
+  ),
+};
+
+/** How an online change went. A conflict never overwrites the other save: the user saves by hand. */
+export type OnlineRun = { ok: true } | { ok: false; reason: string; conflict?: true };
+
+/**
+ * Make one online change from a proposal that passed `dryRun`, with the user's token; the next one reads the link
+ * this one leaves. Never throws and never retries: a refusal or a lost connection comes back as the reason.
+ */
+export async function runOnline(change: OnlineChange, api: OnlineApi): Promise<OnlineRun> {
+  const link = useAppStore.getState().online;
+  const notLinked: OnlineRun = { ok: false, reason: "This working copy isn't linked to an online timetable any more." };
+  const active = () => currentInstitute(useInstitutes.getState());
+  try {
+    switch (change.op) {
+      case "save_online": {
+        if (!link) return notLinked;
+        if (useOnline.getState().saving) return { ok: false, reason: "Another save is running. Try again when it's done." };
+        useOnline.setState({ saving: true });
+        try {
+          await saveVersion(api, link);
+        } finally {
+          useOnline.setState({ saving: false });
+        }
+        break;
+      }
+      case "save_as_new": {
+        const { memberships } = useInstitutes.getState();
+        const into = saveAsInstitute(memberships, link?.instituteId ?? null, active()?.instituteId ?? null);
+        if (!into) return { ok: false, reason: "Your role can't save a new timetable in any institute." };
+        await createOnline(api, into, change.name.trim());
+        break;
+      }
+      case "rename_online":
+        if (!link) return notLinked;
+        await renameOnline(api, link.timetableId, change.name.trim());
+        break;
+      case "publish":
+      case "make_live":
+        if (!link) return notLinked;
+        await pointLink(api, link.timetableId, change.version || link.version);
+        break;
+      case "open_online":
+        await openOnline(api, change.timetableId.trim(), active()?.name ?? "", change.version || undefined);
+        break;
+    }
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof SaveConflict) return { ok: false, reason: "Someone saved this timetable online since it was opened. Save by hand.", conflict: true };
+    return { ok: false, reason: failureMessage(e) };
+  }
+}
 
 // --- the steps ------------------------------------------------------------------------------------------------
 
@@ -636,6 +890,7 @@ const STEPS: { [O in ChangeOp]: Handler<O> } = {
     const warning = env.ctx.hasUnsavedWork ? "Your unsaved changes will be lost: the sample college replaces the data, locks and timetable." : undefined;
     return { data: pick(next), line: { text: "Load the sample college", ...(warning && { warning }) } };
   },
+  ...ONLINE_STEPS,
 };
 
 /** Just the `ChangeData` fields (the sample also has `options`). */

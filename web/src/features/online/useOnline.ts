@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { personLabel } from "@/features/account/institutes";
 import { currentInstitute, failureMessage, useInstitutes, type Notify } from "@/features/account/useInstitutes";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore, type OnlineLink } from "@/store/useAppStore";
 import { docHash, fromDoc, isDirty, roleIn, toDoc, type Conflict } from "./online";
 import { HandleRequired, NotEditable, SaveConflict, type OnlineApi, type PublishStatus } from "./onlineApi";
 import { publicUrl, publishState, type PublishState } from "./publish";
@@ -71,12 +71,9 @@ export async function saveOnline(api: OnlineApi, notify: Notify, base?: number):
     return false;
   }
   if (useOnline.getState().saving) return false;
-  const { doc, hash } = snapshot();
   useOnline.setState({ saving: true, dialog: null });
   try {
-    const version = await api.save(link.timetableId, doc, base ?? link.version);
-    const now = useAppStore.getState().online;
-    if (now?.timetableId === link.timetableId) useAppStore.getState().setOnline({ ...now, version, savedHash: hash });
+    const version = await saveVersion(api, link, base);
     notify.info(`Saved ${link.name} online (version ${version}).`);
     return true;
   } catch (e) {
@@ -87,6 +84,19 @@ export async function saveOnline(api: OnlineApi, notify: Notify, base?: number):
   } finally {
     useOnline.setState({ saving: false });
   }
+}
+
+/**
+ * Saves the working copy as a new version of `link`'s timetable on top of `base` (default: the linked version) and
+ * moves the link to it, unless the working copy was linked elsewhere meanwhile. Returns the new version. Throws
+ * `SaveConflict` for a stale base, `NotEditable` for a deleted timetable or lost access, `DbFailure` otherwise.
+ */
+export async function saveVersion(api: OnlineApi, link: OnlineLink, base = link.version): Promise<number> {
+  const { doc, hash } = snapshot();
+  const version = await api.save(link.timetableId, doc, base);
+  const now = useAppStore.getState().online;
+  if (now?.timetableId === link.timetableId) useAppStore.getState().setOnline({ ...now, version, savedHash: hash });
+  return version;
 }
 
 /** First save and *Save as new timetable*: creates version 1 in `institute` and links the working copy to it. Throws on refusal. */
@@ -195,7 +205,7 @@ export async function saveAndPublish(api: OnlineApi, notify: Notify): Promise<vo
  */
 export async function publishVersion(api: OnlineApi, notify: Notify, target: PublishTarget): Promise<boolean> {
   try {
-    await api.publish(target.timetableId, target.version);
+    await pointLink(api, target.timetableId, target.version);
   } catch (e) {
     if (e instanceof HandleRequired) {
       const role = roleIn(useInstitutes.getState().memberships, target.instituteId);
@@ -203,7 +213,6 @@ export async function publishVersion(api: OnlineApi, notify: Notify, target: Pub
     } else notify.error(`Couldn't publish: ${failureMessage(e)}`);
     return false;
   }
-  await refreshLinked(api);
   if (target.mode === "makeLive") {
     notify.info(`The public link now shows version ${target.version}.`);
     return true;
@@ -213,6 +222,12 @@ export async function publishVersion(api: OnlineApi, notify: Notify, target: Pub
   if (handle && status) showDialog({ kind: "published", url: publicUrl(siteOrigin(), handle, status.publicId), version: target.version });
   else notify.info(`Published version ${target.version}.`);
   return true;
+}
+
+/** Points a timetable's public link at `version` and reloads the linked status. Throws `HandleRequired` or `DbFailure`. */
+export async function pointLink(api: OnlineApi, timetableId: string, version: number): Promise<void> {
+  await api.publish(timetableId, version);
+  await refreshLinked(api);
 }
 
 /** *Unpublish*: takes the public link down; publishing again brings the same link back. Throws on refusal. */

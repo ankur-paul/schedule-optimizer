@@ -30,6 +30,8 @@ export function publicUrl(origin: string, handle: string, publicId: string): str
 export interface VersionSummary {
   version: number;
   savedBy: string | null;
+  /** The saver's user id, so the assistant can say "you" or "another member" without a name (T43). */
+  savedById: string | null;
   savedAt: string;
 }
 

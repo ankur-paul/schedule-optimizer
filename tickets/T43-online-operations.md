@@ -1,5 +1,5 @@
 # T43 — Online operations and online_status
-**Status:** TODO
+**Status:** DONE
 **Lane:** B · **Prereqs:** T42 · **Branch:** t43-online-operations
 
 ## Goal
@@ -45,7 +45,7 @@ it can propose, Q6, Q10, Q12).
 - `online_status`: no member name or email appears (checked on a fixture with named savers); signed out; not linked.
 
 ## Done when
-- [ ] Online operations and `online_status` work as above
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T43: online operations and online_status`
+- [x] Online operations and `online_status` work as above
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T43: online operations and online_status`

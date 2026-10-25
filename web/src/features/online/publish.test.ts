@@ -50,10 +50,10 @@ describe("publicUrl", () => {
 describe("versionLabel", () => {
   const now = new Date(2026, 9, 25, 9, 0);
   it("shows the number, who and when", () => {
-    expect(versionLabel({ version: 7, savedBy: "Meera", savedAt: new Date(2026, 9, 24, 10, 42).toISOString() }, now)).toBe("Version 7 · Meera · 24 Oct, 10:42");
+    expect(versionLabel({ version: 7, savedBy: "Meera", savedById: "u2", savedAt: new Date(2026, 9, 24, 10, 42).toISOString() }, now)).toBe("Version 7 · Meera · 24 Oct, 10:42");
   });
   it("shows only the time for today, and leaves out an unknown saver", () => {
-    expect(versionLabel({ version: 2, savedBy: null, savedAt: new Date(2026, 9, 25, 8, 5).toISOString() }, now)).toBe("Version 2 · 08:05");
+    expect(versionLabel({ version: 2, savedBy: null, savedById: null, savedAt: new Date(2026, 9, 25, 8, 5).toISOString() }, now)).toBe("Version 2 · 08:05");
   });
 });
 

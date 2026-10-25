@@ -87,9 +87,9 @@ describe("toVersions", () => {
         [{ user_id: "u2", name: "Meera", email: "meera@gndec.ac.in" }],
       ),
     ).toEqual([
-      { version: 7, savedBy: "Meera", savedAt: "2026-10-24T10:42:00Z" },
-      { version: 6, savedBy: null, savedAt: "2026-10-23T10:00:00Z" },
-      { version: 2, savedBy: null, savedAt: "2026-10-20T10:00:00Z" },
+      { version: 7, savedBy: "Meera", savedById: "u2", savedAt: "2026-10-24T10:42:00Z" },
+      { version: 6, savedBy: null, savedById: "u1", savedAt: "2026-10-23T10:00:00Z" },
+      { version: 2, savedBy: null, savedById: null, savedAt: "2026-10-20T10:00:00Z" },
     ]);
   });
 });
@@ -200,8 +200,8 @@ describe("supabaseOnlineApi", () => {
       { data: [{ user_id: "u1", name: "Meera", email: null }], error: null },
     ]);
     expect(await api.versions("t1")).toEqual([
-      { version: 2, savedBy: "Meera", savedAt: "2026-10-24T10:00:00Z" },
-      { version: 1, savedBy: "Meera", savedAt: "2026-10-23T10:00:00Z" },
+      { version: 2, savedBy: "Meera", savedById: "u1", savedAt: "2026-10-24T10:00:00Z" },
+      { version: 1, savedBy: "Meera", savedById: "u1", savedAt: "2026-10-23T10:00:00Z" },
     ]);
     expect(calls).toContainEqual(["select", ["version, saved_by, saved_at"]]);
     expect(calls.filter(([m]) => m === "in")).toEqual([["in", ["user_id", ["u1"]]]]);

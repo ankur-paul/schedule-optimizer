@@ -10,11 +10,13 @@ import {
   currentPublishState,
   deleteOnline,
   openOnline,
+  pointLink,
   publishVersion,
   refreshLinked,
   renameOnline,
   saveAndPublish,
   saveOnline,
+  saveVersion,
   startPublish,
   unlink,
   unpublishOnline,
@@ -54,6 +56,48 @@ beforeEach(() => {
   useInstitutes.setState({ userId: "u1", memberships: [], loaded: true, rememberedId: null, admin: null, createOpen: false });
   notify.info.mockClear();
   notify.error.mockClear();
+});
+
+describe("saveVersion", () => {
+  it("saves on the linked version by default, moves the link and returns the new version", async () => {
+    linkHere();
+    const api = fakeApi();
+    expect(await saveVersion(api, store().online!)).toBe(4);
+    expect(api.save).toHaveBeenCalledWith("t1", toDoc(store()), 3);
+    expect(store().online).toMatchObject({ version: 4, savedHash: hashNow() });
+  });
+
+  it("throws a conflict without a dialog, a toast or a link change", async () => {
+    linkHere();
+    const api = fakeApi({ save: vi.fn(async () => Promise.reject(new SaveConflict(null))) });
+    await expect(saveVersion(api, store().online!)).rejects.toBeInstanceOf(SaveConflict);
+    expect(useOnline.getState().dialog).toBeNull();
+    expect(store().online?.version).toBe(3);
+  });
+
+  it("leaves the link alone when the copy was linked elsewhere meanwhile", async () => {
+    linkHere();
+    const link = store().online!;
+    linkHere({ timetableId: "t2" });
+    await saveVersion(fakeApi(), link);
+    expect(store().online).toMatchObject({ timetableId: "t2", version: 3 });
+  });
+});
+
+describe("pointLink", () => {
+  it("publishes the version and reloads the linked status", async () => {
+    linkHere();
+    const api = fakeApi();
+    await pointLink(api, "t1", 2);
+    expect(api.publish).toHaveBeenCalledWith("t1", 2);
+    expect(useOnline.getState().linked).toMatchObject({ timetableId: "t1", liveVersion: 3 });
+  });
+
+  it("throws a refusal, without a dialog", async () => {
+    const api = fakeApi({ publish: vi.fn(async () => Promise.reject(new HandleRequired("Set the link name first."))) });
+    await expect(pointLink(api, "t1", 2)).rejects.toBeInstanceOf(HandleRequired);
+    expect(useOnline.getState().dialog).toBeNull();
+  });
 });
 
 describe("saveOnline", () => {
