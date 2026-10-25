@@ -141,3 +141,4 @@ graph LR
 | [T52](T52-soft-rules-scorers.md) | v2: soft-rule switches and S5 in the scorers | C | — | — |
 | [T53](T53-soft-rules-engines.md) | v2: S5 and the switches in both engines | B | T52 | — |
 | [T54](T54-aim-card.md) | v2: "What to aim for" card, no time-limit slider | A | T52 | — |
+| [T55](T55-trial-request-dialog.md) | v2: trial coupon request dialog | A | — | — |
