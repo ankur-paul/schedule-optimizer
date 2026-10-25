@@ -8,6 +8,7 @@
 import { createInterface } from "node:readline";
 import timetableJson from "../../shared/fixtures/sample-timetable.json";
 import { sampleCollege } from "../src/domain/sampleCollege";
+import { score } from "../src/domain/score";
 import type { SolveInput, SolveResult } from "../src/domain/types";
 import { dryRun } from "../src/features/assistant/changes";
 import { proposalOutcome } from "../src/features/assistant/chat";
@@ -15,7 +16,7 @@ import { maskText, unmaskText } from "../src/features/assistant/mask";
 import type { OnlineSnapshot } from "../src/features/assistant/onlineState";
 import { runTool, type ToolData, type ToolOutput } from "../src/features/assistant/tools";
 
-export type Scenario = "built" | "partial" | "impossible";
+export type Scenario = "built" | "partial" | "impossible" | "lateFinishOff";
 
 const timetable = timetableJson as SolveResult;
 const college = (): SolveInput => structuredClone(sampleCollege);
@@ -39,11 +40,18 @@ export const ONLINE: OnlineSnapshot = {
   problems: [],
 };
 
-/** The sample college with its solved timetable; with two classes left unplaced; or with CSE A overbooked. */
+/**
+ * The sample college with its solved timetable; with two classes left unplaced; with CSE A overbooked; or solved, with
+ * Late finish (S5) switched off.
+ */
 export function scenario(name: Scenario): ToolData {
   switch (name) {
     case "built":
       return { ...college(), result: timetable };
+    case "lateFinishOff": {
+      const softRules = { s1: true, s2: true, s3: true, s4: true, s5: false };
+      return { ...college(), softRules, result: { ...timetable, score: score({ ...college(), softRules }, timetable.placements) } };
+    }
     case "partial": {
       const dropped = ["cse-a-ds:L1", "cse-a-os:L1"];
       const result: SolveResult = {

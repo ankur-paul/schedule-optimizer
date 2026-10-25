@@ -1,4 +1,6 @@
-import type { SolveResult, Teacher } from "@/domain/types";
+import { fillSoftRules } from "@/domain/score";
+import type { SoftRules, SolveResult, Teacher } from "@/domain/types";
+import { AIMS, scoreName } from "@/features/generate/aims";
 import type { ChangeLine, DryRun, NewCheck } from "./changes";
 import type { ToolOutput } from "./tools";
 import type { Blocked } from "./panelState";
@@ -228,10 +230,26 @@ export function withOutcomes(text: string, notes: string[]): string {
   return notes.length === 0 ? text : `${notes.map((n) => `[${n}]`).join("\n")}\n\n${text}`;
 }
 
-/** The line under a card after its regenerate: "Score 34 → 28 · 0 unplaced" ("Score 28 · …" without an earlier timetable). */
-export function scoreLine(before: Pick<SolveResult, "score"> | null, after: Pick<SolveResult, "score" | "unplaced">): string {
+/**
+ * The line under a card after its regenerate: "Score 34 → 28 · 0 unplaced" ("Score 28 · …" without an earlier
+ * timetable). When the card changed switches the scores count different rules, so it says which: "Score 34 → 41 with
+ * Late finish on · 0 unplaced".
+ */
+export function scoreLine(
+  before: Pick<SolveResult, "score"> | null,
+  after: Pick<SolveResult, "score" | "unplaced">,
+  rules?: { before?: Partial<SoftRules>; after?: Partial<SoftRules> },
+): string {
   const score = before ? `${before.score.total} → ${after.score.total}` : `${after.score.total}`;
-  return `Score ${score} · ${after.unplaced.length} unplaced`;
+  return `Score ${score}${rules ? switchedText(rules.before, rules.after) : ""} · ${after.unplaced.length} unplaced`;
+}
+
+/** " with Late finish on and Teachers with long runs off", or "" when no switch changed. */
+function switchedText(before?: Partial<SoftRules>, after?: Partial<SoftRules>): string {
+  const [a, b] = [fillSoftRules(before), fillSoftRules(after)];
+  const changed = AIMS.filter(({ key }) => a[key] !== b[key]).map(({ key }) => `${scoreName(key)} ${b[key] ? "on" : "off"}`);
+  if (changed.length === 0) return "";
+  return ` with ${changed.length === 1 ? changed[0] : `${changed.slice(0, -1).join(", ")} and ${changed.at(-1)}`}`;
 }
 
 // --- errors -----------------------------------------------------------------------------------------------------

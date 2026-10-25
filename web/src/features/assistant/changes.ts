@@ -3,7 +3,8 @@ import { eligibleRooms } from "@/domain/eligibility";
 import { buildGrid, sessionLabel, slotLabel } from "@/domain/grid";
 import { sampleCollege } from "@/domain/sampleCollege";
 import { expandSessions } from "@/domain/sessions";
-import type { Course, Department, Id, Period, Placement, Room, Section, Session, Settings, SolveInput, Teacher } from "@/domain/types";
+import { fillSoftRules } from "@/domain/score";
+import type { Course, Department, Id, Period, Placement, Room, Section, Session, Settings, SoftRules, SolveInput, Teacher } from "@/domain/types";
 import type { RuleId } from "@/domain/validator";
 import { checkData } from "@/features/data/dataChecks";
 import { nextId } from "@/features/data/dataEdit";
@@ -15,7 +16,8 @@ import { canEdit, MAX_TIMETABLE_NAME } from "@/features/online/online";
 import { SaveConflict, type OnlineApi } from "@/features/online/onlineApi";
 import { createOnline, openOnline, pointLink, renameOnline, saveVersion, useOnline } from "@/features/online/useOnline";
 import { currentInstitute, failureMessage, useInstitutes } from "@/features/account/useInstitutes";
-import { useAppStore, type AppData } from "@/store/useAppStore";
+import { AIMS } from "@/features/generate/aims";
+import { rescored, useAppStore, type AppData } from "@/store/useAppStore";
 import { maskTeachers, teacherCodes } from "@/domain/teacherCodes";
 import { maskText } from "./mask";
 import { saveAsInstitute, type OnlineSnapshot } from "./onlineState";
@@ -27,8 +29,10 @@ import { saveAsInstitute, type OnlineSnapshot } from "./onlineState";
 // The online changes (T43) are checked here against the user's role and an `OnlineSnapshot`, then made one by one
 // with `runOnline` after the working-copy changes and regenerate.
 
-/** What a change can touch: the working copy without the print heading, step or time limit. */
-export type ChangeData = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks">;
+/** What a change can touch: the working copy without the print heading or step. Missing switches are the defaults. */
+export type ChangeData = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks"> & {
+  softRules?: Partial<SoftRules>;
+};
 
 export interface ChangeContext {
   /** Replacing the working copy would lose work (`hasUnsavedWork` in features/online). */
@@ -41,6 +45,8 @@ export interface ChangeContext {
 }
 
 interface FieldSet<F extends string> { field: F; value: string }
+/** A soft rule as the model names it. */
+export type SoftRuleId = "S1" | "S2" | "S3" | "S4" | "S5";
 type CourseField = "sectionId" | "subject" | "teacherId" | "lecturesPerWeek" | "labSessionsPerWeek" | "labLength" | "labRoomId" | "batchTeacherIds";
 
 export type Change =
@@ -77,6 +83,7 @@ export type Change =
   | { op: "unlock"; sessionId: Id }
   | { op: "regenerate" }
   | { op: "load_sample" }
+  | { op: "set_soft_rules"; set: { rule: SoftRuleId; on: boolean }[] }
   | OnlineChange;
 
 /** The changes made online, by `runOnline`. A `version` of 0 means the newest, after any save before it. */
@@ -128,7 +135,7 @@ const MAX_ERRORS = 10;
 
 /** The JSON-schema subset `propose_changes` uses. */
 export interface Schema {
-  type?: "object" | "array" | "string" | "integer";
+  type?: "object" | "array" | "string" | "integer" | "boolean";
   const?: string;
   enum?: string[];
   description?: string;
@@ -186,6 +193,8 @@ export function schemaProblem(schema: Schema, value: unknown, path: string): str
       return null;
     case "integer":
       return Number.isInteger(value) ? null : `${at} must be a whole number.`;
+    case "boolean":
+      return typeof value === "boolean" ? null : `${at} must be true or false.`;
     default:
       return null;
   }
@@ -885,17 +894,33 @@ const STEPS: { [O in ChangeOp]: Handler<O> } = {
     const sample = structuredClone(sampleCollege);
     env.codes = teacherCodes(sample.teachers);
     env.aliases.clear();
-    const next: ChangeData = { ...data, ...sample, result: null, locks: [] };
+    // The switches stay, as with the store's loadSample.
+    const next: ChangeData = { ...data, ...sample, softRules: data.softRules, result: null, locks: [] };
     const warning = env.ctx.hasUnsavedWork ? "Your unsaved changes will be lost: the sample college replaces the data, locks and timetable." : undefined;
     return { data: pick(next), line: { text: "Load the sample college", ...(warning && { warning }) } };
+  },
+  set_soft_rules: (data, c) => {
+    const before = fillSoftRules(data.softRules);
+    const after: SoftRules = { ...before };
+    for (const { rule, on } of c.set) after[switchOf(rule)] = on;
+    const flipped = (on: boolean) => AIMS.filter((a) => after[a.key] === on && before[a.key] !== on).map((a) => a.label);
+    const [on, off] = [flipped(true), flipped(false)];
+    if (on.length + off.length === 0) {
+      fail(`nothing changes: ${c.set.map((s) => `${s.rule} is already ${s.on ? "on" : "off"}`).join(", ")}.`);
+    }
+    const text = [on.length > 0 && `Turn on: ${on.join(", ")}`, off.length > 0 && `Turn off: ${off.join(", ")}`].filter(Boolean).join(" · ");
+    return { data: { ...data, softRules: after, result: rescored(data, after) }, line: { text } };
   },
   ...ONLINE_STEPS,
 };
 
+/** "S5" → "s5". */
+const switchOf = (rule: SoftRuleId) => rule.toLowerCase() as keyof SoftRules;
+
 /** Just the `ChangeData` fields (the sample also has `options`). */
 function pick(d: ChangeData): ChangeData {
-  const { settings, departments, teachers, rooms, sections, courses, result, locks } = d;
-  return { settings, departments, teachers, rooms, sections, courses, result, locks };
+  const { settings, departments, teachers, rooms, sections, courses, result, locks, softRules } = d;
+  return { settings, departments, teachers, rooms, sections, courses, result, locks, softRules };
 }
 
 /** The ops with a step, for the test that the definition and the steps match. */

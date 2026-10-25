@@ -1,16 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { sampleCollege } from "../src/domain/sampleCollege";
-import { answer, scenario, type ToolAnswer } from "./agent-eval-tools";
+import { answer, scenario, type Scenario, type ToolAnswer } from "./agent-eval-tools";
 
 const teacher = sampleCollege.teachers[0];
 
 describe("agent-eval-tools", () => {
   it("builds each scenario's status", () => {
-    const status = (name: "built" | "partial" | "impossible") =>
+    const status = (name: Scenario) =>
       JSON.parse((answer({ op: "tool", scenario: name, name: "overview", input: {} }) as { content: string }).content).status;
     expect(status("built")).toBe("built");
     expect(status("partial")).toBe("partial");
     expect(status("impossible")).toBe("can't be built");
+    expect(status("lateFinishOff")).toBe("built");
+  });
+
+  it("switches Late finish off in its scenario, which a card can turn back on", () => {
+    const details = JSON.parse((answer({ op: "tool", scenario: "lateFinishOff", name: "score_details", input: { rule: "S5" } }) as ToolAnswer).content);
+    expect(details.rules[0]).toMatchObject({ rule: "S5", on: false, points: null });
+    expect(scenario("lateFinishOff").result!.score.breakdown.lateFinish).toBeNull();
+    const input = { summary: "Finish earlier", changes: [{ op: "set_soft_rules", set: [{ rule: "S5", on: true }] }, { op: "regenerate" }] };
+    const out = answer({ op: "tool", scenario: "lateFinishOff", name: "propose_changes", input, n: 1 }) as ToolAnswer;
+    expect(out.isError).toBe(false);
+    expect(out.card!.lines).toEqual(["Turn on: Finish each day as early as possible", "Regenerate"]);
   });
 
   it("leaves two classes unplaced in the partial scenario", () => {

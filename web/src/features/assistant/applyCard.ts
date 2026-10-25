@@ -54,7 +54,7 @@ export async function applyCard(n: number, deps: ApplyDeps): Promise<void> {
     }
 
     // The score line compares with the timetable the user had before the card, not the one its moves left.
-    const before = deps.data().result;
+    const { result: before, softRules: rulesBefore } = deps.data();
     if (changesWorkingCopy(card)) deps.pushUndo(`assistant changes #${n}`);
     // open_online is an online change that replaces the working copy, so it runs below, after the snapshot.
     if (local > 0) deps.setData(next);
@@ -74,7 +74,7 @@ export async function applyCard(n: number, deps: ApplyDeps): Promise<void> {
         stop(done, reason);
         return;
       }
-      update({ after: { text: scoreLine(before, after), failed: false } });
+      update({ after: { text: scoreLine(before, after, { before: rulesBefore, after: deps.data().softRules }), failed: false } });
       done++;
       update({ steps: stepStates(count, done) });
     }

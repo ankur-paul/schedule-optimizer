@@ -110,9 +110,11 @@ export function softRulesPatch(
   state: Pick<AppState, "settings" | "teachers" | "sections" | "rooms" | "courses" | "result" | "softRules" | "rulesAtRun">,
   softRules: SoftRules,
 ): Pick<AppState, "softRules" | "result" | "rulesAtRun"> {
-  const rulesAtRun = state.rulesAtRun ?? state.softRules;
-  return { softRules, result: rescored(state, softRules), rulesAtRun };
+  return { softRules, result: rescored(state, softRules), rulesAtRun: baselineBeforeFlip(state) };
 }
+
+/** The switches the stored timetable was made with, once switches change: known from a run, else the ones before the flip. */
+export const baselineBeforeFlip = (state: Pick<AppState, "softRules" | "rulesAtRun">): SoftRules => state.rulesAtRun ?? state.softRules;
 
 /** The stored timetable scored under `softRules`; unchanged if the data is too broken to score (step ② reports it). */
 export function rescored(state: Pick<AppData, "settings" | "teachers" | "sections" | "rooms" | "courses" | "result">, softRules: SoftRules): SolveResult | null {
