@@ -506,7 +506,6 @@ function Unlock({ api, instituteId, renew }: { api: AssistantApi; instituteId: s
  */
 function TrialRequest({ institute }: { institute: { name: string; handle: string | null } }) {
   const [open, setOpen] = useState(false);
-  const account = useAccount((s) => s.session?.user.email);
   const [copied, setCopied] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -529,7 +528,7 @@ function TrialRequest({ institute }: { institute: { name: string; handle: string
   const gmail = (
     <a
       key="gmail"
-      href={trialGmailUrl(CONTACT_EMAIL, institute, account)}
+      href={trialGmailUrl(CONTACT_EMAIL, institute)}
       target="_blank"
       rel="noopener noreferrer"
       className={buttonVariants({ variant: touch ? "outline" : "default" })}

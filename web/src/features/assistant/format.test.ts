@@ -68,16 +68,10 @@ describe("trialGmailUrl", () => {
     expect(url.searchParams.get("body")).toBe('Institute: Tom\'s "Institute" #1?\nHandle: (not set)\n\nWhat will you use it for?\n');
   });
 
-  it("opens in the signed-in account, else the first one", () => {
-    expect(new URL(trialGmailUrl("a@b.org", institute)).pathname).toBe("/mail/u/0/");
-    expect(new URL(trialGmailUrl("a@b.org", institute, "")).pathname).toBe("/mail/u/0/");
-    const url = new URL(trialGmailUrl("a@b.org", institute, "asha+x@gndec.ac.in"));
-    expect(decodeURIComponent(url.pathname)).toBe("/mail/u/asha+x@gndec.ac.in/");
+  it("opens in the browser's first Google account, with no other parameters", () => {
+    const url = new URL(trialGmailUrl("a@b.org", institute));
+    expect(url.pathname).toBe("/mail/u/0/");
     expect([...url.searchParams.keys()]).toEqual(["to", "su", "body", "tf"]);
-  });
-
-  it("keeps an odd account name inside its path segment", () => {
-    expect(new URL(trialGmailUrl("a@b.org", institute, "x/../y?z#w")).pathname).toBe("/mail/u/x%2F..%2Fy%3Fz%23w/");
   });
 });
 
@@ -94,7 +88,7 @@ describe("trialCopyRows", () => {
 
   it("matches what Gmail is sent", () => {
     const institute = { name: "GNDEC & Co", handle: "gndec" };
-    const url = new URL(trialGmailUrl("a@b.org", institute, "me@x.org"));
+    const url = new URL(trialGmailUrl("a@b.org", institute));
     expect(trialCopyRows("a@b.org", institute).map((r) => r.value)).toEqual([url.searchParams.get("to"), url.searchParams.get("su"), url.searchParams.get("body")]);
   });
 });

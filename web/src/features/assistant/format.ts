@@ -34,11 +34,11 @@ export function trialMailto(to: string, institute: RequestingInstitute): string 
 }
 
 /**
- * The same email as a Gmail compose window. `account` (the signed-in email) goes in the path, `/mail/u/<email>/`,
- * so Gmail opens it in that account when several are signed in; without it, the first one (`/u/0/`). `tf=cm` opens
- * the compose window; the older `view=cm&fs=1` no longer does.
+ * The same email as a Gmail compose window, in the browser's first Google account (`/u/0/`). Not the signed-in
+ * email's account (`/u/<email>/`): Gmail answers "account temporarily unavailable" when that email isn't a Google
+ * account signed in there. `tf=cm` opens the compose window; the older `view=cm&fs=1` no longer does.
  */
-export function trialGmailUrl(to: string, institute: RequestingInstitute, account?: string): string {
+export function trialGmailUrl(to: string, institute: RequestingInstitute): string {
   const params: [string, string][] = [
     ["to", to],
     ["su", TRIAL_SUBJECT],
@@ -47,7 +47,7 @@ export function trialGmailUrl(to: string, institute: RequestingInstitute, accoun
   ];
   // encodeURIComponent, as for the mailto: Gmail shows a "+" from URLSearchParams as a plus.
   const query = params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
-  return `https://mail.google.com/mail/u/${account ? encodeURIComponent(account) : "0"}/?${query}`;
+  return `https://mail.google.com/mail/u/0/?${query}`;
 }
 
 /** The dialog's copy rows: the same email in three parts, to paste into any email. */
