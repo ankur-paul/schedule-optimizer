@@ -289,9 +289,9 @@ class Agent:
             "cache_control": {"type": "ephemeral"},  # also caches the chat so far, which each tool round resends
             "messages": messages,
         }
-        # The last call of a question, and a compaction, must answer in text. The tools stay in the request (the
-        # history may hold tool calls, which the API only accepts with tools defined, and the cached prefix starts
-        # with them); tool_choice none keeps the model from calling one.
+        # The last call of a question, and a compaction, must answer in text. The tools stay in the request because
+        # the cached prefix starts with them: without them the call rewrites the ~17k-token cache (about 8 cents
+        # instead of 1.5, measured). tool_choice none keeps the model from calling one.
         if req.kind == "compact" or call.call_number >= LAST_CALL:
             params["tool_choice"] = {"type": "none"}
         return params

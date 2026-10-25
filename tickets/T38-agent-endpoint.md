@@ -1,5 +1,5 @@
 # T38 — Assistant endpoint
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** B · **Prereqs:** T36 · **Branch:** t38-agent-endpoint
 
 ## Goal
@@ -77,8 +77,8 @@ call and records what it cost. It stays stateless; the browser (T40) drives the 
   PROGRESS.md.
 
 ## Done when
-- [ ] `POST /agent` works as above; `/solve` unchanged
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] New env vars noted in `docs/v2-roadmap.md`'s deploy list if they differ from the plan
-- [ ] PROGRESS.md line
-- [ ] Committed: `T38: assistant endpoint`
+- [x] `POST /agent` works as above; `/solve` unchanged
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] New env vars noted in `docs/v2-roadmap.md`'s deploy list if they differ from the plan
+- [x] PROGRESS.md line
+- [x] Committed: `T38: assistant endpoint`
