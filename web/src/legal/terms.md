@@ -30,13 +30,24 @@ anything important (*Print / PDF* or your Excel files).
 - You keep the rights to the data you add. You let us store and process it only to run Lattice for you, which
   includes showing a published timetable to anyone with its link.
 
+## The assistant
+
+- The assistant can be wrong. Check its answers against the timetable and the help before you act on them, and
+  don't rely on it for anything it can't see in your data.
+- Don't type other people's personal details, such as phone numbers or addresses, into a question. Lattice replaces
+  teachers' full names with codes, but it can't recognise anything else.
+- Trial coupons are free. A coupon gives one institute a number of questions for a number of days, has no cash
+  value, and can't be sold or exchanged. We may withdraw a coupon, end a trial early, or pause the assistant when
+  its monthly budget runs out.
+
 ## Fair use
 
 Don't:
 
 - try to reach institutes or data you haven't been given access to;
 - overload, attack or probe the service, or get around its limits;
-- use it for anything unlawful, or to store or publish data unrelated to timetables.
+- use it for anything unlawful, or to store or publish data unrelated to timetables;
+- use the assistant for anything other than Lattice and your timetables, or share coupon codes publicly.
 
 We may suspend or delete accounts that break these terms, and we'll tell you first where we reasonably can. We may
 also unpublish a timetable that breaks them.
