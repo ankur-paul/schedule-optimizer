@@ -273,33 +273,29 @@ def build_model(
 
     lunch_set = set(settings.lunch_candidates)  # S3 and S5 read every lunch candidate, even when H8 is off
 
-    def busy_after(busy: dict) -> dict:
-        """after[t]: busy in some teaching period after t (bounded from below; the objective pulls it down)."""
-        after = {}
-        for i in reversed(range(len(teaching))):
-            t = teaching[i]
-            after[t] = m.new_bool_var("")
-            if i < len(teaching) - 1:
-                nxt = teaching[i + 1]
-                m.add(after[t] >= after[nxt])
-                m.add(after[t] >= busy[nxt])
-        return after
-
     late_terms = []
 
-    def late_finish(busy: dict, after: dict) -> None:
-        """S5: free teaching periods before the last class, less one if a lunch candidate is among them."""
-        late = {}
-        for t in teaching:
-            late[t] = m.new_bool_var("")
-            m.add(late[t] >= after[t] - busy[t])
-            late_terms.append(late[t])
-        lunch_late = [late[t] for t in teaching if t in lunch_set]
-        if lunch_late:
-            # Exact at the optimum: inflating a lunch late[t] to earn the excuse costs as much as it saves.
-            excused = m.new_bool_var("")
-            m.add(excused <= sum(lunch_late))
-            late_terms.append(-excused)
+    def late_finish(busy: dict) -> None:
+        """S5: free teaching periods before the last class, less one if a lunch candidate is among them.
+
+        `reach` is the number of teaching periods up to the last busy one (bounded from below; the objective pulls it
+        down), so the free periods before it are `reach` less the busy ones.
+        """
+        reach = m.new_int_var(0, len(teaching), "")
+        for i, t in enumerate(teaching):
+            m.add(reach >= (i + 1) * busy[t])
+        # Excused: a lunch candidate that is free and has a class after it. Enforced, so claiming one costs as much
+        # as it saves unless it's true.
+        excuses = []
+        for i, t in enumerate(teaching):
+            if t in lunch_set:
+                f = m.new_bool_var("")
+                m.add(busy[t] == 0).only_enforce_if(f)
+                m.add(reach >= i + 2).only_enforce_if(f)
+                excuses.append(f)
+        if len(excuses) > 1:
+            m.add_at_most_one(excuses)
+        late_terms.append(reach - sum(busy.values()) - sum(excuses))
 
     # --- H1 + H8 (teachers), S2 teacher overload, S5 for teachers.
     overload_terms = []
@@ -314,8 +310,7 @@ def build_model(
             if not objective:
                 continue
             if on.s5:
-                busy_sum = {t: sum(busy[t]) for t in teaching}  # 0 or 1 by H1
-                late_finish(busy_sum, busy_after(busy_sum))
+                late_finish({t: sum(busy[t]) for t in teaching})  # 0 or 1 by H1
             if not on.s2:
                 continue
             for run in runs:
@@ -362,23 +357,28 @@ def build_model(
                             idle_terms.append(idle)
             if lunch:
                 m.add(sum(busy[t] for t in lunch) <= len(lunch) - 1)
-            if not objective or not (on.s3 or on.s5):
+            if not objective:
                 continue
-
-            after = busy_after(busy)
             if on.s5:
-                late_finish(busy, after)
+                late_finish(busy)
             if not on.s3:
                 continue
 
             # S3: gap at t if idle with a class before and after (lunch candidates don't count).
-            before = {}
+            before, after = {}, {}
             for i, t in enumerate(teaching):
                 before[t] = m.new_bool_var("")
                 if i > 0:
                     prev = teaching[i - 1]
                     m.add(before[t] >= before[prev])
                     m.add(before[t] >= busy[prev])
+            for i in reversed(range(len(teaching))):
+                t = teaching[i]
+                after[t] = m.new_bool_var("")
+                if i < len(teaching) - 1:
+                    nxt = teaching[i + 1]
+                    m.add(after[t] >= after[nxt])
+                    m.add(after[t] >= busy[nxt])
             for t in teaching:
                 if t in lunch_set:
                     continue

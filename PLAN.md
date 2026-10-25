@@ -53,7 +53,7 @@ tickets in [`tickets/`](tickets/README.md).
 
 "Consecutive" = adjacent teaching periods with no break period between them. For S5 a section is busy in a period
 when it or any of its batches is (as in H8), and only the first free lunch candidate before the last class is excused.
-**v2 (T52–T54):** each soft rule has an on/off switch in the working copy (all on by default unless T53's measurement turns S5 off); a rule that's off adds nothing. See [`docs/discussions/2026-10-25-soft-rules.md`](docs/discussions/2026-10-25-soft-rules.md).
+**v2 (T52–T54):** each soft rule has an on/off switch in the working copy, all on by default except S5 (T53's measurement: with S5 on, CP-SAT's S1–S4 got much worse in 20 s at 2 threads); a rule that's off adds nothing. See [`docs/discussions/2026-10-25-soft-rules.md`](docs/discussions/2026-10-25-soft-rules.md).
 `score.total = sum of penalties` of the rules that are on. The **TS scorer is the source of truth** for the score shown in the UI, whichever engine ran.
 
 ## 3. Data contract (shared by all agents — do not change without updating all tickets)

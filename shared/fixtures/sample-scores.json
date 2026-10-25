@@ -1267,13 +1267,13 @@
       {
         "softRules": {},
         "score": {
-          "total": 891,
+          "total": 520,
           "breakdown": {
             "subjectRepeat": 370,
             "teacherOverload": 15,
             "sectionGaps": 60,
             "batchIdle": 75,
-            "lateFinish": 371
+            "lateFinish": null
           }
         }
       },
@@ -1320,13 +1320,13 @@
           "s1": false
         },
         "score": {
-          "total": 521,
+          "total": 150,
           "breakdown": {
             "subjectRepeat": null,
             "teacherOverload": 15,
             "sectionGaps": 60,
             "batchIdle": 75,
-            "lateFinish": 371
+            "lateFinish": null
           }
         }
       },
@@ -1335,13 +1335,13 @@
           "s2": false
         },
         "score": {
-          "total": 876,
+          "total": 505,
           "breakdown": {
             "subjectRepeat": 370,
             "teacherOverload": null,
             "sectionGaps": 60,
             "batchIdle": 75,
-            "lateFinish": 371
+            "lateFinish": null
           }
         }
       },
@@ -1350,13 +1350,13 @@
           "s3": false
         },
         "score": {
-          "total": 831,
+          "total": 460,
           "breakdown": {
             "subjectRepeat": 370,
             "teacherOverload": 15,
             "sectionGaps": null,
             "batchIdle": 75,
-            "lateFinish": 371
+            "lateFinish": null
           }
         }
       },
@@ -1365,13 +1365,13 @@
           "s4": false
         },
         "score": {
-          "total": 816,
+          "total": 445,
           "breakdown": {
             "subjectRepeat": 370,
             "teacherOverload": 15,
             "sectionGaps": 60,
             "batchIdle": null,
-            "lateFinish": 371
+            "lateFinish": null
           }
         }
       },
@@ -1387,6 +1387,21 @@
             "sectionGaps": 60,
             "batchIdle": 75,
             "lateFinish": null
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s5": true
+        },
+        "score": {
+          "total": 891,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": 15,
+            "sectionGaps": 60,
+            "batchIdle": 75,
+            "lateFinish": 371
           }
         }
       }
@@ -2660,13 +2675,13 @@
       {
         "softRules": {},
         "score": {
-          "total": 893,
+          "total": 497,
           "breakdown": {
             "subjectRepeat": 350,
             "teacherOverload": 10,
             "sectionGaps": 68,
             "batchIdle": 69,
-            "lateFinish": 396
+            "lateFinish": null
           }
         }
       },
@@ -2713,13 +2728,13 @@
           "s1": false
         },
         "score": {
-          "total": 543,
+          "total": 147,
           "breakdown": {
             "subjectRepeat": null,
             "teacherOverload": 10,
             "sectionGaps": 68,
             "batchIdle": 69,
-            "lateFinish": 396
+            "lateFinish": null
           }
         }
       },
@@ -2728,13 +2743,13 @@
           "s2": false
         },
         "score": {
-          "total": 883,
+          "total": 487,
           "breakdown": {
             "subjectRepeat": 350,
             "teacherOverload": null,
             "sectionGaps": 68,
             "batchIdle": 69,
-            "lateFinish": 396
+            "lateFinish": null
           }
         }
       },
@@ -2743,13 +2758,13 @@
           "s3": false
         },
         "score": {
-          "total": 825,
+          "total": 429,
           "breakdown": {
             "subjectRepeat": 350,
             "teacherOverload": 10,
             "sectionGaps": null,
             "batchIdle": 69,
-            "lateFinish": 396
+            "lateFinish": null
           }
         }
       },
@@ -2758,13 +2773,13 @@
           "s4": false
         },
         "score": {
-          "total": 824,
+          "total": 428,
           "breakdown": {
             "subjectRepeat": 350,
             "teacherOverload": 10,
             "sectionGaps": 68,
             "batchIdle": null,
-            "lateFinish": 396
+            "lateFinish": null
           }
         }
       },
@@ -2780,6 +2795,21 @@
             "sectionGaps": 68,
             "batchIdle": 69,
             "lateFinish": null
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s5": true
+        },
+        "score": {
+          "total": 893,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": 10,
+            "sectionGaps": 68,
+            "batchIdle": 69,
+            "lateFinish": 396
           }
         }
       }
@@ -4053,13 +4083,13 @@
       {
         "softRules": {},
         "score": {
-          "total": 832,
+          "total": 417,
           "breakdown": {
             "subjectRepeat": 270,
             "teacherOverload": 15,
             "sectionGaps": 72,
             "batchIdle": 60,
-            "lateFinish": 415
+            "lateFinish": null
           }
         }
       },
@@ -4106,13 +4136,13 @@
           "s1": false
         },
         "score": {
-          "total": 562,
+          "total": 147,
           "breakdown": {
             "subjectRepeat": null,
             "teacherOverload": 15,
             "sectionGaps": 72,
             "batchIdle": 60,
-            "lateFinish": 415
+            "lateFinish": null
           }
         }
       },
@@ -4121,13 +4151,13 @@
           "s2": false
         },
         "score": {
-          "total": 817,
+          "total": 402,
           "breakdown": {
             "subjectRepeat": 270,
             "teacherOverload": null,
             "sectionGaps": 72,
             "batchIdle": 60,
-            "lateFinish": 415
+            "lateFinish": null
           }
         }
       },
@@ -4136,13 +4166,13 @@
           "s3": false
         },
         "score": {
-          "total": 760,
+          "total": 345,
           "breakdown": {
             "subjectRepeat": 270,
             "teacherOverload": 15,
             "sectionGaps": null,
             "batchIdle": 60,
-            "lateFinish": 415
+            "lateFinish": null
           }
         }
       },
@@ -4151,13 +4181,13 @@
           "s4": false
         },
         "score": {
-          "total": 772,
+          "total": 357,
           "breakdown": {
             "subjectRepeat": 270,
             "teacherOverload": 15,
             "sectionGaps": 72,
             "batchIdle": null,
-            "lateFinish": 415
+            "lateFinish": null
           }
         }
       },
@@ -4173,6 +4203,21 @@
             "sectionGaps": 72,
             "batchIdle": 60,
             "lateFinish": null
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s5": true
+        },
+        "score": {
+          "total": 832,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": 15,
+            "sectionGaps": 72,
+            "batchIdle": 60,
+            "lateFinish": 415
           }
         }
       }

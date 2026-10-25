@@ -14,7 +14,7 @@ export interface ScoreCase {
   scores: { softRules: Partial<SoftRules>; score: Score }[];
 }
 
-/** Missing (the defaults), all on, all off, and each rule alone switched off. */
+/** Missing (the defaults: S5 off), all on, all off, each rule alone switched off, and S5 alone switched on. */
 export const SWITCH_SETTINGS: Partial<SoftRules>[] = [
   {},
   { s1: true, s2: true, s3: true, s4: true, s5: true },
@@ -24,6 +24,7 @@ export const SWITCH_SETTINGS: Partial<SoftRules>[] = [
   { s3: false },
   { s4: false },
   { s5: false },
+  { s5: true },
 ];
 
 /**

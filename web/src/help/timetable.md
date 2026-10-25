@@ -24,7 +24,7 @@ Each soft rule adds points:
 | Teachers with long runs | 5 per extra period | Each period a teacher teaches beyond 3 in a row. A break ends the run. |
 | Free periods between classes | 2 per free period | An idle period between a section's first and last class of the day. Lunch candidates don't count. |
 | Batches waiting during labs | 3 per batch-period | A period where one batch of a split section is in a lab and another batch has nothing |
-| Late finish | 1 per free period | A free period before a section's or a teacher's last class of the day. One free lunch candidate doesn't count. |
+| Late finish | 1 per free period | A free period before a section's or a teacher's last class of the day. One free lunch candidate doesn't count. Off unless switched on, so it shows "Off" and adds nothing. |
 
 Step ③ shows the score with a box per rule, and step ④ shows it as one line of chips under the badge. A chip turns amber when its rule costs points. Each box or chip also says what was counted, such as "6 batch-periods".
 

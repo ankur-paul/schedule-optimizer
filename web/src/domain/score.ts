@@ -5,8 +5,8 @@ import type { Id, Placement, Score, ScoreBreakdown, SoftRules } from "./types";
 export const WEIGHTS = { subjectRepeat: 10, teacherOverload: 5, sectionGaps: 2, batchIdle: 3, lateFinish: 1 } as const;
 const MAX_CONSECUTIVE = 3;
 
-/** The switches when the data doesn't say (models.py's `SoftRules` has the same defaults). */
-export const DEFAULT_SOFT_RULES: SoftRules = { s1: true, s2: true, s3: true, s4: true, s5: true };
+/** The switches when the data doesn't say (models.py's `SoftRules` has the same defaults). S5 is off: T53's measurement. */
+export const DEFAULT_SOFT_RULES: SoftRules = { s1: true, s2: true, s3: true, s4: true, s5: false };
 
 /** Every switch, the defaults filling any that `rules` leaves out. */
 export function fillSoftRules(rules?: Partial<SoftRules> | null): SoftRules {

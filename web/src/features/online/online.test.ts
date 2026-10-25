@@ -27,7 +27,7 @@ import {
 
 const sample = (): WorkingCopy => {
   const { settings, departments, teachers, rooms, sections, courses } = structuredClone(sampleCollege);
-  return { settings, departments, teachers, rooms, sections, courses, locks: [], result: null, printHeading: "GNDEC · Semester 5", softRules: { ...DEFAULT_SOFT_RULES, s5: false } };
+  return { settings, departments, teachers, rooms, sections, courses, locks: [], result: null, printHeading: "GNDEC · Semester 5", softRules: { ...DEFAULT_SOFT_RULES, s5: true } };
 };
 
 const link: OnlineLink = {

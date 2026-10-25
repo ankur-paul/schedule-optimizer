@@ -112,11 +112,11 @@ Soft rules, which add to the score (lower is better):
 | S4 | One batch idle while another batch of the section is in a lab | 3 per idle batch-period |
 | S5 | Free periods before a section's or teacher's last class of a day, one free lunch candidate excused | 1 per period |
 
-Each soft rule can be switched off (`softRules` in the working copy, saved with the data and online versions); a rule that's off shows "Off" in the score and adds nothing. There is no switch in the UI yet (T54).
+Each soft rule can be switched off (`softRules` in the working copy, saved with the data and online versions); a rule that's off shows "Off" in the score and adds nothing, and both engines ignore it. S1–S4 are on by default and S5 is off, since aiming for it made the exact solver's S1–S4 much worse within 20 s on 2 threads. With S5 on, both engines aim for it. There is no switch in the UI yet (T54).
 
 ## Known limits
 
-- Late finish (S5) is counted in the score but neither engine aims for it yet (T53), so scores are much higher than before: the sample's best timetable scores 417 (18 of it batches waiting, 399 late finish). The help pages' screenshots and "scores 18" text predate it.
+- With Late finish (S5) on, the exact solver does much worse on the other rules within 20 s on 2 threads (the sample: S1–S4 240–260 instead of 56–108), which is why it starts off. The quick draft has no such cost: on the sample it still reaches 18 on S1–S4 and cuts late finish from about 400 to about 100.
 - The heuristic runs until its time limit unless it reaches score 0, and its results vary slightly between runs.
 - The exact solver needs about 2 s before its first solution on the sample, so very short limits end in *Couldn't finish*; heavily over-booked data can also take longer than 5 s to prove impossible.
 - A *Can't be built* or *Couldn't finish* card stays until the next run, even after the data is fixed.

@@ -7,6 +7,9 @@ import { scoreCases as makeScoreCases } from "./scoreCases";
 import type { ScoreBreakdown, SoftRules, SolveInput, SolveResult } from "./types";
 import { MON, TUE, at, tinyCollege, tinyValid } from "./tinyCollege";
 
+/** S5 is off by default (T53), so the S5 tests below and the timetables with every rule's points switch it on. */
+const tiny = { ...tinyCollege, softRules: { s5: true } };
+const sample = { ...sampleCollege, softRules: { s5: true } };
 /** The S1–S4 tests below leave S5 off, so their breakdowns read as before S5 existed. */
 const noS5 = { ...tinyCollege, softRules: { s5: false } };
 const breakdown = (placements: Parameters<typeof score>[1]) => score(noS5, placements).breakdown;
@@ -14,7 +17,7 @@ const breakdown = (placements: Parameters<typeof score>[1]) => score(noS5, place
 describe("score", () => {
   it("scores the valid tiny timetable (batch labs run one at a time)", () => {
     // S5: ECE-2B and t1 free at P1–P2 on Tue, t2 free at P2 on Mon, t3 free at P1, P3 (P4 lunch excused) on Mon.
-    expect(score(tinyCollege, tinyValid)).toEqual({
+    expect(score(tiny, tinyValid)).toEqual({
       total: 19,
       breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 12, lateFinish: 7 },
     });
@@ -52,7 +55,7 @@ describe("score", () => {
 /** tinyCollege's sections, teachers and courses on a one-day week: `pattern` has T (teaching) or B (break) per period. */
 function day(pattern: string, lunchCandidates: number[]): SolveInput {
   const periods = [...pattern].map((c, id) => ({ id, label: `P${id + 1}`, start: "09:00", end: "10:00", kind: c === "T" ? ("teaching" as const) : ("break" as const) }));
-  return { ...tinyCollege, settings: { days: ["Mon"], periods, lunchCandidates } };
+  return { ...tiny, settings: { days: ["Mon"], periods, lunchCandidates } };
 }
 
 /** S5 periods per section and teacher that has any. */
@@ -94,9 +97,9 @@ describe("S5 late finish", () => {
 
   it("never counts a break, and a day with no classes costs nothing", () => {
     // tinyCollege: P1–P4, Break, P5, lunch candidates P4 and P5. Tuesday is empty.
-    expect(lateBy(tinyCollege, [at("b-m:L1", MON, 5, "cr2")])).toEqual({ b: [0, 1, 2], t3: [0, 1, 2] });
-    expect(penalties(tinyCollege, [at("b-m:L1", MON, 5, "cr2")]).every((p) => p.day === MON)).toBe(true);
-    expect(score(tinyCollege, []).breakdown.lateFinish).toBe(0);
+    expect(lateBy(tiny, [at("b-m:L1", MON, 5, "cr2")])).toEqual({ b: [0, 1, 2], t3: [0, 1, 2] });
+    expect(penalties(tiny, [at("b-m:L1", MON, 5, "cr2")]).every((p) => p.day === MON)).toBe(true);
+    expect(score(tiny, []).breakdown.lateFinish).toBe(0);
   });
 
   it("lateFinishPeriods: nothing when there is no class", () => {
@@ -108,7 +111,7 @@ describe("S5 late finish", () => {
 describe("soft-rule switches", () => {
   // A random sample-college timetable: every rule has points, so switching any one off changes the total.
   const [first] = makeScoreCases(sampleCollege, [1]);
-  const all = score(sampleCollege, first.placements);
+  const all = score(sample, first.placements);
   const keys = Object.keys(RULE_SWITCH) as (keyof ScoreBreakdown)[];
 
   it("has points for every rule on the random timetable", () => {
@@ -116,10 +119,11 @@ describe("soft-rule switches", () => {
   });
 
   it.each(keys)("switching %s's rule off removes exactly it from the total", (key) => {
-    const off = score({ ...sampleCollege, softRules: { [RULE_SWITCH[key]]: false } }, first.placements);
+    const softRules = { s5: true, [RULE_SWITCH[key]]: false };
+    const off = score({ ...sampleCollege, softRules }, first.placements);
     expect(off.breakdown).toEqual({ ...all.breakdown, [key]: null });
     expect(off.total).toBe(all.total - all.breakdown[key]!);
-    expect(penalties({ ...sampleCollege, softRules: { [RULE_SWITCH[key]]: false } }, first.placements).some((p) => p.key === key)).toBe(false);
+    expect(penalties({ ...sampleCollege, softRules }, first.placements).some((p) => p.key === key)).toBe(false);
   });
 
   it("all off gives 0 with every rule null", () => {
@@ -131,9 +135,12 @@ describe("soft-rule switches", () => {
     expect(penalties({ ...sampleCollege, softRules }, first.placements)).toEqual([]);
   });
 
-  it("missing softRules, or a missing key, means the defaults", () => {
-    expect(score({ ...sampleCollege, softRules: DEFAULT_SOFT_RULES }, first.placements)).toEqual(all);
-    expect(score({ ...sampleCollege, softRules: {} }, first.placements)).toEqual(all);
+  it("missing softRules, or a missing key, means the defaults: all on but S5", () => {
+    expect(DEFAULT_SOFT_RULES).toEqual({ s1: true, s2: true, s3: true, s4: true, s5: false });
+    const defaults = { total: all.total - all.breakdown.lateFinish!, breakdown: { ...all.breakdown, lateFinish: null } };
+    expect(score({ ...sampleCollege, softRules: DEFAULT_SOFT_RULES }, first.placements)).toEqual(defaults);
+    expect(score({ ...sampleCollege, softRules: {} }, first.placements)).toEqual(defaults);
+    expect(score(sampleCollege, first.placements)).toEqual(defaults);
   });
 
   it("fillSoftRules fills missing keys and ignores anything that isn't a boolean", () => {
@@ -163,11 +170,11 @@ describe("penalties", () => {
   };
 
   it("adds up to the score on the tiny and the sample timetable", () => {
-    expect(sums(penalties(tinyCollege, tinyValid))).toEqual(score(tinyCollege, tinyValid).breakdown);
+    expect(sums(penalties(tiny, tinyValid))).toEqual(score(tiny, tinyValid).breakdown);
     const { placements } = timetableJson as SolveResult;
-    const list = penalties(sampleCollege, placements);
+    const list = penalties(sample, placements);
     expect(list.length).toBeGreaterThan(0);
-    expect(sums(list)).toEqual(score(sampleCollege, placements).breakdown);
+    expect(sums(list)).toEqual(score(sample, placements).breakdown);
   });
 
   it("is empty for an empty timetable", () => {
@@ -199,7 +206,7 @@ describe("penalties", () => {
   });
 
   it("S5: the section or teacher and their free periods", () => {
-    expect(penalties(tinyCollege, [at("b-ph:L2", TUE, 2, "cr2")])).toEqual([
+    expect(penalties(tiny, [at("b-ph:L2", TUE, 2, "cr2")])).toEqual([
       { rule: "S5", key: "lateFinish", points: 2, day: TUE, periods: [0, 1], sectionId: "b" },
       { rule: "S5", key: "lateFinish", points: 2, day: TUE, periods: [0, 1], teacherId: "t2" },
     ]);
