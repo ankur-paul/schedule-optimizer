@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { score } from "@/domain/score";
 import type { Id, Session } from "@/domain/types";
 import { useAppStore } from "@/store/useAppStore";
+import { undoIfNewest } from "@/features/undo/runUndo";
 import { subjectColor } from "./colors";
 import { sessionLabel, slotLabel } from "@/domain/grid";
 import type { PlacedSession, ViewData } from "./layout";
@@ -136,9 +137,12 @@ export function MoveDnd({ data, sessions, colors, locked, children }: Props) {
   );
 }
 
-/** Re-validate, then move + lock + re-score, with Undo. Reads the store fresh so it never applies a stale result. */
+/**
+ * Re-validate, then move + lock + re-score, with Undo. Reads the store fresh so it never applies a stale result. The
+ * move goes on the undo stack (T41); the toast's Undo undoes it only while it is still the newest change.
+ */
 function commitMove(data: ViewData, session: Session, target: Extract<MoveTarget, { ok: true }>) {
-  const { result, locks, setResult, setLocks } = useAppStore.getState();
+  const { result, locks, setResult, setLocks, pushUndo } = useAppStore.getState();
   if (!result) return;
   const moved = { sessionId: session.id, day: target.day, period: target.period, roomId: target.roomId };
   const next = applyMove(result, locks, moved);
@@ -148,19 +152,11 @@ function commitMove(data: ViewData, session: Session, target: Extract<MoveTarget
     return;
   }
   const edited = editedResult(result, next.placements, next.unplaced, data);
+  const { title, description, label } = moveSummary(data, session, moved, { before: score(data, result.placements).total, after: edited.score.total }, check.violations);
+  const entry = pushUndo(label);
   setResult(edited);
   setLocks(next.locks);
-  const { title, description } = moveSummary(data, session, moved, { before: score(data, result.placements).total, after: edited.score.total }, check.violations);
-  toast.success(title, {
-    description,
-    action: {
-      label: "Undo",
-      onClick: () => {
-        setResult(result);
-        setLocks(locks);
-      },
-    },
-  });
+  toast.success(title, { description, action: { label: "Undo", onClick: () => undoIfNewest(entry) } });
 }
 
 /** The card under the pointer while dragging, with a line saying what dropping here would do. */

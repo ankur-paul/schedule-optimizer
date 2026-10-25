@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { sampleCollege } from "@/domain/sampleCollege";
 import type { Course, Department, Placement, Room, Section, Settings, SolveResult, Teacher } from "@/domain/types";
+import { emptyStacks, pushEntry, redoEntry, takeSnapshot, undoEntry, type UndoEntry, type UndoStacks } from "./undo";
 
 /** 0 = Setup week, 1 = Add data, 2 = Generate, 3 = View & export. */
 export type Step = 0 | 1 | 2 | 3;
@@ -62,6 +63,13 @@ export interface AppState extends AppData {
   loadOnline: (data: WorkingCopy, online: OnlineLink) => void;
   /** Back to an empty college and a Mon–Fri week with no periods, on step ①, on this device only (drops the link). */
   reset: () => void;
+  /** Undo and Redo of whole changes (T41), in memory only: not persisted, so a reload clears them. */
+  history: UndoStacks;
+  /** Snapshot the working copy before a change, e.g. `pushUndo("move CSE B DS to Tue P4")`. Clears Redo. */
+  pushUndo: (label: string) => UndoEntry;
+  /** Restore the newest snapshot; returns its label, or `null` when there is nothing to undo. */
+  undo: () => string | null;
+  redo: () => string | null;
 }
 
 export const initialData = (): AppData => ({
@@ -116,7 +124,7 @@ export function migrateState(persisted: unknown, version: number): AppState {
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialData(),
       online: null,
       setSettings: (settings) => set({ settings, result: null, locks: [] }),
@@ -148,11 +156,30 @@ export const useAppStore = create<AppState>()(
       setOnline: (online) => set({ online }),
       loadOnline: (data, online) => set({ ...data, online }),
       reset: () => set({ ...initialData(), online: null }),
+      history: emptyStacks(),
+      pushUndo: (label) => {
+        const entry = { label, snapshot: takeSnapshot(get()) };
+        set({ history: pushEntry(get().history, entry) });
+        return entry;
+      },
+      undo: () => {
+        const out = undoEntry(get().history, get());
+        if (!out) return null;
+        set({ ...out.restore.snapshot, history: out.stacks });
+        return out.restore.label;
+      },
+      redo: () => {
+        const out = redoEntry(get().history, get());
+        if (!out) return null;
+        set({ ...out.restore.snapshot, history: out.stacks });
+        return out.restore.label;
+      },
     }),
     {
       name: "timetable-v1",
       version: PERSIST_VERSION,
       migrate: migrateState,
+      partialize: ({ history: _, ...rest }) => rest,
       storage: createJSONStorage(() => safeStorage),
     },
   ),
