@@ -1,6 +1,6 @@
 import pytest
 
-from solver import solve, teaching_runs, valid_starts
+from solver import NUM_WORKERS, new_solver, solve, solver_workers, teaching_runs, valid_starts
 from tests.helpers import course, hard_violations, tiny
 from tests.test_sessions import load_sample
 
@@ -285,3 +285,16 @@ def test_s4_zero_when_batch_labs_run_in_parallel():
     res = solve(inp)
     assert res.status == "optimal"
     assert res.score.total == 0
+
+
+@pytest.mark.parametrize("value, workers", [(None, 8), ("2", 2), (" 4 ", 4), ("abc", 8), ("0", 8), ("-3", 8), ("", 8)])
+def test_solver_workers_from_the_environment(monkeypatch, value, workers):
+    if value is None:
+        monkeypatch.delenv("SOLVER_WORKERS", raising=False)
+    else:
+        monkeypatch.setenv("SOLVER_WORKERS", value)
+    assert solver_workers() == workers
+
+
+def test_new_solver_and_the_locks_probe_use_num_workers():
+    assert new_solver(tiny(), 1).parameters.num_workers == NUM_WORKERS

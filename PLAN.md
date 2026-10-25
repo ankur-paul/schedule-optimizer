@@ -197,9 +197,14 @@ Expansion order and IDs (deterministic, courses in input order):
 
 ### Server API
 
-- `GET  /health` → `{ "ok": true }`
+- `GET  /health` → `{ "ok": true, "contract": 1 }`. `contract` is the number in `shared/contract.json`; bump it when
+  `SolveInput`, `SolveResult` or the `/agent` body changes in a way the other side must know (T45).
 - `POST /solve` body `SolveInput` → `SolveResult` (`score` may be zeros; client re-scores). On `infeasible` it fills
   `diagnosis`; with locks it also re-solves once without them (feasibility only, ≤ 5 s) to tell `locks` from `locksLikely`.
+- Caps (T45): `options.timeLimitSec` is over 0 and at most 120, else 422. A `/solve` body over 2 MB gets 413
+  `{ "reason": "too_large" }` (`/agent`: 300 KB). An invalid body gets 422 `{ "detail": [...] }` without the input.
+- `SOLVER_WORKERS` sets CP-SAT's workers (unset or invalid: 8). Each request logs one line to stdout (method, path,
+  status, duration in ms), never the body, query, headers or client address; uvicorn's access log is off.
 - Port **8000**, CORS allows `http://localhost:5173`. Frontend reads `VITE_SOLVER_URL` (default `http://localhost:8000`).
 
 ## 4. Repository layout
@@ -211,6 +216,7 @@ shared/fixtures/
   sample-college.json       SolveInput for the demo college
   sample-sessions.json      golden expandSessions output
 shared/agent-tools.json     v2: the assistant's tool definitions, read by server and web (T37)
+shared/contract.json        v2: the contract version /health returns (T45)
 web/                        Vite + React + TS app
   src/domain/               types, sessions, eligibility, validator, score   (pure, tested)
   src/engine/               heuristic, worker, solveClient                    (pure-ish, tested)

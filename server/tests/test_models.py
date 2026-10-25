@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from models import Diagnosis, SolveResult, Unplaced
+from models import Diagnosis, Options, SolveResult, Unplaced
 
 
 def test_diagnosis_and_unplaced_cause_round_trip_as_camelcase():
@@ -41,3 +41,18 @@ def test_unknown_cause_and_kind_are_rejected():
         Unplaced.model_validate({"sessionId": "s", "reason": "r", "cause": "weather"})
     with pytest.raises(ValidationError):
         Diagnosis.model_validate({"kind": "tooHard", "ids": []})
+
+
+@pytest.mark.parametrize("limit", [0.5, 30, 120])
+def test_time_limit_within_the_cap_passes(limit):
+    assert Options(time_limit_sec=limit).time_limit_sec == limit
+
+
+@pytest.mark.parametrize("limit", [0, -1, 120.5, 121])
+def test_time_limit_outside_the_cap_is_refused(limit):
+    with pytest.raises(ValidationError):
+        Options.model_validate({"timeLimitSec": limit})
+
+
+def test_time_limit_defaults_to_30():
+    assert Options().time_limit_sec == 30
