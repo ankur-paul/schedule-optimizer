@@ -7,15 +7,21 @@ import { Input } from "@/components/ui/input";
 import { SignInButton } from "@/features/account/AccountButton";
 import { useAccount } from "@/features/account/useAccount";
 import { setCreateOpen, useInstitutes } from "@/features/account/useInstitutes";
-import { runOutcome } from "@/features/generate/useGenerate";
+import { regenerate, runOutcome } from "@/features/generate/useGenerate";
+import { docHash, hasUnsavedWork } from "@/features/online/online";
+import { supabaseOnlineApi } from "@/features/online/onlineApi";
 import { helpHref } from "@/help/helpLinks";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
+import { initialData, useAppStore } from "@/store/useAppStore";
+import { applyCard, type ApplyDeps } from "./applyCard";
+import { runOnline, type ChangeData } from "./changes";
+import { ChangeCard } from "./ChangeCard";
 import { postAgent, supabaseAssistantApi, type AssistantApi } from "./agentClient";
 import { askText, type AskCard } from "./askAbout";
 import { allowanceLine, answerBlocks, askAdminLine, trialMailto, type Inline } from "./format";
 import { unmaskText } from "./mask";
+import { loadOnlineSnapshot } from "./onlineState";
 import { chooseInstitute, panelState, type PanelState } from "./panelState";
 import {
   ask,
@@ -83,13 +89,26 @@ function useNow(): Date {
 
 const toolData = () => ({ ...useAppStore.getState(), outcome: runOutcome() });
 
+const EMPTY_HASH = docHash(initialData());
+
+function unsavedWork(): boolean {
+  const state = useAppStore.getState();
+  return hasUnsavedWork(state.online, docHash(state), EMPTY_HASH);
+}
+
+/** Just the working copy, for the store. */
+function setWorkingCopy({ settings, departments, teachers, rooms, sections, courses, result, locks }: ChangeData): void {
+  useAppStore.setState({ settings, departments, teachers, rooms, sections, courses, result, locks });
+}
+
 function Panel({ client }: { client: SupabaseClient }) {
   const api = useMemo(() => supabaseAssistantApi(client), [client]);
+  const onlineApi = useMemo(() => supabaseOnlineApi(client), [client]);
   const session = useAccount((s) => s.session);
   const userId = session?.user.id ?? null;
   const { loaded, memberships, rememberedId } = useInstitutes();
   const linkedId = useAppStore((s) => s.online?.instituteId ?? null);
-  const { pickedId, access, accessFor, accessError, blocked, busy, items, pending } = useAssistant();
+  const { pickedId, access, accessFor, accessError, blocked, busy, items, pending, applying } = useAssistant();
   const { institute, picker } = chooseInstitute(memberships, linkedId, pickedId, rememberedId);
   const instituteId = institute?.instituteId ?? null;
   const now = useNow();
@@ -122,9 +141,25 @@ function Panel({ client }: { client: SupabaseClient }) {
         instituteId,
         toolData,
         reloadAccess: () => void loadAccess(api, instituteId),
+        onlineSnapshot: () => loadOnlineSnapshot(onlineApi),
+        hasUnsavedWork: unsavedWork,
       });
     },
-    [api, instituteId],
+    [api, onlineApi, instituteId],
+  );
+
+  const apply = useCallback(
+    (n: number) => {
+      const deps: ApplyDeps = {
+        data: () => useAppStore.getState(),
+        setData: setWorkingCopy,
+        pushUndo: (label) => void useAppStore.getState().pushUndo(label),
+        regenerate,
+        runOnline: (change) => runOnline(change, onlineApi),
+      };
+      void applyCard(n, deps);
+    },
+    [onlineApi],
   );
 
   // *Ask about this*: send once the chat is open and free; in any other settled state, just drop it.
@@ -157,7 +192,7 @@ function Panel({ client }: { client: SupabaseClient }) {
           {allowance && <p className={cn("text-xs", allowance.low ? "font-medium text-amber-700" : "text-muted-foreground")}>{allowance.text}</p>}
         </div>
         {items.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={newChat} disabled={busy !== null}>
+          <Button variant="ghost" size="sm" onClick={newChat} disabled={busy !== null || applying !== null}>
             <MessageSquarePlus /> New chat
           </Button>
         )}
@@ -183,17 +218,22 @@ function Panel({ client }: { client: SupabaseClient }) {
         </label>
       )}
 
-      <Conversation items={items} busy={busy}>
+      <Conversation items={items} busy={busy} onApply={apply}>
         <StateScreen state={state} client={client} api={api} accessError={accessError} instituteId={instituteId} hasChat={items.length > 0} />
       </Conversation>
 
-      {state.kind === "open" && <Composer busy={busy !== null} onSend={send} />}
+      {state.kind === "open" && <Composer busy={busy !== null || applying !== null} onSend={send} />}
     </aside>
   );
 }
 
 /** The chat (kept on screen in every state), then the state's own screen or the busy line. */
-function Conversation({ items, busy, children }: { items: ChatItem[]; busy: { tools: string[] } | null; children: React.ReactNode }) {
+function Conversation({ items, busy, onApply, children }: {
+  items: ChatItem[];
+  busy: { tools: string[] } | null;
+  onApply: (n: number) => void;
+  children: React.ReactNode;
+}) {
   const end = useRef<HTMLDivElement>(null);
   const teachers = useAppStore((s) => s.teachers);
   // Braces: Chrome's scrollIntoView returns a promise now, and an effect may only return a cleanup.
@@ -214,6 +254,8 @@ function Conversation({ items, busy, children }: { items: ChatItem[]; busy: { to
               {item.tools.length > 0 && <ToolList tools={item.tools} />}
               <Answer text={unmaskText(item.text, teachers)} />
             </div>
+          ) : item.kind === "card" ? (
+            <ChangeCard key={i} card={item.card} onApply={onApply} />
           ) : (
             <p key={i} className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive">
               {item.text}
@@ -306,7 +348,8 @@ function Parts({ parts }: { parts: Inline[] }) {
 
 const ABOUT =
   "The assistant answers questions about using Lattice and about your own timetable: why it can't be built, why a " +
-  "class wasn't placed, where the score comes from, when a teacher is free. It only reads your data; it changes nothing.";
+  "class wasn't placed, where the score comes from, when a teacher is free. Ask it to change something and it shows the " +
+  "changes on a card; nothing changes until you click Apply.";
 
 function StateScreen({ state, client, api, accessError, instituteId, hasChat }: {
   state: PanelState;
@@ -394,10 +437,10 @@ function OpenIntro() {
       <ul className="list-disc pl-5">
         <li>Why is the score what it is?</li>
         <li>When is a teacher free on Monday?</li>
-        <li>How do I lock a class?</li>
+        <li>Move CSE A's Database Systems lecture off Monday.</li>
       </ul>
       <p className="text-xs">
-        It only reads your data, and its answers can be wrong.{" "}
+        Nothing changes until you click Apply on its card, and its answers can be wrong.{" "}
         <HelpLink href={helpHref("online", "assistant")} className="hover:text-foreground">
           More
         </HelpLink>

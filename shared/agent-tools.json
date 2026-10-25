@@ -75,5 +75,661 @@
       "required": ["text"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "online_status",
+    "description": "Where the working copy stands online: signed in or not, the linked institute and timetable, the user's role, unsaved changes, the kept versions (number, date, saved by you or another member) and which one the public link shows, plus the active institute's timetables for open_online. Use it before proposing online changes.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "propose_changes",
+    "description": "Propose changes to the user's working copy. Nothing changes until the user clicks Apply on the card this shows, so never say a change is made. The browser first checks the whole set in order (later changes see earlier ones, e.g. add a room, then move a lab into it); if a check fails you get the errors back and can fix them. At most 100 changes. Teachers are referred to by their code; a new teacher gets an id you choose, which later changes in the same proposal use. Every field is required: use \"\" or [] for none where a field says so. Moves, swaps and locks must keep every hard rule (H1-H8); a moved or swapped class is locked in its new place. Data and settings changes may apply even when they cause new data-check problems, which the card lists. Changing settings clears the timetable and all locks. regenerate runs Generate after the other changes, keeping locks; put it after them. load_sample replaces the whole working copy with the demo college. Online changes (save_online, save_as_new, rename_online, publish, make_live) go after every working-copy change and after regenerate, and run in order once those are done; they are checked against the user's role and the online state (see online_status), and a viewer can't make them. open_online replaces the working copy with a timetable from the institute, so propose it on its own. These stay manual, so explain the steps and link the help instead of proposing them: deleting a timetable or the institute, leaving the institute, removing a member, inviting someone, cancelling an invite, changing a role or handing over the admin role, changing the institute's link name (handle), unpublishing, overwriting after a save conflict, and a save that would delete an old version (the server keeps the newest 20 plus the live one).",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "One short sentence for the card saying what the changes do and why."
+        },
+        "changes": {
+          "type": "array",
+          "description": "The changes, applied in this order. At most 100.",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "add_department"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "A new id, e.g. civil."
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": ["op", "id", "name"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update_department"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "enum": ["name"]
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["field", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["op", "id", "set"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "remove_department"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "Fails while teachers, rooms or sections belong to it."
+                  }
+                },
+                "required": ["op", "id"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "add_teacher"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "A short id of your choice for later changes in this proposal to refer to, e.g. new-1. The teacher then gets a code like the others."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The name as the user gave it."
+                  },
+                  "departmentId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["op", "id", "name", "departmentId"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update_teacher"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "The teacher's code."
+                  },
+                  "set": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "enum": ["name", "departmentId"]
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["field", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["op", "id", "set"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "remove_teacher"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "The teacher's code. Fails while a course uses the teacher."
+                  }
+                },
+                "required": ["op", "id"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "add_room"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "A new id, e.g. lh-5."
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["classroom", "lab"]
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "description": "The owning department, or \"\" for a room any department may use."
+                  }
+                },
+                "required": ["op", "id", "name", "type", "departmentId"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update_room"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "enum": ["name", "type", "departmentId"]
+                        },
+                        "value": {
+                          "type": "string",
+                          "description": "type: classroom or lab. departmentId: \"\" for shared."
+                        }
+                      },
+                      "required": ["field", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["op", "id", "set"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "remove_room"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "Fails while a course requires this lab."
+                  }
+                },
+                "required": ["op", "id"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "add_section"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "A new id, e.g. cse-d."
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "departmentId": {
+                    "type": "string"
+                  },
+                  "batches": {
+                    "type": "integer",
+                    "description": "Lab batches; 1 = the section isn't split."
+                  }
+                },
+                "required": ["op", "id", "name", "departmentId", "batches"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update_section"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "enum": ["name", "departmentId", "batches"]
+                        },
+                        "value": {
+                          "type": "string",
+                          "description": "batches: a whole number as text, e.g. \"2\"."
+                        }
+                      },
+                      "required": ["field", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["op", "id", "set"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "remove_section"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "Fails while the section has courses; remove those first."
+                  }
+                },
+                "required": ["op", "id"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "add_course"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "A new id, e.g. cse-a-ml."
+                  },
+                  "sectionId": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "teacherId": {
+                    "type": "string",
+                    "description": "The lecture teacher's code; also the lab teacher unless batchTeacherIds says otherwise."
+                  },
+                  "lecturesPerWeek": {
+                    "type": "integer"
+                  },
+                  "labSessionsPerWeek": {
+                    "type": "integer",
+                    "description": "Per batch."
+                  },
+                  "labLength": {
+                    "type": "integer",
+                    "description": "Consecutive periods per lab; 0 when there are no labs."
+                  },
+                  "labRoomId": {
+                    "type": "string",
+                    "description": "A lab the labs must use, or \"\" for any lab the section may use."
+                  },
+                  "batchTeacherIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "One teacher code per batch for the labs, or [] for the lecture teacher in every batch."
+                  }
+                },
+                "required": ["op", "id", "sectionId", "subject", "teacherId", "lecturesPerWeek", "labSessionsPerWeek", "labLength", "labRoomId", "batchTeacherIds"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update_course"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "enum": ["sectionId", "subject", "teacherId", "lecturesPerWeek", "labSessionsPerWeek", "labLength", "labRoomId", "batchTeacherIds"]
+                        },
+                        "value": {
+                          "type": "string",
+                          "description": "Numbers as text, e.g. \"3\". labRoomId: \"\" for any lab. batchTeacherIds: teacher codes separated by commas, one per batch, or \"\" for the lecture teacher in every batch."
+                        }
+                      },
+                      "required": ["field", "value"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["op", "id", "set"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "remove_course"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["op", "id"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "set_settings"
+                  },
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Working days in order, e.g. [\"Mon\", \"Tue\"]."
+                  },
+                  "periods": {
+                    "type": "array",
+                    "description": "Every period of the day in time order, breaks included.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "description": "e.g. P1 or Break."
+                        },
+                        "start": {
+                          "type": "string",
+                          "description": "24-hour time, e.g. 09:00."
+                        },
+                        "end": {
+                          "type": "string"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": ["teaching", "break"]
+                        }
+                      },
+                      "required": ["label", "start", "end", "kind"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "lunchCandidates": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Labels of the teaching periods that may be lunch."
+                  }
+                },
+                "required": ["op", "days", "periods", "lunchCandidates"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "move"
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "description": "The class to move (or to place, if it is unplaced)."
+                  },
+                  "day": {
+                    "type": "string",
+                    "description": "Day name, e.g. Tue."
+                  },
+                  "period": {
+                    "type": "string",
+                    "description": "Label of the period it starts in, e.g. P4."
+                  },
+                  "roomId": {
+                    "type": "string",
+                    "description": "The room, or \"\" to keep its room if free, else the first free room it may use."
+                  }
+                },
+                "required": ["op", "sessionId", "day", "period", "roomId"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "swap"
+                  },
+                  "a": {
+                    "type": "string",
+                    "description": "A placed class."
+                  },
+                  "b": {
+                    "type": "string",
+                    "description": "Another placed class; the two trade places."
+                  }
+                },
+                "required": ["op", "a", "b"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "lock"
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "description": "A placed class to keep where it is when regenerating."
+                  }
+                },
+                "required": ["op", "sessionId"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "unlock"
+                  },
+                  "sessionId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["op", "sessionId"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "regenerate"
+                  }
+                },
+                "required": ["op"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "load_sample"
+                  }
+                },
+                "required": ["op"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "open_online"
+                  },
+                  "timetableId": {
+                    "type": "string",
+                    "description": "A timetable id of the active institute, from online_status."
+                  },
+                  "version": {
+                    "type": "integer",
+                    "description": "The version to open, or 0 for the latest."
+                  }
+                },
+                "required": ["op", "timetableId", "version"],
+                "additionalProperties": false,
+                "description": "Open a timetable from the institute, replacing the working copy. Propose it on its own."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "save_online"
+                  }
+                },
+                "required": ["op"],
+                "additionalProperties": false,
+                "description": "Save the working copy as a new version of the linked timetable."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "save_as_new"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The timetable's name online, at most 120 characters."
+                  }
+                },
+                "required": ["op", "name"],
+                "additionalProperties": false,
+                "description": "Save the working copy as a new timetable, the first save included; the working copy then links to it."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "rename_online"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The timetable's name online, at most 120 characters."
+                  }
+                },
+                "required": ["op", "name"],
+                "additionalProperties": false,
+                "description": "Rename the linked timetable."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "publish"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "description": "The version for the public link to show, from online_status; 0 for the newest, including a save earlier in this proposal."
+                  }
+                },
+                "required": ["op", "version"],
+                "additionalProperties": false,
+                "description": "Publish the linked timetable: its public link starts showing a version. For a timetable not published yet."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "make_live"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "description": "The version to make live, from online_status; 0 for the newest, including a save earlier in this proposal."
+                  }
+                },
+                "required": ["op", "version"],
+                "additionalProperties": false,
+                "description": "Point an already published timetable's public link at another kept version."
+              }
+            ]
+          }
+        }
+      },
+      "required": ["summary", "changes"],
+      "additionalProperties": false
+    }
   }
 ]

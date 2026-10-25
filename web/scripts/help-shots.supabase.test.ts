@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
+import timetableJson from "../../shared/fixtures/sample-timetable.json";
+import { sampleCollege } from "../src/domain/sampleCollege";
+import type { SolveResult } from "../src/domain/types";
+import { dryRun } from "../src/features/assistant/changes";
 import { parseConflict, toDoc } from "../src/features/online/online";
 import { initialData } from "../src/store/useAppStore";
 import { POLICY_VERSION } from "../src/legal/policy";
-import { AGENT_ACCESS, agentReply, answer, INSTITUTE, PEOPLE, SESSION_KEY, storedSession, SUPABASE_URL, TIMETABLE } from "./help-shots.supabase";
+import { AGENT_ACCESS, AGENT_CHANGE_QUESTION, agentReply, answer, INSTITUTE, PEOPLE, SESSION_KEY, storedSession, SUPABASE_URL, TIMETABLE } from "./help-shots.supabase";
 
 const doc = toDoc(initialData());
 const get = (path: string) => answer({ method: "GET", url: `${SUPABASE_URL}${path}` }, doc);
@@ -91,6 +95,14 @@ describe("the pretend assistant", () => {
     expect(second.stop_reason).toBe("end_turn");
     expect(second.content[0].text).toContain("All 18 points");
     expect(second.questions_left).toBe(AGENT_ACCESS.questions_left);
+  });
+
+  it("proposes changes to the change question, and the move passes on the fixed timetable", () => {
+    const first = agentReply({ messages: [{ role: "user", content: AGENT_CHANGE_QUESTION }] }) as { content: { type: string; name: string; input: unknown }[] };
+    expect(first.content[0]).toMatchObject({ type: "tool_use", name: "propose_changes" });
+    const data = { ...structuredClone(sampleCollege), result: structuredClone(timetableJson as SolveResult), locks: [] };
+    const dry = dryRun(first.content[0].input, data, { hasUnsavedWork: false });
+    expect(dry.ok).toBe(true);
   });
 });
 

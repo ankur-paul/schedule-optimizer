@@ -3,7 +3,7 @@
 import type { Id } from "../src/domain/types";
 import type { Role } from "../src/features/account/institutes";
 import type { Step } from "../src/store/useAppStore";
-import { AGENT_QUESTION } from "./help-shots.supabase";
+import { AGENT_CHANGE_QUESTION, AGENT_QUESTION } from "./help-shots.supabase";
 
 /**
  * What the app holds when the page opens: the sample college with no timetable (`sample`), or with the fixed
@@ -162,5 +162,19 @@ export const SHOTS: Shot[] = [
     padding: 0,
     // The panel is as tall as the window; the chat is at its top.
     maxHeight: 400,
+  },
+  {
+    name: "assistant-card",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "editor", online: "latest" },
+    actions: [
+      { click: { role: "button", name: "Assistant" } },
+      { fill: { css: 'textarea[aria-label="Your question"]' }, value: AGENT_CHANGE_QUESTION },
+      { click: { role: "button", name: "Send" } },
+      { waitFor: { text: "Discard" } },
+    ],
+    capture: { css: 'section[aria-label="Changes #1"]' },
   },
 ];

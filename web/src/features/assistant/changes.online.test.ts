@@ -9,7 +9,7 @@ import { docHash, toDoc } from "@/features/online/online";
 import { SaveConflict, type OnlineApi } from "@/features/online/onlineApi";
 import { useOnline } from "@/features/online/useOnline";
 import { useAppStore, type OnlineLink } from "@/store/useAppStore";
-import { applyChanges, dryRun, KEPT_VERSIONS, ONLINE_STATUS_TOOL, runOnline, type ChangeData, type DryRun, type OnlineChange } from "./changes";
+import { applyChanges, dryRun, KEPT_VERSIONS, runOnline, type ChangeData, type DryRun, type OnlineChange } from "./changes";
 import type { OnlineSnapshot } from "./onlineState";
 
 const college = (): ChangeData => {
@@ -249,12 +249,6 @@ describe("without an online snapshot", () => {
     expect(result.lines.slice(1).map((l) => l.text)).toEqual(["Save online", "Publish version latest"]);
     expect(applyChanges(input, base)).toEqual(result.data);
     expect(() => applyChanges({ summary: "x", changes: [SAVE, MOVE] }, base)).toThrow(/put online changes last/);
-  });
-});
-
-describe("the online_status definition", () => {
-  it("is strict and takes no input", () => {
-    expect(ONLINE_STATUS_TOOL).toMatchObject({ name: "online_status", strict: true, input_schema: { type: "object", properties: {}, required: [], additionalProperties: false } });
   });
 });
 

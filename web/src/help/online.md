@@ -183,8 +183,8 @@ about Lattice or your timetables.
 
 ![The assistant panel: "143 questions left · until 23 Nov", the question "Where does the score of 18 come from?", "Looked at the score", and an answer naming the batches waiting during labs in ECE A and ME A](/help/assistant-panel.png)
 
-**It only reads.** The assistant can't change your data, move classes, lock anything or generate a timetable; it
-tells you what to do and where. **Its answers can be wrong**, so check them against the timetable before acting.
+**Its answers can be wrong**, so check them against the timetable before acting on them. It changes nothing by
+itself: see [Changes from the assistant](#assistant-changes).
 
 **Ask about this.** Signed in, the problem cards in step ③ (each *Can't be built* reason, *Couldn't finish*, each
 group of unplaced classes) and each data check in step ② have an *Ask about this* link. It opens the panel and asks
@@ -211,8 +211,61 @@ the assistant summarises the earlier part every 20 questions so it can keep goin
 Enter sends, Shift+Enter adds a new line, Esc closes the panel.
 
 **Privacy.** Your questions and what the assistant looks up are sent to Anthropic, which runs the AI model, with
-teachers' names replaced by codes; a misspelt name in a question isn't replaced. Chats aren't stored. See the
+teachers' names replaced by codes; a misspelt name in a question isn't replaced. A new teacher's name you type
+("add teacher Ravi Sharma") is sent as you typed it, since it isn't in your data yet. Chats aren't stored. See the
 [Privacy Policy](/privacy).
+
+### Changes from the assistant {#assistant-changes}
+
+Ask the assistant to change something, such as "Move CSE-3A's Database Systems lecture off Monday", "Add a room
+LH-5 and regenerate" or "Save this online", and it shows a **change card** in the chat instead of changing it: a
+summary, one line per change, and **Apply** and **Discard**. Nothing changes until you click *Apply*.
+
+![A change card: "Changes #1", the summary, a move of CSE A's Data Structures lecture to Tue P1 locked there, Save online as version 7, the note that Undo restores only the working copy, and Apply and Discard](/help/assistant-card.png)
+
+It can propose:
+
+- **Your working copy:** add, change or remove departments, teachers, rooms, sections and courses; change the week
+  (this clears the timetable and its locks, and the card says so); lock and unlock classes; move and swap classes,
+  which locks them in their new place as [drag and drop](/help/timetable#drag-and-drop) does; regenerate; load the
+  sample college; open a timetable from your institute.
+- **Online** (admin and editors): *Save online*, *Save as new timetable*, rename, publish and *Make live*.
+
+Every role can use it, since changes land in your own working copy. A viewer isn't offered online changes.
+
+**The card** is checked before you see it: moves and swaps keep every hard rule, and online changes suit your role
+and the timetable's versions. It also lists any new data checks the changes cause (you can still apply it, as with
+edits by hand), warns when it would replace unsaved work (*Load sample*, opening a timetable), and, when it has
+online changes, says "Undo restores your working copy; the saved version stays online".
+
+**Apply** takes the whole card; to leave a change out, ask again ("do it without the room"). Lattice first checks
+the card again against your working copy as it is now. If it no longer fits, because you changed something since, the
+card says *Out of date: ask again* and nothing changes; an older card that still fits can be applied. Then it:
+
+1. makes the working-copy changes;
+2. runs **Generate** if the card has it, exactly as the button does, and shows the score before and after under the
+   card, e.g. "Score 34 → 28 · 0 unplaced", or what went wrong with *See why*;
+3. makes the online changes, in order.
+
+If a step fails it stops there: the steps before it stay done, and the card marks the failed step and why. If
+someone saved the timetable since you opened it, save by hand (see [When someone saved first](#conflicts)).
+*Apply* and *Discard* don't use a question; the assistant hears what happened at the start of your next question.
+
+**Undo.** Applying a card first takes a snapshot, so **Undo** at the top of the page ("Undo: assistant changes #3")
+puts your data, timetable and locks back as they were. See [Undo and Redo](/help/timetable#undo). Online steps
+aren't undone: a saved version, a rename or a publish stays online; to show an older version again, use *Make live*
+in [Versions](#versions). Undo is lost when you reload.
+
+**What stays manual.** The assistant doesn't do anything that Undo or *Make live* can't take back, or that changes
+who can reach your institute. Ask and it gives you the steps instead:
+
+- deleting a timetable or the institute, leaving the institute, handing over the admin role
+  ([Leaving and deleting](#leaving-and-deleting));
+- inviting someone, cancelling an invite, changing a role, removing a member ([Managing members](#institutes));
+- changing the institute's link name ([Publishing](#publishing)) and unpublishing ([Versions](#versions));
+- *Overwrite* after someone else's save ([When someone saved first](#conflicts));
+- a *Save online* that would delete an old version: Lattice keeps the last 20, so once there are 20 the next save
+  deletes the oldest one that isn't live. Click *Save online* yourself.
 
 ## Leaving and deleting
 

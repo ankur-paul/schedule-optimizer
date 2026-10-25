@@ -6,8 +6,22 @@ import { DbFailure } from "@/features/account/institutesApi";
 import { AgentFailure, type AssistantApi } from "./agentClient";
 import { COMPACT_EVERY, EMPTY_CHAT, type AgentReply, type AgentRequest, type Block, type Chat } from "./chat";
 import { teacherCodes } from "./mask";
+import type { OnlineSnapshot } from "./onlineState";
 import type { ToolData } from "./tools";
-import { ask, askAbout, loadAccess, newChat, redeemCoupon, resetAssistant, takePending, useAssistant, type LoopDeps } from "./useAssistant";
+import {
+  ask,
+  askAbout,
+  discardCard,
+  findCard,
+  loadAccess,
+  newChat,
+  redeemCoupon,
+  resetAssistant,
+  takePending,
+  updateCard,
+  useAssistant,
+  type LoopDeps,
+} from "./useAssistant";
 
 const data: ToolData = { ...structuredClone(sampleCollege), result: timetableJson as SolveResult };
 const teacher = sampleCollege.teachers[0];
@@ -24,6 +38,18 @@ const reply = (content: Block[], stop_reason = "end_turn", questions_left = 99):
 const text = (t: string): Block => ({ type: "text", text: t });
 const toolUse = (id: string, name: string, input: unknown): Block => ({ type: "tool_use", id, name, input });
 
+const SIGNED_OUT: OnlineSnapshot = {
+  signedIn: false,
+  link: null,
+  role: null,
+  linkedInstitute: null,
+  dirty: false,
+  timetable: null,
+  saveAsInto: null,
+  active: null,
+  problems: [],
+};
+
 /** Deps whose `post` answers with `replies` in order, recording each request. */
 function deps(replies: (AgentReply | Error)[], over: Partial<LoopDeps> = {}) {
   const requests: AgentRequest[] = [];
@@ -35,8 +61,18 @@ function deps(replies: (AgentReply | Error)[], over: Partial<LoopDeps> = {}) {
     return next;
   });
   const reloadAccess = vi.fn();
-  const d: LoopDeps = { api: { token: async () => "tok" }, post, instituteId: "inst", toolData: () => data, reloadAccess, ...over };
-  return { d, requests, post, reloadAccess };
+  const onlineSnapshot = vi.fn(async () => SIGNED_OUT);
+  const d: LoopDeps = {
+    api: { token: async () => "tok" },
+    post,
+    instituteId: "inst",
+    toolData: () => data,
+    reloadAccess,
+    onlineSnapshot,
+    hasUnsavedWork: () => false,
+    ...over,
+  };
+  return { d, requests, post, reloadAccess, onlineSnapshot };
 }
 
 beforeEach(() => {
@@ -270,5 +306,112 @@ describe("access", () => {
   it("shows the database's message on a refusal", async () => {
     const refused = api({ redeem: async () => Promise.reject(new DbFailure("Too many tries, wait an hour.")) });
     expect(await redeemCoupon(refused, "x", "bad")).toBe("Too many tries, wait an hour.");
+  });
+});
+
+// --- change cards ---------------------------------------------------------------------------------------------
+
+describe("change cards", () => {
+  const MOVE = { op: "move", sessionId: "cse-a-ds:L1", day: "Tue", period: "P1", roomId: "" };
+  const propose = (id: string, changes: unknown[], summary = "Move DS") => toolUse(id, "propose_changes", { summary, changes });
+  const cards = () => useAssistant.getState().items.filter((i) => i.kind === "card").map((i) => (i.kind === "card" ? i.card : null)!);
+  const lastResult = (req: AgentRequest) => (req.messages.at(-1)!.content as Block[])[0];
+
+  it("shows a passed proposal as a card, says so to the model, and puts the answer above it", async () => {
+    const { d, requests, onlineSnapshot } = deps([reply([propose("p", [MOVE])], "tool_use"), reply([text("Apply it when ready.")])]);
+    await ask("Move DS off Monday", d);
+    expect(onlineSnapshot).toHaveBeenCalledOnce();
+    expect(lastResult(requests[1])).toEqual({ type: "tool_result", tool_use_id: "p", content: "Shown to the user as changes #1; they will apply or discard it." });
+    const items = useAssistant.getState().items;
+    expect(items.map((i) => i.kind)).toEqual(["question", "answer", "card"]);
+    expect(items[1]).toEqual({ kind: "answer", text: "Apply it when ready.", tools: ["Proposed changes #1"] });
+    expect(cards()[0]).toMatchObject({ n: 1, summary: "Move DS", status: "proposed", steps: ["pending"] });
+    expect(cards()[0].lines[0].text).toMatch(/^Move CSE A Data Structures from .+ to Tue P1 · .+ · locked$/);
+  });
+
+  it("numbers cards through the chat, and from 1 again after New chat", async () => {
+    await ask("one", deps([reply([propose("a", [MOVE]), propose("b", [{ op: "regenerate" }])], "tool_use"), reply([text("Two.")])]).d);
+    await ask("two", deps([reply([propose("c", [{ op: "regenerate" }])], "tool_use"), reply([text("One more.")])]).d);
+    expect(cards().map((c) => c.n)).toEqual([1, 2, 3]);
+    expect(useAssistant.getState().items.map((i) => i.kind)).toEqual(["question", "answer", "card", "card", "question", "answer", "card"]);
+    newChat();
+    await ask("three", deps([reply([propose("d", [{ op: "regenerate" }])], "tool_use"), reply([text("Ok.")])]).d);
+    expect(cards().map((c) => c.n)).toEqual([1]);
+  });
+
+  it("returns a failed proposal as an error result and adds no card", async () => {
+    const { d, requests } = deps([reply([propose("p", [{ ...MOVE, sessionId: "nope" }])], "tool_use"), reply([text("Sorry.")])]);
+    await ask("Move it", d);
+    const result = lastResult(requests[1]);
+    expect(result).toMatchObject({ type: "tool_result", tool_use_id: "p", is_error: true });
+    expect(JSON.parse(result.content as string).error).toMatch(/^Change 1: no class with id nope/);
+    expect(cards()).toEqual([]);
+    expect(useAssistant.getState().items.at(-1)).toEqual({ kind: "answer", text: "Sorry.", tools: ["Checked changes that didn't pass"] });
+  });
+
+  it("passes the snapshot and the unsaved-work flag to the dry run", async () => {
+    const { d } = deps([reply([propose("p", [{ op: "load_sample" }])], "tool_use"), reply([text("Ok.")])], { hasUnsavedWork: () => true });
+    await ask("Load the sample", d);
+    expect(cards()[0].lines[0].warning).toMatch(/unsaved changes will be lost/);
+
+    const viewer = deps([reply([propose("p", [{ op: "save_online" }])], "tool_use"), reply([text("Can't.")])]);
+    await ask("Save it", viewer.d);
+    // Signed out: the online check refuses it, so no card.
+    expect(JSON.parse(lastResult(viewer.requests[1]).content as string).error).toMatch(/signed out/);
+  });
+
+  it("reads the online snapshot for online_status only when asked", async () => {
+    const plain = deps([reply([toolUse("a", "overview", {})], "tool_use"), reply([text("Ok.")])]);
+    await ask("hi", plain.d);
+    expect(plain.onlineSnapshot).not.toHaveBeenCalled();
+    const online = deps([reply([toolUse("a", "online_status", {})], "tool_use"), reply([text("Ok.")])]);
+    await ask("Is it saved?", online.d);
+    expect(online.onlineSnapshot).toHaveBeenCalledOnce();
+    expect(JSON.parse(lastResult(online.requests[1]).content as string)).toMatchObject({ signedIn: false });
+  });
+
+  it("puts every outcome since the last question at the start of the next one, masked, once", async () => {
+    await ask("one", deps([reply([propose("a", [MOVE]), propose("b", [MOVE])], "tool_use"), reply([text("Two.")])]).d);
+    discardCard(1);
+    updateCard(2, { status: "stopped", failure: { step: 0, reason: `No connection for ${teacher.name}.` } });
+    const next = deps([reply([text("Noted.")]), reply([text("Again.")])]);
+    await ask(`And ${teacher.name}?`, next.d);
+    expect(next.requests[0].messages.at(-1)).toEqual({
+      role: "user",
+      content: `[Discarded changes #1]\n[Applied changes #2 up to step 1: No connection for ${code}.]\n\nAnd ${code}?`,
+    });
+    // The screen shows the question as typed.
+    expect(useAssistant.getState().items.filter((i) => i.kind === "question").at(-1)).toEqual({ kind: "question", text: `And ${teacher.name}?` });
+    await ask("Then?", next.d);
+    expect(next.requests[1].messages.at(-1)).toEqual({ role: "user", content: "Then?" });
+  });
+
+  it("keeps the outcomes for the next question when this one fails", async () => {
+    await ask("one", deps([reply([propose("a", [MOVE])], "tool_use"), reply([text("Ok.")])]).d);
+    discardCard(1);
+    await ask("two", deps([new AgentFailure(502, "model_error")]).d);
+    const next = deps([reply([text("Ok.")])]);
+    await ask("three", next.d);
+    expect(next.requests[0].messages.at(-1)!.content).toBe("[Discarded changes #1]\n\nthree");
+  });
+
+  it("discards only a card still waiting, once", async () => {
+    await ask("one", deps([reply([propose("a", [MOVE])], "tool_use"), reply([text("Ok.")])]).d);
+    discardCard(1);
+    discardCard(1);
+    expect(findCard(1)!.status).toBe("discarded");
+    expect(useAssistant.getState().outcomes).toEqual(["Discarded changes #1"]);
+    updateCard(1, { status: "proposed" });
+    useAssistant.setState({ outcomes: [] });
+    updateCard(1, { status: "applied" });
+    discardCard(1);
+    expect(findCard(1)!.status).toBe("applied");
+  });
+
+  it("asks nothing while a card is being applied", async () => {
+    useAssistant.setState({ applying: 1 });
+    const { d, post } = deps([reply([text("Hi.")])]);
+    await ask("hi", d);
+    expect(post).not.toHaveBeenCalled();
   });
 });

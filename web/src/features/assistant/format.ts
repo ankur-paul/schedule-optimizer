@@ -71,6 +71,8 @@ export function toolLabel(name: string, input: unknown, names: Names): string {
       return str("rule") ? `Looked at the ${str("rule")} penalties` : "Looked at the score";
     case "find":
       return `Searched for "${entityName("teacher", str("text"), names)}"`;
+    case "online_status":
+      return "Looked at where it stands online";
     default:
       return `Used ${name}`;
   }

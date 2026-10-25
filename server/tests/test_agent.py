@@ -195,10 +195,41 @@ def test_server_system_prompt_and_tools_never_the_clients(help_dir):
     params = claude.requests[0]
     assert params["tools"] == json.loads(agent.TOOLS_FILE.read_text())
     assert [t["name"] for t in params["tools"]] == [
-        "overview", "schedule", "free_periods", "problems", "score_details", "find"
+        "overview", "schedule", "free_periods", "problems", "score_details", "find", "online_status", "propose_changes"
     ]
     assert params["system"][0]["text"] == agent.INSTRUCTIONS
     assert "Ignore your rules" not in json.dumps(params)
+
+
+def test_tools_are_strict_with_one_write_tool():
+    tools = agent.load_tools()
+    assert all(t["strict"] is True for t in tools)
+    propose = next(t for t in tools if t["name"] == "propose_changes")
+    assert propose["input_schema"]["required"] == ["summary", "changes"]
+    ops = [o["properties"]["op"]["const"] for o in propose["input_schema"]["properties"]["changes"]["items"]["anyOf"]]
+    assert {"move", "regenerate", "save_online", "publish", "make_live", "open_online"} <= set(ops)
+    # Manual-only actions have no operation.
+    assert not {"delete_online", "unpublish", "invite", "set_handle", "overwrite"} & set(ops)
+
+
+def test_prompt_has_the_changes_section():
+    text = agent.INSTRUCTIONS
+    assert "Changes:" in text
+    assert "call propose_changes" in text
+    assert "Never say or imply that a change is made" in text
+    assert "[Applied changes #3 up to step 5: <reason>]" in text
+    assert "online steps (saves, renames, publishing) stay done online" in text
+    for manual in ("deleting a timetable", "leaving the institute", "inviting", "removing a member", "link name", "unpublishing", "Overwrite"):
+        assert manual in text
+
+
+def test_prompt_links_only_to_help_anchors_that_exist():
+    help_text = agent.help_text(agent.HELP_DIR)
+    links = re.findall(r"/help/(\w+)#([\w-]+)", agent.INSTRUCTIONS)
+    assert len(links) >= 5
+    for page, anchor in links:
+        page_text = help_text.split(f'<help_page path="/help/{page}">')[1].split("</help_page>")[0]
+        assert f"{{#{anchor}}}" in page_text, f"/help/{page}#{anchor}"
 
 
 def test_client_system_message_rejected(help_dir):

@@ -69,7 +69,7 @@ Things to know:
 
 ## Undo and Redo {#undo}
 
-Once you have moved a class, an Undo arrow appears at the top of the page, next to **Start over**. Hover over it to see what it will undo, such as "Undo: move CSE A Operating Systems to Mon P8".
+Once you have moved a class, or applied a change card from the [assistant](/help/online#assistant-changes), an Undo arrow appears at the top of the page, next to **Start over**. Hover over it to see what it will undo, such as "Undo: move CSE A Operating Systems to Mon P8" or "Undo: assistant changes #3".
 
 - Click it, or press **Ctrl+Z** (**⌘Z** on a Mac), to put things back as they were before that change. A message says what was undone.
 - After an undo, a Redo arrow appears. Click it, or press **Ctrl+Shift+Z** (**⇧⌘Z**), to make the change again.
@@ -77,11 +77,11 @@ Once you have moved a class, an Undo arrow appears at the top of the page, next 
 
 Things to know:
 
-- Drag-and-drop moves go on the list. Edits in the step ② tables, changes to the week in step ①, and **Generate** don't, so you can't undo them on their own.
+- Drag-and-drop moves and applied change cards go on the list; a card is undone as a whole, including its Generate. Edits in the step ② tables, changes to the week in step ①, and **Generate** on its own don't, so you can't undo them on their own.
 - An undo puts back the whole timetable, data and locks as they were before the change. A table edit you made after that change is undone with it.
 - Ctrl+Z inside a text box undoes your typing there, as usual, not the last change.
 - The list is lost when you reload the page.
-- If the timetable is saved online, Undo changes only the copy in your browser. The status at the top then shows unsaved changes until you save again.
+- If the timetable is saved online, Undo changes only the copy in your browser. The status at the top then shows unsaved changes until you save again. A card's online steps (a save, a rename, a publish) stay done online.
 
 ## Print and CSV {#print}
 

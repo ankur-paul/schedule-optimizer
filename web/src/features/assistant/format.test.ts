@@ -71,6 +71,7 @@ describe("toolLabel", () => {
     expect(toolLabel("score_details", { rule: "S3" }, names)).toBe("Looked at the S3 penalties");
     expect(toolLabel("find", { text: "CSE" }, names)).toBe('Searched for "CSE"');
     expect(toolLabel("find", { text: code }, names)).toBe('Searched for "Ravi Kumar"');
+    expect(toolLabel("online_status", {}, names)).toBe("Looked at where it stands online");
     expect(toolLabel("nope", null, names)).toBe("Used nope");
   });
 });

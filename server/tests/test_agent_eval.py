@@ -1,5 +1,6 @@
 """scripts/agent_eval.py's loop with a fake Claude client and fake tools: no network, no cost, no Node."""
 
+import json
 from decimal import Decimal
 
 import pytest
@@ -34,10 +35,15 @@ class FakeTools:
     def unmask(self, scenario, text):
         return text.replace("T-AAAAA", "Dr. Meera Iyer")
 
-    def run(self, scenario, name, tool_input):
+    def run(self, scenario, name, tool_input, n=1):
         self.runs.append((scenario, name, tool_input))
         if name == "nope":
             return {"content": '{"error": "No tool named nope."}', "isError": True}
+        if name == "propose_changes":
+            if tool_input["changes"] == ["bad"]:
+                return {"content": '{"error": "Change 1: no class with id x."}', "isError": True}
+            card = {"summary": tool_input["summary"], "lines": [f"Lock T-AAAAA's lab #{n}"], "warnings": ["warning: T-AAAAA is busy."]}
+            return {"content": f"Shown to the user as changes #{n}; they will apply or discard it.", "isError": False, "card": card}
         return {"content": '{"free": ["P1"]}', "isError": False}
 
 
@@ -115,6 +121,30 @@ def test_asks_before_spending(monkeypatch, capsys):
     assert "Nothing spent." in capsys.readouterr().out
 
 
-def test_fifteen_questions_cover_every_scenario():
-    assert len(agent_eval.QUESTIONS) == 15
+def test_questions_cover_every_scenario_and_the_write_questions():
+    assert len(agent_eval.QUESTIONS) == 22
     assert {s for s, _ in agent_eval.QUESTIONS} == {"built", "partial", "impossible"}
+    questions = [q for _, q in agent_eval.QUESTIONS]
+    assert "Save this online." in questions and "Delete this timetable." in questions
+
+
+def test_collects_cards_and_failed_proposals_numbered_per_question():
+    def propose(id, changes):
+        return {"type": "tool_use", "id": id, "name": "propose_changes", "input": {"summary": "Lock it", "changes": changes}}
+
+    first = reply([propose("a", ["bad"]), propose("b", ["ok"])], stop_reason="tool_use")
+    claude, backend, assistant = make([first, reply([propose("c", ["ok"])], stop_reason="tool_use"), reply()])
+    tools = FakeTools()
+    answer = ask(assistant, backend, tools, "built", "Lock Dr. Meera Iyer's labs")
+
+    assert answer.failed_proposals == ['{"error": "Change 1: no class with id x."}']
+    assert [(c.n, c.lines) for c in answer.cards] == [(1, ["Lock Dr. Meera Iyer's lab #1"]), (2, ["Lock Dr. Meera Iyer's lab #2"])]
+    assert answer.cards[0].warnings == ["warning: Dr. Meera Iyer is busy."]
+    # The model gets the tool result, never the card.
+    sent = claude.requests[1]["messages"][-1]["content"]
+    assert [r.get("is_error", False) for r in sent] == [True, False]
+    assert '"card"' not in json.dumps(sent)
+
+    text = report(16, "built", "Lock", answer)
+    assert "   failed dry run: " in text
+    assert "   card #2: Lock it\n     1. Lock Dr. Meera Iyer's lab #2\n     ! warning: Dr. Meera Iyer is busy." in text

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { create } from "zustand";
 import type { SolveInput } from "@/domain/types";
-import { generate, makeDraft, type SolveFailure } from "@/engine/solveClient";
+import { checkServer, generate, makeDraft, type SolveFailure } from "@/engine/solveClient";
 import { droppedLocksMessage, pruneLocks } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
 import { buildSolveInput, newSeed, type DraftReason, type RunOutcome } from "./generate";
@@ -58,6 +58,38 @@ async function exclusive(kind: "exact" | "draft", work: (signal: AbortSignal) =>
   }
 }
 
+/** Generate with the exact solver only; `timeLimitSec` also becomes the new setting ("Try again with 40 s"). */
+export const runExact = (timeLimitSec?: number) =>
+  exclusive("exact", async (signal) => {
+    if (timeLimitSec) useAppStore.getState().setTimeLimitSec(timeLimitSec);
+    const input = currentInput();
+    const out = await generate(input, { signal });
+    if (out.failure) {
+      const failed = { failure: out.failure, input };
+      useRun.setState((s) => ({ outcome: { ...s.outcome, failed, showFailure: true } }));
+      return { kind: "failed", failure: out.failure };
+    }
+    useAppStore.getState().setResult(out.result);
+    useRun.setState({ outcome: { showFailure: false, limitSec: input.options.timeLimitSec } });
+    return { kind: "done" };
+  });
+
+/** A quick draft. Keeps the last failure when the draft answers it, so a partial result can lead "Back to the reasons". */
+export const runDraft = (reason: DraftReason) =>
+  exclusive("draft", async (signal) => {
+    const out = await makeDraft(currentInput(), { signal });
+    useAppStore.getState().setResult(out.result);
+    useRun.setState((s) => ({
+      outcome: { failed: reason === "offline" ? undefined : s.outcome.failed, showFailure: false, draft: reason },
+    }));
+    return { kind: "done" };
+  });
+
+/** Step ④'s *Regenerate*, for callers without the polled server state (the assistant's cards, T44): the exact solver, or a quick draft while it is offline. */
+export async function regenerate(): Promise<RunEnd> {
+  return (await checkServer()) ? runExact() : runDraft("offline");
+}
+
 /**
  * Step ③ Generate and step ④ Regenerate. `generate` asks the exact solver only; on failure the stored timetable stays
  * and the failure is kept for step ③'s card. `draft` makes a quick draft, only ever from a button that says so.
@@ -73,33 +105,6 @@ export function useGenerate() {
     const id = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 250);
     return () => clearInterval(id);
   }, [running]);
-
-  /** `timeLimitSec` also becomes the new setting ("Try again with 40 s"). */
-  const runExact = (timeLimitSec?: number) =>
-    exclusive("exact", async (signal) => {
-      if (timeLimitSec) useAppStore.getState().setTimeLimitSec(timeLimitSec);
-      const input = currentInput();
-      const out = await generate(input, { signal });
-      if (out.failure) {
-        const failed = { failure: out.failure, input };
-        useRun.setState((s) => ({ outcome: { ...s.outcome, failed, showFailure: true } }));
-        return { kind: "failed", failure: out.failure };
-      }
-      useAppStore.getState().setResult(out.result);
-      useRun.setState({ outcome: { showFailure: false, limitSec: input.options.timeLimitSec } });
-      return { kind: "done" };
-    });
-
-  /** Keeps the last failure when the draft answers it, so a partial result can lead "Back to the reasons". */
-  const runDraft = (reason: DraftReason) =>
-    exclusive("draft", async (signal) => {
-      const out = await makeDraft(currentInput(), { signal });
-      useAppStore.getState().setResult(out.result);
-      useRun.setState((s) => ({
-        outcome: { failed: reason === "offline" ? undefined : s.outcome.failed, showFailure: false, draft: reason },
-      }));
-      return { kind: "done" };
-    });
 
   const cancel = () => useRun.getState().controller?.abort();
 

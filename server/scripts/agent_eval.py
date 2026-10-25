@@ -1,5 +1,5 @@
-"""Ask the assistant about 15 fixed questions about the sample college through the real API (T40), and print each
-answer, its tool calls, tokens and cost.
+"""Ask the assistant 22 fixed questions about the sample college through the real API (T40, T44), and print each
+answer, its tool calls, the change cards it proposed, tokens and cost.
 
     cd server && uv run scripts/agent_eval.py          # asks before spending
     cd server && uv run scripts/agent_eval.py --yes    # doesn't ask
@@ -10,6 +10,9 @@ web/scripts/agent-eval-tools.ts, the browser's own code. Each question is a new 
 send the question, run the tools the reply asks for, send their results back, until the reply is an answer. The
 server half is agent.Agent itself, with the Supabase checks replaced by an in-memory stand-in that counts calls the
 way agent_begin does and keeps the usage rows.
+
+The write questions (T44) end in change cards. Each proposal is dry-run as the panel does, against an editor linked
+to a saved timetable; nothing is applied, online or not. A proposal that fails its dry run is listed with its errors.
 """
 
 import argparse
@@ -51,13 +54,21 @@ QUESTIONS: list[tuple[str, str]] = [
     ("partial", "How can I place the classes that were left over?"),
     ("built", "मेरे टाइमटेबल का स्कोर इतना क्यों है?"),
     ("built", "Write me a short poem about the monsoon."),
+    # Write questions (T44): each should end in a card that passes the dry run, except the delete, which gets steps.
+    ("built", "Move CSE A's Data Structures lecture off Monday."),
+    ("built", "Add a classroom LH-5 for CSE and regenerate."),
+    ("built", "Lock all of CSE B's labs where they are."),
+    ("built", "Add a teacher Ravi Sharma to CSE and give him CSE A's Operating Systems."),
+    ("built", "Save this online."),
+    ("built", "Publish the latest version."),
+    ("built", "Delete this timetable."),
 ]
 
 
 class Tools(Protocol):
     def mask(self, scenario: str, text: str) -> str: ...
     def unmask(self, scenario: str, text: str) -> str: ...
-    def run(self, scenario: str, name: str, tool_input: object) -> dict: ...
+    def run(self, scenario: str, name: str, tool_input: object, n: int = 1) -> dict: ...
 
 
 class NodeTools:
@@ -87,8 +98,8 @@ class NodeTools:
     def unmask(self, scenario, text):
         return self.ask({"op": "unmask", "scenario": scenario, "text": text})["text"]
 
-    def run(self, scenario, name, tool_input):
-        return self.ask({"op": "tool", "scenario": scenario, "name": name, "input": tool_input})
+    def run(self, scenario, name, tool_input, n=1):
+        return self.ask({"op": "tool", "scenario": scenario, "name": name, "input": tool_input, "n": n})
 
     def close(self):
         self.proc.stdin.close()
@@ -127,10 +138,22 @@ class EvalBackend:
 
 
 @dataclass
+class Card:
+    """A proposal that passed its dry run, as the panel would show it (teachers unmasked)."""
+
+    n: int
+    summary: str
+    lines: list[str]
+    warnings: list[str]
+
+
+@dataclass
 class Answer:
     text: str
     tool_calls: list[str] = field(default_factory=list)
     usage: list[Usage] = field(default_factory=list)
+    cards: list[Card] = field(default_factory=list)
+    failed_proposals: list[str] = field(default_factory=list)
 
     @property
     def cost_cents(self) -> Decimal:
@@ -146,6 +169,8 @@ def ask(assistant: agent.Agent, backend: EvalBackend, tools: Tools, scenario: st
     messages: list[dict] = [{"role": "user", "content": tools.mask(scenario, question)}]
     question_id = None
     tool_calls: list[str] = []
+    cards: list[Card] = []
+    failed: list[str] = []
     while True:
         req = agent.AgentRequest(institute_id=INSTITUTE, question_id=question_id, kind="turn", messages=messages)
         res = assistant.handle("eval", req)
@@ -154,10 +179,18 @@ def ask(assistant: agent.Agent, backend: EvalBackend, tools: Tools, scenario: st
         uses = [b for b in res.content if b.get("type") == "tool_use"] if res.stop_reason == "tool_use" else []
         if not uses:
             text = "\n\n".join(b["text"] for b in res.content if b.get("type") == "text").strip()
-            return Answer(tools.unmask(scenario, text), tool_calls, backend.usage.get(str(question_id), []))
+            usage = backend.usage.get(str(question_id), [])
+            return Answer(tools.unmask(scenario, text), tool_calls, usage, cards, failed)
         results = []
         for use in uses:
-            out = tools.run(scenario, use["name"], use.get("input"))
+            out = tools.run(scenario, use["name"], use.get("input"), len(cards) + 1)
+            if use["name"] == "propose_changes":
+                if out.get("card"):
+                    c = out["card"]
+                    unmask = lambda t: tools.unmask(scenario, t)  # noqa: E731
+                    cards.append(Card(len(cards) + 1, unmask(c["summary"]), [unmask(x) for x in c["lines"]], [unmask(w) for w in c["warnings"]]))
+                elif out["isError"]:
+                    failed.append(tools.unmask(scenario, out["content"]))
             tool_calls.append(f"{use['name']}({json.dumps(use.get('input'), ensure_ascii=False)})" + (" → error" if out["isError"] else ""))
             result = {"type": "tool_result", "tool_use_id": use["id"], "content": out["content"]}
             results.append({**result, "is_error": True} if out["isError"] else result)
@@ -173,6 +206,16 @@ def report(n: int, scenario: str, question: str, answer: Answer) -> str:
     lines = [
         f"── {n}. [{scenario}] {question}",
         f"   calls: {', '.join(answer.tool_calls) or 'none'}",
+        *(f"   failed dry run: {f}" for f in answer.failed_proposals),
+        *(
+            line
+            for card in answer.cards
+            for line in [
+                f"   card #{card.n}: {card.summary}",
+                *(f"     {i}. {text}" for i, text in enumerate(card.lines, 1)),
+                *(f"     ! {w}" for w in card.warnings),
+            ]
+        ),
         f"   model calls: {len(answer.usage)} · in {t['input_tokens']} · out {t['output_tokens']} · cache read "
         f"{t['cache_read_tokens']} · cache write {t['cache_write_tokens']} · {cents(answer.cost_cents)}",
         "",
@@ -183,7 +226,7 @@ def report(n: int, scenario: str, question: str, answer: Answer) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Ask the assistant 15 fixed questions through the real API.")
+    parser = argparse.ArgumentParser(description=f"Ask the assistant {len(QUESTIONS)} fixed questions through the real API.")
     parser.add_argument("--yes", action="store_true", help="don't ask before spending")
     parser.add_argument("--only", type=int, nargs="*", help="ask only these question numbers (1-based)")
     args = parser.parse_args(argv)
@@ -194,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     chosen = [(i, q) for i, q in enumerate(QUESTIONS, 1) if not args.only or i in args.only]
     if not args.yes:
-        prompt = f"This asks {len(chosen)} questions on {agent.MODEL} with your key: roughly $0.50–$1. Go on? [y/N] "
+        prompt = f"This asks {len(chosen)} questions on {agent.MODEL} with your key: roughly 5 cents each. Go on? [y/N] "
         if input(prompt).strip().lower() not in ("y", "yes"):
             print("Nothing spent.")
             return 1
@@ -203,14 +246,19 @@ def main(argv: list[str] | None = None) -> int:
     assistant = agent.Agent(anthropic.Anthropic(api_key=api_key), backend, agent.HELP_DIR, agent.load_tools(), Decimal(0))  # no monthly stop here
     tools = NodeTools()
     total = Decimal(0)
+    answers: list[Answer] = []
     try:
         for n, (scenario, question) in chosen:
             answer = ask(assistant, backend, tools, scenario, question)
+            answers.append(answer)
             total += answer.cost_cents
             print(report(n, scenario, question, answer), flush=True)
     finally:
         tools.close()
+    cards = sum(len(a.cards) for a in answers)
+    failed = sum(len(a.failed_proposals) for a in answers)
     print(f"Total {cents(total)} for {len(chosen)} questions · {cents(total / len(chosen))} a question on average.")
+    print(f"Cards: {cards} passed the dry run · {failed} proposals failed it (the model is told why and may retry).")
     return 0
 
 

@@ -1,5 +1,5 @@
 # T44 — Change card in the panel
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** main · **Prereqs:** T41, T42, T43 · **Branch:** t44-change-card
 
 ## Goal
