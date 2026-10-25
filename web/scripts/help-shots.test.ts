@@ -92,7 +92,8 @@ describe("persistedState", () => {
   it("is what the store's persist middleware reads", () => {
     const saved = JSON.parse(persistedState(shot({ step: 2 }), timetable));
     expect(saved.version).toBe(PERSIST_VERSION);
-    expect(saved.state).toMatchObject({ step: 2, online: null, timeLimitSec: 20 });
+    expect(saved.state).toMatchObject({ step: 2, online: null });
+    expect(saved.state).not.toHaveProperty("timeLimitSec");
     expect(saved.state.result.placements).toHaveLength(timetable.placements.length);
   });
 

@@ -4,11 +4,20 @@ import type { SolveFailure } from "@/engine/solveClient";
 import type { FooterNote } from "@/features/footer";
 import type { AppData } from "@/store/useAppStore";
 
-export const TIME_LIMIT = { min: 5, max: 120, step: 5, default: 20 } as const;
+/** The exact solver's time limit: Generate uses `default` (or a remembered longer one); retries double it up to `max`. */
+export const TIME_LIMIT = { min: 5, max: 120, default: 20 } as const;
 
 /** "Try longer" / "Try again with": double the limit, up to the max; null when already at the max. */
 export function nextTimeLimit(t: number): number | null {
   return t >= TIME_LIMIT.max ? null : Math.min(2 * t, TIME_LIMIT.max);
+}
+
+/**
+ * The limit later Generates use after a run: a retry's longer limit (`retryLimit`) once it finished with a timetable,
+ * so a large college doesn't time out first on every regenerate. A plain Generate, a failure or a cancel keeps it.
+ */
+export function rememberLimit(remembered: number, retryLimit: number | undefined, finished: boolean): number {
+  return finished && retryLimit !== undefined ? retryLimit : remembered;
 }
 
 /** What the engines get: the college data, the current locks, and run options. */
@@ -80,7 +89,7 @@ export interface GenerateViewInput {
   running: "exact" | "draft" | null;
   outcome: RunOutcome;
   result: Pick<SolveResult, "engine" | "status" | "placements" | "unplaced"> | null;
-  /** The current time limit setting. */
+  /** The limit Generate uses now: 20 s, or a remembered longer one. */
   timeLimitSec: number;
 }
 

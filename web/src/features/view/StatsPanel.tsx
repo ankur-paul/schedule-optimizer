@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { score } from "@/domain/score";
-import { dayInitials, LOAD_PREVIEW, loadRange, previewRows, roomUtilisation, SCORE_ROWS, scoreCount, sortLoads, teacherLoads, type LoadSortKey, type StatsData } from "@/domain/stats";
+import { dayInitials, LOAD_PREVIEW, loadRange, previewRows, roomUtilisation, SCORE_ROWS, scoreCount, scoreTotalTip, sortLoads, teacherLoads, type LoadSortKey, type StatsData } from "@/domain/stats";
 import type { Placement } from "@/domain/types";
 
 interface Props {
@@ -36,7 +36,7 @@ export function ScoreStrip({ data, placements }: Props) {
     <div className="flex flex-wrap items-center gap-2 text-sm print:hidden" aria-label="Quality score">
       <span className="flex items-center gap-1.5 font-medium">
         Score {result.total} pts{result.total === 0 && " · perfect"}
-        <InfoTip more={helpHref("timetable", "score")}>Penalty points for the soft rules. Lower is better; 0 is perfect. Hard rules (no clashes) are never broken.</InfoTip>
+        <InfoTip more={helpHref("timetable", "score")}>{scoreTotalTip(result.breakdown)}</InfoTip>
       </span>
       {SCORE_ROWS.map((row) => {
         const points = result.breakdown[row.key];

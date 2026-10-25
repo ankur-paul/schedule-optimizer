@@ -83,7 +83,8 @@ Nothing you enter goes online until an admin or editor clicks *Save online*. To 
 After that, **Save online** in the same menu saves your changes as a new version of that timetable.
 
 A save sends the week setup, departments, teachers with their names, rooms, sections, courses, locked classes, the
-generated timetable and the print heading. The step you're on and the time limit stay on your device. A timetable
+generated timetable, the print heading and the [What to aim for](/help/generate#aims) switches. The step you're on
+stays on your device. A timetable
 over 2 MB is too big to save online.
 
 ![The status menu of a saved, published timetable: Save online, Save as new timetable, Publish again, Versions, Open from GNDEC Ludhiana, Rename and Work on this device only](/help/online-menu.png)

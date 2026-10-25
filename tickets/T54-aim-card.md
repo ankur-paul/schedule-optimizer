@@ -1,5 +1,5 @@
 # T54 — "What to aim for" card, no time-limit slider
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** A · **Prereqs:** T52 · **Branch:** t54-aim-card
 
 ## Goal

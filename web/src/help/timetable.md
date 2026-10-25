@@ -26,6 +26,8 @@ Each soft rule adds points:
 | Batches waiting during labs | 3 per batch-period | A period where one batch of a split section is in a lab and another batch has nothing |
 | Late finish | 1 per free period | A free period before a section's or a teacher's last class of the day. One free lunch candidate doesn't count. |
 
+Each rule has a switch in step ③'s [What to aim for](/help/generate#aims) card, all on to begin with. A rule that's off shows *Off* instead of points and isn't in the total; the ⓘ next to the total lists the rules it counts. Flipping a switch counts the score again at once, without changing the timetable.
+
 Step ③ shows the score with a box per rule, and step ④ shows it as one line of chips under the badge. A chip turns amber when its rule costs points. Each box or chip also says what was counted, such as "6 batch-periods".
 
 Things to know:

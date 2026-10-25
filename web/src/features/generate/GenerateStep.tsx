@@ -6,7 +6,8 @@ import { AskAboutButton } from "@/features/assistant/AssistantPanel";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SCORE_ROWS, scoreCount } from "@/domain/stats";
+import { Switch } from "@/components/ui/switch";
+import { SCORE_ROWS, scoreCount, scoreTotalTip } from "@/domain/stats";
 import type { SolveResult } from "@/domain/types";
 import { validate } from "@/domain/validator";
 import { useCollegeData } from "@/features/data/collegeData";
@@ -15,6 +16,7 @@ import { useDataView } from "@/features/data/dataView";
 import { helpHref } from "@/help/helpLinks";
 import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
+import { aimRows, aimsSummary, PREFERENCES_CHANGED, preferencesChanged } from "./aims";
 import { causeHelpHref, unplacedHelpHref } from "./causeHelp";
 import { explainInfeasible, GENERAL_SUGGESTIONS, preflightWarnings, topCauses, type Cause, type CauseLink } from "./causes";
 import {
@@ -23,12 +25,11 @@ import {
   generateBlockers,
   generateView,
   partialHow,
-  TIME_LIMIT,
   unplacedGroups,
   type DraftReason,
   type GenerateView,
 } from "./generate";
-import { cancelledToast, showFailure, useGenerate, useRunKind, useRunOutcome, type RunEnd } from "./useGenerate";
+import { cancelledToast, showFailure, useGenerate, useRunKind, useRunLimit, useRunOutcome, type RunEnd } from "./useGenerate";
 import { useServerStatus, type ServerState } from "./useServer";
 
 const SERVER_COMMAND = "cd server && uv run uvicorn main:app --port 8000";
@@ -62,6 +63,7 @@ export function GenerateStep() {
 
   return (
     <div className="grid gap-6">
+      <AimsCard running={view.state === "running"} />
       <GenerateCard view={view} server={server} contractMismatch={contractMismatch} onRecheck={recheck} actions={actions} elapsed={run.elapsed} />
       <div ref={outcomeRef} className="grid scroll-mt-4 gap-6">
         {view.state === "impossible" && <ImpossibleCard view={view} actions={actions} />}
@@ -78,6 +80,45 @@ interface Actions {
   cancel: () => void;
 }
 
+/** The soft rules as aims, one switch each (T54). A flip keeps the timetable and re-scores it at once. */
+function AimsCard({ running }: { running: boolean }) {
+  const softRules = useAppStore((s) => s.softRules);
+  const setSoftRules = useAppStore((s) => s.setSoftRules);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-1.5">
+          What to aim for
+          <InfoTip more={helpHref("generate", "aims")}>
+            The soft rules: things a timetable may do but shouldn't. Each one that's on adds points to the score, and Generate
+            looks for the lowest score. Hard rules, such as no clashes, always apply.
+          </InfoTip>
+        </CardTitle>
+        <CardDescription>{aimsSummary(softRules)}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
+          {aimRows(softRules).map((aim) => (
+            <li key={aim.key} className="flex items-center gap-2">
+              <label className={cn("flex items-center gap-2.5", running ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer")}>
+                {/* The stock off track is near-white on a white card. */}
+                <Switch
+                  className="data-unchecked:bg-muted-foreground/35"
+                  checked={aim.on}
+                  disabled={running}
+                  onCheckedChange={(on) => setSoftRules({ ...softRules, [aim.key]: on })}
+                />
+                {aim.label}
+              </label>
+              <InfoTip more={helpHref("timetable", "score")}>{aim.tip}</InfoTip>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
 function GenerateCard({ view, server, contractMismatch, onRecheck, actions, elapsed }: {
   view: GenerateView;
   server: ServerState;
@@ -87,7 +128,9 @@ function GenerateCard({ view, server, contractMismatch, onRecheck, actions, elap
   elapsed: number;
 }) {
   const data = useAppStore();
-  const { timeLimitSec, setTimeLimitSec, loadSample, locks, setLocks } = data;
+  const { timeLimitSec, loadSample, locks, setLocks } = data;
+  const runLimit = useRunLimit() ?? timeLimitSec;
+  const changed = preferencesChanged(data.rulesAtRun, data.softRules, data.result !== null);
   const college = useCollegeData();
   const blockers = generateBlockers(data);
   const running = view.state === "running";
@@ -176,7 +219,13 @@ function GenerateCard({ view, server, contractMismatch, onRecheck, actions, elap
           )}
           {running && (
             <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
-              {view.draft ? `${elapsed} s` : `${elapsed} s of up to ${timeLimitSec} s`}
+              {view.draft ? `${elapsed} s` : `${elapsed} s of up to ${runLimit} s`}
+            </span>
+          )}
+          {!running && blockers.length === 0 && changed && (
+            <span role="status" className="flex items-center gap-1.5 text-sm text-amber-800">
+              <Info className="size-4 shrink-0" />
+              {PREFERENCES_CHANGED}
             </span>
           )}
           {!running && blockers.length > 0 && (
@@ -191,31 +240,6 @@ function GenerateCard({ view, server, contractMismatch, onRecheck, actions, elap
           )}
         </div>
 
-        <details className="text-sm">
-          <summary className="w-fit cursor-pointer text-muted-foreground select-none hover:text-foreground">
-            Advanced: time limit ({timeLimitSec} s)
-          </summary>
-          <div className="mt-3 grid max-w-md gap-2">
-            <label htmlFor="time-limit" className="flex items-center gap-1.5 font-medium">
-              Time limit: <span className="tabular-nums">{timeLimitSec} s</span>
-              <InfoTip more={helpHref("generate", "time-limit")}>
-                How long the exact solver may search. Longer can give a better score; it stops early once it proves the best
-                one. A quick draft uses at most 5 s.
-              </InfoTip>
-            </label>
-            <input
-              id="time-limit"
-              type="range"
-              min={TIME_LIMIT.min}
-              max={TIME_LIMIT.max}
-              step={TIME_LIMIT.step}
-              value={timeLimitSec}
-              disabled={running}
-              onChange={(e) => setTimeLimitSec(Number(e.target.value))}
-              className="accent-primary"
-            />
-          </div>
-        </details>
       </CardContent>
     </Card>
   );
@@ -541,6 +565,7 @@ function ScoreGrid({ result }: { result: SolveResult }) {
       <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
         Score: <span className="tabular-nums">{result.score.total}</span>
         <span className="font-normal text-muted-foreground">(lower is better, 0 is perfect)</span>
+        <InfoTip more={helpHref("timetable", "score")}>{scoreTotalTip(result.score.breakdown)}</InfoTip>
       </p>
       <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {SCORE_ROWS.map((row) => {

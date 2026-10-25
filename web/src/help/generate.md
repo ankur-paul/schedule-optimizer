@@ -2,11 +2,31 @@
 
 How Lattice builds the timetable in step ③, and what to do when it can't.
 
+## What to aim for {#aims}
+
+The first card in step ③ lists five aims, one switch each. They are the soft rules: things a timetable may do but shouldn't. Each aim that's on adds points to the [score](/help/timetable#score) when it's missed, and Generate looks for the timetable with the lowest score. The hard rules, such as no clashes and lunch for everyone, always apply and have no switch.
+
+| Aim | In the score |
+|---|---|
+| Spread each subject across the week | Same subject twice in a day |
+| At most 3 periods in a row for a teacher | Teachers with long runs |
+| No free periods between a section's classes | Free periods between classes |
+| Keep a section's batches busy at the same time | Batches waiting during labs |
+| Finish each day as early as possible | Late finish |
+
+All five are on to begin with. The ⓘ next to each says how many points it costs.
+
+- **Flipping a switch keeps your timetable and its locks.** The score is counted again at once under the new switches, and "Preferences changed: regenerate to use them" appears next to the main button. Generate again to get a timetable made for them. The line goes away after the next run, or if you flip the switches back.
+- An aim that's off reads *Off* in the score, not 0, and adds nothing to the total.
+- The switches are saved with your data, in your browser and in [online versions](/help/online), so another editor who opens the timetable regenerates it the same way. **Undo** brings back switches that the assistant changed; a switch you flip yourself has no undo step, so flip it back.
+- Turning an aim off can let Generate do better on the others. For example, with *Finish each day as early as possible* off, Generate doesn't mind a section starting late or a teacher waiting for a last class.
+- The switches are greyed out while a run is going.
+
 ## The exact solver and the quick draft {#engines}
 
 Lattice has two ways to build a timetable.
 
-- **The exact solver** runs on Lattice's server. **Generate timetable** asks it. It either finds the best timetable your data allows or proves that none exists. On the sample college it finds the best one within the default 20 seconds.
+- **The exact solver** runs on Lattice's server. **Generate timetable** asks it. It either finds the best timetable your data allows or proves that none exists. On the sample college it finds the best one within 20 seconds.
 - **A quick draft** is made in your browser in at most 5 seconds. It places the hardest classes first, then moves and swaps classes to improve the score. On the sample college it scores as well as the exact solver. It can't prove that a timetable is the best or that none exists, it may score worse on other data, and if it can't place every class it gives you a [partial timetable](#partial).
 
 A quick draft runs only when you click a button that says so: **Make a quick draft** while the solver is offline, **Make a partial timetable** after *Can't be built*, or **Make a quick draft instead** after *Couldn't finish*. Lattice never switches to it on its own.
@@ -21,14 +41,14 @@ Before it sends anything, your browser replaces teacher names with codes, so the
 
 ## The time limit {#time-limit}
 
-**Advanced: time limit** under the main button sets how long the exact solver may search: 5 to 120 seconds, 20 by default. While it runs, the button reads *Generating…* with "7 s of up to 20 s".
+The exact solver searches for at most 20 seconds. There is no setting for it. While it runs, the button reads *Generating…* with "7 s of up to 20 s".
 
 - The solver stops early once it has proved it has the best timetable. Then the result card says "The best possible timetable".
 - If time runs out first, you get the best timetable it found, "The best timetable found in 20 s", and a **Try longer: 40 s** button. A longer search may lower the score.
-- If time runs out before it finds any timetable, you get [Couldn't finish](#couldnt-finish).
-- The solver needs a couple of seconds before its first timetable, so 5 seconds is often too short, and a large college needs longer.
+- If time runs out before it finds any timetable, you get [No timetable found in time](#couldnt-finish) with **Try again with 40 s**. Each retry doubles the limit, up to 120 s.
+- When a longer search finishes with a timetable, Lattice keeps using that limit for later runs, so a large college doesn't run out of time first every time you regenerate. Reloading the page goes back to 20 s.
 
-A quick draft ignores this setting and uses at most 5 seconds.
+A quick draft uses at most 5 seconds.
 
 ## Can't be built
 
@@ -102,7 +122,7 @@ The rooms of one kind can't hold all the classes that need them:
 
 A card with an ⓘ icon means the exact solver gave no answer. Your previous timetable is unchanged. There are three kinds:
 
-- **No timetable found in time**: the time limit ran out before it found any timetable. **Try again with 40 s** doubles the limit, up to 120 s. See [Couldn't finish on a short time limit](/help/troubleshooting#short-limit).
+- **No timetable found in time**: the time limit ran out before it found any timetable. **Try again with 40 s** doubles the limit, up to 120 s. See [No timetable found in time](/help/troubleshooting#short-limit).
 - **Couldn't reach the exact solver**: the solver service didn't answer. It may have stopped. **Try again** when the dot shows *online*. See [The solver is offline](/help/troubleshooting#solver-offline).
 - **The exact solver failed**: something went wrong on the solver service. The ⓘ next to the title has the details. **Try again**, and if it keeps failing, report the details.
 
