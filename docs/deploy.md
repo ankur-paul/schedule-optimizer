@@ -1,9 +1,115 @@
 # Deploying Lattice
 
-How Lattice gets from a commit to production, so it can be redone. Plan:
-[`discussions/2026-10-25-deploy.md`](discussions/2026-10-25-deploy.md). T51 writes the rest of this file (the
-accounts, their settings, the env vars per function); so far it covers CI, the server image and the deploy
-pipeline (T50).
+How Lattice runs in production and how a commit gets there, so all of it can be redone from scratch. Plan and
+reasons: [`discussions/2026-10-25-deploy.md`](discussions/2026-10-25-deploy.md).
+
+## Where things run
+
+| Part | Where | Address / name |
+|---|---|---|
+| Web app (static Vite build) | Cloudflare Pages, project `lattice` | `https://uselattice.app`; `www` redirects there |
+| Solver (`/health`, `/solve`) | AWS Lambda `lattice-solver`, Mumbai, 3,008 MB, 150 s | its Function URL (`VITE_SOLVER_URL`) |
+| Assistant (`/agent`) | AWS Lambda `lattice-agent`, Mumbai, 512 MB, 300 s, same image | its Function URL (`VITE_AGENT_URL`) |
+| Accounts, institutes, timetables | Supabase project `lattice-prod`, Mumbai, Free (dev is a separate project) | `VITE_SUPABASE_URL` |
+| Sign-in emails | Resend, through Supabase's custom SMTP | `Lattice <no-reply@uselattice.app>` |
+| `privacy@uselattice.app` | Cloudflare Email Routing | forwards to the operator's inbox |
+| DNS | Cloudflare (Free) | nameservers set at Name.com |
+| Domain registration | Name.com | `uselattice.app`, auto-renew on |
+| Google sign-in | Google Cloud, the dev project's consent screen ("Lattice", published) | OAuth client *Lattice Supabase production* |
+| Images | ECR `lattice-server`, Mumbai | tagged with the commit SHA, last 10 kept |
+| CI and deploys | GitHub Actions on `ankur-paul/schedule-optimizer` | `ci.yml`, `deploy.yml`, `rollback.yml`, `keepalive.yml` |
+
+Accounts: Cloudflare, Name.com, Resend, Supabase, Google Cloud, AWS, Anthropic, GitHub, all the operator's.
+
+## Setting it up from scratch
+
+[`scripts/go-live-wizard.sh`](../scripts/go-live-wizard.sh) walks through every step in order, opens each page,
+says what to click, runs the CLI parts itself (`dig` checks, `migrate-prod.sh`, `aws-setup.sh`, `smoke.sh`) and
+writes the public values into `web/.env.production`. Secrets are pasted straight into the dashboard that keeps
+them; the wizard never sees them, except the Pages deploy hook, which it puts in GitHub.
+
+```bash
+scripts/go-live-wizard.sh        # all 21 stages
+scripts/go-live-wizard.sh 14     # from stage 14; earlier values come back from web/.env.production
+```
+
+Needs `dig`, `curl`, `aws` (2.32 or newer, for `aws login`), `gh` logged in, `npx`, and `podman` or `docker`.
+
+| # | Stage | What it sets up |
+|---|---|---|
+| 1–2 | Cloudflare, Name.com | the zone (Name.com's three parking `A` records, `*`, apex and `www`, deleted); Cloudflare's nameservers at Name.com, DNSSEC off there, auto-renew on |
+| 3 | `www` | a proxied `AAAA www 100::` placeholder and a 301 redirect rule `www` → apex, keeping path and query |
+| 4 | `privacy@` | Email Routing: `privacy@` → the operator's inbox (verified); Cloudflare's MX and SPF on the apex; catch-all off |
+| 5 | Resend | the domain verified: its MX and SPF on `send.uselattice.app`, DKIM on `resend._domainkey`; `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:privacy@uselattice.app` |
+| 6–7 | Supabase project | `lattice-prod`, Mumbai, Free, default security options; URL and publishable key into `web/.env.production` |
+| 8 | Migrations | `scripts/migrate-prod.sh`, then `scripts/smoke.sh migrations` |
+| 9 | Auth URLs | Site URL `https://uselattice.app`; redirect URL `https://uselattice.app/**` |
+| 10 | SMTP | a Resend key (sending access, this domain only); Supabase SMTP: `smtp.resend.com`, port 465, user `resend`, sender `Lattice <no-reply@uselattice.app>`; default email templates |
+| 11 | Email test | an invite from Supabase (SPF, DKIM, DMARC pass; user deleted), and a mail to `privacy@` |
+| 12–13 | Google client | a second OAuth client for production's `https://<ref>.supabase.co/auth/v1/callback`; Supabase's Google provider |
+| 14 | AWS | `aws login`; `scripts/aws-setup.sh <budget email>`; both Function URLs into `web/.env.production` |
+| 15–16 | Lambda env vars | set in the console, see the table below; then `scripts/smoke.sh server` |
+| 17 | Pages | Git connection, root `web`, build `npm ci && npm run build`, output `dist`, `NODE_VERSION=24` |
+| 18 | Deploy hook | automatic production deploys off, previews off; hook `github-deploy` on `main` tried once, saved as `PAGES_DEPLOY_HOOK` (or the fallback below) |
+| 19 | Custom domain | `uselattice.app` on the Pages project |
+| 20 | Consent screen | name Lattice, no logo; home, privacy and terms on the domain; authorized domains; published |
+| 21 | GitHub | variable `AWS_DEPLOY_ROLE_ARN`; checks the CI secrets |
+
+Then commit `web/.env.production`, push to `main`, watch `deploy.yml`, and run `keepalive.yml` once by hand.
+
+Email records: SPF lives on two names, each with exactly one record: Cloudflare's on `uselattice.app` (for
+forwarding) and Resend's on `send.uselattice.app` (the return path Resend sends with). DMARC passes on Resend's
+DKIM signature. Start DMARC at `p=none`; after a few weeks of clean reports to `privacy@`, raise it to
+`p=quarantine`.
+
+## Settings per place
+
+**Lambda environment variables**, set by hand in the console (Configuration → Environment variables), never by a
+deploy. A function gets only what it uses.
+
+| Function | Variable | Value |
+|---|---|---|
+| `lattice-solver` | `SOLVER_WORKERS` | `2` (4 at 7 GB, see below) |
+| | `CORS_ORIGINS` | `https://uselattice.app` |
+| `lattice-agent` | `ANTHROPIC_API_KEY` | an Anthropic key named `lattice-production` (secret) |
+| | `SUPABASE_URL` | production's project URL |
+| | `SUPABASE_SERVICE_ROLE_KEY` | production's secret (or service_role) key (secret) |
+| | `CORS_ORIGINS` | `https://uselattice.app` |
+| | `AGENT_MONTHLY_USD` | `10` |
+
+**`web/.env.production`** (committed, public): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SOLVER_URL`,
+`VITE_AGENT_URL`, `VITE_CONTACT_EMAIL`. See *Production settings* below.
+
+**GitHub** (Settings → Secrets and variables → Actions): secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY` (all **dev**, for CI) and `PAGES_DEPLOY_HOOK`; variable `AWS_DEPLOY_ROLE_ARN`.
+
+**Supabase production** (dashboard): Auth URL configuration, custom SMTP, the Google provider's client ID and
+secret. **Cloudflare Pages**: build settings, branch control, the deploy hook, the custom domain.
+
+## Looking after it
+
+**Rotating a key.** Make the new one, put it where it's used, then delete the old one:
+- Anthropic: a new key → `lattice-agent`'s `ANTHROPIC_API_KEY` → Save (the next request uses it).
+- Supabase secret key: Project Settings → API keys → a new secret key → `lattice-agent`'s
+  `SUPABASE_SERVICE_ROLE_KEY`; then delete the old key. A legacy service_role JWT rotates only with the JWT secret,
+  which also signs everyone out.
+- Resend: a new sending key → Supabase SMTP password → Save.
+- Google client secret: add a secret on the client → Supabase's Google provider → Save → disable the old one.
+- Pages deploy hook: delete it, add a new one, `gh secret set PAGES_DEPLOY_HOOK`.
+- The database password (only `migrate-prod.sh` uses it): Project Settings → Database → Reset.
+
+**Raising the solver's memory.** When AWS approves 10,240 MB: `lattice-solver` → Configuration → General
+configuration → Memory 7168 MB; Environment variables → `SOLVER_WORKERS` = `4`. No new build.
+
+**What pauses or expires:**
+
+| What | When | Fix |
+|---|---|---|
+| Supabase Free project | pauses after 7 days without activity | `keepalive.yml` every 3 days; if paused, Restore in the dashboard |
+| GitHub schedules | off after 60 days without a commit | Actions → Keep-alive → Enable workflow |
+| `uselattice.app` | 24 Oct 2027 | auto-renew at Name.com; keep the card current |
+| AWS Free plan | the operator's to watch | the $5 budget alert emails |
+| Resend Free | 100 emails a day, 3,000 a month | only sign-in links and invites use it |
 
 ## CI
 

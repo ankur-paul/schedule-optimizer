@@ -14,7 +14,8 @@ REPO=$(cd "$(dirname "$0")/.." && pwd)
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
-url=$(sed -n 's/^VITE_SUPABASE_URL=//p' "$REPO/web/.env.production" 2>/dev/null | tail -1)
+url=$(sed -n 's/^VITE_SUPABASE_URL=//p' "$REPO/web/.env.production" 2>/dev/null | tail -1 |
+  sed -e 's/^["'\'']//' -e 's/["'\'']$//')
 REF=${1:-$(sed -n 's|^https://\([a-z0-9]*\)\.supabase\.co/*$|\1|p' <<<"$url")}
 [[ $REF =~ ^[a-z]{20}$ ]] || fail "give the production project ref (20 letters), or set VITE_SUPABASE_URL in web/.env.production"
 [[ $REF != "$(cat "$REPO/supabase/.temp/project-ref" 2>/dev/null)" ]] ||

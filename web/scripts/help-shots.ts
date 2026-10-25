@@ -31,7 +31,7 @@ const STORE_KEY = "timetable-v1";
  * The address the page sees. Its requests are passed to the preview server, whose port changes each run, so public
  * links on screen read the same every time.
  */
-const SITE = "https://lattice.example";
+const SITE = "https://uselattice.app";
 /** The pretend Supabase is on another origin, so its answers need these to reach the page. */
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, POST, PATCH, DELETE" };
 const NO_MOTION = "*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }";
