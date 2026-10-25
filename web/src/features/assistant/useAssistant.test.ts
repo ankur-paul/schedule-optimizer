@@ -5,7 +5,7 @@ import type { SolveResult } from "@/domain/types";
 import { DbFailure } from "@/features/account/institutesApi";
 import { AgentFailure, type AssistantApi } from "./agentClient";
 import { COMPACT_EVERY, EMPTY_CHAT, type AgentReply, type AgentRequest, type Block, type Chat } from "./chat";
-import { teacherCodes } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
 import type { OnlineSnapshot } from "./onlineState";
 import type { ToolData } from "./tools";
 import {

@@ -19,6 +19,7 @@ import { SetupStep } from '@/features/setup/SetupStep'
 import type { FooterNote } from '@/features/footer'
 import { generateFooterNote } from '@/features/generate/generate'
 import { useGenerating } from '@/features/generate/useGenerate'
+import { useServerCheckOnOpen } from '@/features/generate/useServer'
 import { settingsErrors, setupFooterNote } from '@/features/setup/periods'
 import { ViewStep } from '@/features/view/ViewStep'
 import { UndoButtons } from '@/features/undo/UndoButtons'
@@ -48,6 +49,7 @@ function App() {
   const reset = useAppStore((s) => s.reset)
   const data = useCollegeData()
   const assistantOpen = useAssistant((s) => s.open)
+  useServerCheckOnOpen()
 
   // Each step starts at its top, not wherever the previous step was scrolled to.
   useEffect(() => {

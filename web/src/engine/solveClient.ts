@@ -1,18 +1,24 @@
+import contract from "../../../shared/contract.json";
 import { score } from "@/domain/score";
 import { sessionLabel } from "@/domain/grid";
 import { expandSessions } from "@/domain/sessions";
+import { maskTeachers, teacherCodes } from "@/domain/teacherCodes";
 import type { Diagnosis, SolveInput, SolveResult } from "@/domain/types";
 import { validate, type ValidationResult } from "@/domain/validator";
 import type { HeuristicOptions } from "./heuristic";
 import { runHeuristic } from "./runHeuristic";
 
 export const SOLVER_URL: string = import.meta.env?.VITE_SOLVER_URL ?? "http://localhost:8000";
-export const HEALTH_TIMEOUT_MS = 1000;
+/** The data contract this page was built with (`shared/contract.json`); the server reports its own in `/health`. */
+export const CONTRACT_VERSION: number = contract.version;
+/** Long enough for a cold start on Lambda (1–3 s plus importing the server), so a sleeping solver isn't "offline". */
+export const HEALTH_TIMEOUT_MS = 5000;
 /**
- * Extra time on top of the CP-SAT limit: model building, the network round trip, and the server's locks probe (up to
- * 5 s more when the data with locks is infeasible). Always 10 s, locks or not, so the timeout is one number to explain.
+ * Extra time on top of the CP-SAT limit: a cold start, model building, the network round trip, and the server's locks
+ * probe (up to 5 s more when the data with locks is infeasible). Always 15 s, locks or not, so the timeout is one
+ * number to explain.
  */
-export const SOLVE_GRACE_MS = 10000;
+export const SOLVE_GRACE_MS = 15000;
 /** The heuristic levels off within a few seconds and runs until its limit, so don't give it the full CP-SAT budget. */
 export const HEURISTIC_MAX_MS = 5000;
 
@@ -46,23 +52,37 @@ export interface GenerateDeps {
   signal?: AbortSignal;
 }
 
-/** `GET /health` with a short timeout. Never throws. */
-export async function checkServer(deps: GenerateDeps = {}, timeoutMs = HEALTH_TIMEOUT_MS): Promise<boolean> {
+/** What `/health` said. `contract`: the server's contract version, `null` when it didn't send one (or is offline). */
+export interface ServerHealth {
+  online: boolean;
+  contract: number | null;
+}
+
+/** `GET /health` with a timeout that outlasts a cold start. Never throws. */
+export async function checkServer(deps: GenerateDeps = {}, timeoutMs = HEALTH_TIMEOUT_MS): Promise<ServerHealth> {
   const fetchFn = deps.fetch ?? globalThis.fetch;
   try {
     const res = await fetchFn(`${deps.solverUrl ?? SOLVER_URL}/health`, { signal: AbortSignal.timeout(timeoutMs) });
-    return res.ok && (await res.json())?.ok === true;
+    const body = res.ok ? await res.json() : null;
+    if (body?.ok !== true) return { online: false, contract: null };
+    return { online: true, contract: typeof body.contract === "number" ? body.contract : null };
   } catch {
-    return false;
+    return { online: false, contract: null };
   }
 }
 
+/** True when the server is up but on another contract version than this page, or doesn't say which. */
+export function contractMismatch(health: ServerHealth): boolean {
+  return health.online && health.contract !== CONTRACT_VERSION;
+}
+
 /**
- * The input with each teacher's name replaced by its id: teacher names are the only personal data in it, and the
- * server works on ids. Results refer to ids, so nothing maps back; the UI labels them from the local store.
+ * The input with each teacher's id and name replaced by its code, in teachers and courses alike: names are the only
+ * personal data in it, and an imported id is a slug of the name. Nothing maps back: a result names sessions
+ * (`<course id>:L1`), rooms and slots, never a teacher, and the UI labels teachers from the local store.
  */
 export function withoutPersonalData(input: SolveInput): SolveInput {
-  return { ...input, teachers: input.teachers.map((t) => ({ ...t, name: t.id })) };
+  return maskTeachers(input, teacherCodes(input.teachers));
 }
 
 /** `POST /solve` with teacher names stripped. Throws on network errors, timeouts and non-2xx responses. */

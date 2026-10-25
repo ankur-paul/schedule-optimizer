@@ -1,5 +1,5 @@
 import type { Room, Section, Teacher } from "@/domain/types";
-import { teacherCodes } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
 import type { Access } from "./panelState";
 
 // What the assistant panel shows (T40) apart from the chat logic: the allowance line, the trial-coupon email, the

@@ -3,7 +3,8 @@ import timetableJson from "../../../../shared/fixtures/sample-timetable.json";
 import { sampleCollege } from "@/domain/sampleCollege";
 import type { Placement, SolveResult } from "@/domain/types";
 import { applyChanges, CHANGE_TOOL, dryRun, MAX_CHANGES, SCHEMA_OPS, STEP_OPS, type ChangeData, type DryRun, type Schema } from "./changes";
-import { teacherCodes, unmaskText } from "./mask";
+import { teacherCodes } from "@/domain/teacherCodes";
+import { unmaskText } from "./mask";
 import { runTool } from "./tools";
 
 const timetable = timetableJson as SolveResult;

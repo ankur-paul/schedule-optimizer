@@ -16,7 +16,8 @@ import { SaveConflict, type OnlineApi } from "@/features/online/onlineApi";
 import { createOnline, openOnline, pointLink, renameOnline, saveVersion, useOnline } from "@/features/online/useOnline";
 import { currentInstitute, failureMessage, useInstitutes } from "@/features/account/useInstitutes";
 import { useAppStore, type AppData } from "@/store/useAppStore";
-import { maskTeachers, maskText, teacherCodes } from "./mask";
+import { maskTeachers, teacherCodes } from "@/domain/teacherCodes";
+import { maskText } from "./mask";
 import { saveAsInstitute, type OnlineSnapshot } from "./onlineState";
 
 // The assistant's working-copy changes (T42): the `propose_changes` tool's operations as pure functions. `dryRun`

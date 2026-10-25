@@ -34,7 +34,7 @@ import { useServerStatus, type ServerState } from "./useServer";
 const SERVER_COMMAND = "cd server && uv run uvicorn main:app --port 8000";
 
 export function GenerateStep() {
-  const { server, recheck } = useServerStatus();
+  const { server, contractMismatch, recheck } = useServerStatus();
   const runKind = useRunKind();
   const outcome = useRunOutcome();
   const result = useAppStore((s) => s.result);
@@ -62,7 +62,7 @@ export function GenerateStep() {
 
   return (
     <div className="grid gap-6">
-      <GenerateCard view={view} server={server} onRecheck={recheck} actions={actions} elapsed={run.elapsed} />
+      <GenerateCard view={view} server={server} contractMismatch={contractMismatch} onRecheck={recheck} actions={actions} elapsed={run.elapsed} />
       <div ref={outcomeRef} className="grid scroll-mt-4 gap-6">
         {view.state === "impossible" && <ImpossibleCard view={view} actions={actions} />}
         {view.state === "couldntFinish" && <CouldntFinishCard view={view} actions={actions} />}
@@ -78,9 +78,10 @@ interface Actions {
   cancel: () => void;
 }
 
-function GenerateCard({ view, server, onRecheck, actions, elapsed }: {
+function GenerateCard({ view, server, contractMismatch, onRecheck, actions, elapsed }: {
   view: GenerateView;
   server: ServerState;
+  contractMismatch: boolean;
   onRecheck: () => void;
   actions: Actions;
   elapsed: number;
@@ -138,6 +139,16 @@ function GenerateCard({ view, server, onRecheck, actions, elapsed }: {
               </p>
             </div>
           </div>
+        )}
+
+        {contractMismatch && !view.offline && (
+          <p role="status" className="flex gap-2 text-sm text-muted-foreground">
+            <Info className="mt-0.5 size-4 shrink-0" />
+            <span>
+              The solver was updated at a different time from this page. Reload the page; if this stays, results may be
+              wrong. <HelpLink href={helpHref("troubleshooting", "solver-version")}>Why</HelpLink>
+            </span>
+          </p>
         )}
 
         {warnings.length > 0 && view.state !== "impossible" && !running && <BeforeYouStart warnings={warnings} />}
