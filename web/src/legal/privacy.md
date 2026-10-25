@@ -13,6 +13,8 @@ You can use Lattice without an account.
   browser. It leaves the browser only when you generate a timetable.
 - When you click *Generate timetable*, your browser sends that data to our solver server, with each teacher's name
   replaced by a code. The solver returns the timetable and doesn't store or log what you sent.
+- Like any website, Lattice reaches you through a web host, Cloudflare, which sees your IP address and the pages you
+  load (see *Where your data is kept* below).
 
 ## If you sign in
 
@@ -112,8 +114,19 @@ tells you to sign in. An unused invite stays until it's used or the admin cancel
   models on this data, and its
   [retention policy](https://privacy.claude.com/en/articles/7996866-how-long-does-anthropic-store-my-organizations-data)
   says it deletes it within 30 days in most cases.
-- Our **server** receives timetable data for the solver and chats for the assistant, both without teacher names,
-  and keeps nothing.
+- Our **server** runs on Amazon Web Services in Mumbai, India. It receives timetable data for the solver and chats
+  for the assistant, both with teachers' names replaced by codes, and keeps neither. For each request it writes one
+  log line: the time, the address called, the result and how long it took. The line has no timetable data, no chat
+  text and no IP address, and is deleted after 14 days.
+- **Cloudflare** serves the website. Like any web host, it sees each visitor's IP address and the pages and files
+  they request. It handles this for us under its
+  [data processing addendum](https://www.cloudflare.com/cloudflare-customer-dpa/) and its
+  [privacy policy](https://www.cloudflare.com/privacypolicy/). It also forwards email sent to {{CONTACT_EMAIL}} to our
+  inbox.
+- **Resend**, a US company, sends Lattice's emails: the sign-in link, and the link that confirms making someone admin
+  or leaving an institute. It receives your email address and the email it sends you, and keeps a log of them for
+  30 days. It handles them for us under its [data processing addendum](https://resend.com/legal/dpa) and its
+  [privacy policy](https://resend.com/legal/privacy-policy).
 
 Connections use HTTPS, and database rules limit each person to the institutes they belong to. Published pages are
 the one exception, as described above.
@@ -138,6 +151,8 @@ cookies and no analytics.
 - Wrong coupon tries: they count for an hour, and are deleted the next time you try a coupon after that, or with
   your account.
 - Assistant chats: we keep none. Anthropic keeps what it received under its retention policy, linked above.
+- Our server's request logs: 14 days.
+- Emails Lattice sends: Resend keeps its log of them for 30 days.
 - Deleting is immediate. Copies in our database host's backups are erased within 7 days.
 
 ## Your rights
