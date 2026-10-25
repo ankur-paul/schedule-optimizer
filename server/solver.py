@@ -1,4 +1,4 @@
-"""CP-SAT timetable solver. Rules H1–H8 / S1–S4 as in PLAN.md §2."""
+"""CP-SAT timetable solver. Rules H1–H8 / S1–S5 as in PLAN.md §2."""
 
 import os
 import time
@@ -186,7 +186,8 @@ def describe(diagnosis: list[Diagnosis]) -> str:
 def build_model(
     inp: SolveInput, sessions: list[Session], use_locks: bool = True, objective: bool = True
 ) -> tuple[cp_model.CpModel, dict[tuple[str, int, int, str], cp_model.IntVar]]:
-    """CP-SAT model for H1–H8 (plus S1–S4 when `objective`); returns it with the x[session, day, start, room] vars.
+    """CP-SAT model for H1–H8 (plus the soft rules that are on when `objective`); returns it with the
+    x[session, day, start, room] vars. A rule that's off adds no variables or terms.
 
     Assumes every session has a slot and every lock is valid (see no_slot_diagnosis / bad_lock_diagnosis).
     """
@@ -197,6 +198,7 @@ def build_model(
     sections = {s.id: s for s in inp.sections}
     by_id = {s.id: s for s in sessions}
     locks = inp.locks if use_locks else []
+    on = inp.soft_rules
 
     m = cp_model.CpModel()
 
@@ -269,7 +271,37 @@ def build_model(
         if len(vs) > 1:
             m.add_at_most_one(vs)
 
-    # --- H1 + H8 (teachers), S2 teacher overload.
+    lunch_set = set(settings.lunch_candidates)  # S3 and S5 read every lunch candidate, even when H8 is off
+
+    def busy_after(busy: dict) -> dict:
+        """after[t]: busy in some teaching period after t (bounded from below; the objective pulls it down)."""
+        after = {}
+        for i in reversed(range(len(teaching))):
+            t = teaching[i]
+            after[t] = m.new_bool_var("")
+            if i < len(teaching) - 1:
+                nxt = teaching[i + 1]
+                m.add(after[t] >= after[nxt])
+                m.add(after[t] >= busy[nxt])
+        return after
+
+    late_terms = []
+
+    def late_finish(busy: dict, after: dict) -> None:
+        """S5: free teaching periods before the last class, less one if a lunch candidate is among them."""
+        late = {}
+        for t in teaching:
+            late[t] = m.new_bool_var("")
+            m.add(late[t] >= after[t] - busy[t])
+            late_terms.append(late[t])
+        lunch_late = [late[t] for t in teaching if t in lunch_set]
+        if lunch_late:
+            # Exact at the optimum: inflating a lunch late[t] to earn the excuse costs as much as it saves.
+            excused = m.new_bool_var("")
+            m.add(excused <= sum(lunch_late))
+            late_terms.append(-excused)
+
+    # --- H1 + H8 (teachers), S2 teacher overload, S5 for teachers.
     overload_terms = []
     runs = teaching_runs(inp)
     for sids in by_teacher.values():
@@ -281,6 +313,11 @@ def build_model(
                 at_most([v for t in lunch for v in busy[t]], len(lunch) - 1)
             if not objective:
                 continue
+            if on.s5:
+                busy_sum = {t: sum(busy[t]) for t in teaching}  # 0 or 1 by H1
+                late_finish(busy_sum, busy_after(busy_sum))
+            if not on.s2:
+                continue
             for run in runs:
                 for i in range(len(run) - MAX_CONSECUTIVE):
                     window = [v for t in run[i : i + MAX_CONSECUTIVE + 1] for v in busy[t]]
@@ -289,10 +326,9 @@ def build_model(
                         m.add(pen >= sum(window) - MAX_CONSECUTIVE)
                         overload_terms.append(pen)
 
-    # --- H2 + H8 (sections), S3 section gaps, S4 batch idle.
+    # --- H2 + H8 (sections), S3 section gaps, S4 batch idle, S5 for sections.
     gap_terms = []
     idle_terms = []
-    lunch_set = set(settings.lunch_candidates)  # S3 never counts a lunch candidate as a gap, even when H8 is off
     for sec_id, sec_sessions in by_section.items():
         batches = sections[sec_id].batches
         whole = [s.id for s in sec_sessions if s.batch is None]
@@ -314,7 +350,7 @@ def build_model(
                 m.add(b_t <= sum(covering))
                 busy[t] = b_t
 
-                if objective and batches > 1:
+                if objective and on.s4 and batches > 1:
                     batch_vars = [v for b in per_batch.values() for sid in b for v in occ.get((sid, d, t), [])]
                     if batch_vars:
                         lab_active = m.new_bool_var("")
@@ -326,24 +362,23 @@ def build_model(
                             idle_terms.append(idle)
             if lunch:
                 m.add(sum(busy[t] for t in lunch) <= len(lunch) - 1)
-            if not objective:
+            if not objective or not (on.s3 or on.s5):
+                continue
+
+            after = busy_after(busy)
+            if on.s5:
+                late_finish(busy, after)
+            if not on.s3:
                 continue
 
             # S3: gap at t if idle with a class before and after (lunch candidates don't count).
-            before, after = {}, {}
+            before = {}
             for i, t in enumerate(teaching):
                 before[t] = m.new_bool_var("")
                 if i > 0:
                     prev = teaching[i - 1]
                     m.add(before[t] >= before[prev])
                     m.add(before[t] >= busy[prev])
-            for i in reversed(range(len(teaching))):
-                t = teaching[i]
-                after[t] = m.new_bool_var("")
-                if i < len(teaching) - 1:
-                    nxt = teaching[i + 1]
-                    m.add(after[t] >= after[nxt])
-                    m.add(after[t] >= busy[nxt])
             for t in teaching:
                 if t in lunch_set:
                     continue
@@ -360,7 +395,7 @@ def build_model(
     for s in sessions:
         if s.kind == "lecture":
             lectures_of[s.course_id].append(s.id)
-    for sids in lectures_of.values():
+    for sids in lectures_of.values() if on.s1 else []:
         if len(sids) < 2:
             continue
         for d in days:
@@ -373,6 +408,7 @@ def build_model(
         + W_TEACHER_OVERLOAD * sum(overload_terms)
         + W_SECTION_GAPS * sum(gap_terms)
         + W_BATCH_IDLE * sum(idle_terms)
+        + W_LATE_FINISH * sum(late_terms)
     )
     return m, x
 

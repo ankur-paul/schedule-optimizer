@@ -2,7 +2,8 @@
 
 For each instance: CP-SAT and an exhaustive search must agree on whether a clash-free timetable exists and on the
 best score; CP-SAT's placements must pass the independent hard-rule check, and the score it reports must equal the
-reference scorer's score of those placements (so the objective encodes S1–S4 exactly as the web app scores them).
+reference scorer's score of those placements (so the objective encodes S1–S5 and their switches exactly as the web
+app scores them).
 """
 
 import random
@@ -83,8 +84,8 @@ def random_college(seed: int) -> SolveInput:
         "departments": [{"id": "d1", "name": "D1"}, {"id": "d2", "name": "D2"}],
         "teachers": teachers, "rooms": rooms, "sections": sections, "courses": courses,
         "locks": [], "options": {"timeLimitSec": 10, "seed": seed},
-        # The CP-SAT objective ignores the switches and has no S5 yet: T53 adds S5 and random switches here.
-        "softRules": {"s5": False},
+        # Mostly all on, sometimes a random mix, so each switch is tried off.
+        "softRules": {k: rng.random() < 0.7 for k in ("s1", "s2", "s3", "s4", "s5")} if rng.random() < 0.5 else {},
     })
 
     # Sometimes lock one session at a random slot (valid or not), to exercise lock handling.
@@ -143,3 +144,5 @@ def test_generator_covers_the_interesting_cases():
     assert sum(bool(i.settings.lunch_candidates) for i in insts) >= 60, "too few instances with lunch candidates"
     assert sum(r is not None and r % 10 != 0 for r in results) >= 10, "too few optima with S2–S4 penalties"
     assert sum(any(c.lab_sessions_per_week for c in i.courses) for i in insts) >= 60, "too few labs"
+    for rule in ("s1", "s2", "s3", "s4", "s5"):
+        assert sum(not getattr(i.soft_rules, rule) for i in insts) >= 20, f"too few instances with {rule} off"

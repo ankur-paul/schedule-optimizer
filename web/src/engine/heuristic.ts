@@ -1,9 +1,9 @@
 import { eligibleRooms, validStarts } from "@/domain/eligibility";
 import { sessionLabel } from "@/domain/grid";
 import { rng } from "@/domain/rng";
-import { score, WEIGHTS } from "@/domain/score";
+import { fillSoftRules, RULE_SWITCH, score, WEIGHTS } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
-import type { Id, Placement, Session, SolveInput, SolveResult, UnplacedCause } from "@/domain/types";
+import type { Id, Placement, ScoreBreakdown, Session, SolveInput, SolveResult, UnplacedCause } from "@/domain/types";
 
 export interface HeuristicOptions { timeLimitMs: number; seed?: number }
 
@@ -43,6 +43,7 @@ export class Solver {
   private readonly teaching: boolean[];
   private readonly lunch: number[];
   private readonly lunchSet: Set<number>;
+  private readonly w: Record<keyof ScoreBreakdown, number>; // WEIGHTS, 0 for a rule that's off
   // Per session (index i)
   private readonly sTeacher: number[];
   private readonly sSection: number[];
@@ -86,6 +87,9 @@ export class Solver {
     this.teaching = settings.periods.map((p) => p.kind === "teaching");
     this.lunch = settings.lunchCandidates.filter((p) => p >= 0 && p < this.P);
     this.lunchSet = new Set(this.lunch);
+    const on = fillSoftRules(input.softRules);
+    this.w = { ...WEIGHTS };
+    for (const key of Object.keys(RULE_SWITCH) as (keyof ScoreBreakdown)[]) if (!on[RULE_SWITCH[key]]) this.w[key] = 0;
     this.rand = rng(seed);
 
     const index = (ids: Id[]) => new Map(ids.map((id, k) => [id, k]));
@@ -229,7 +233,7 @@ export class Solver {
   // ---- soft constraints --------------------------------------------------------
 
   private sectionDayCost(sec: number, d: number): number {
-    const { D, P, teaching } = this;
+    const { D, P, teaching, w } = this;
     const base = sec * D * P + d * P;
     let first = -1;
     let last = -1;
@@ -240,12 +244,12 @@ export class Solver {
       }
     }
     let gaps = 0;
-    for (let p = first + 1; first >= 0 && p < last; p++) {
+    for (let p = first + 1; w.sectionGaps > 0 && first >= 0 && p < last; p++) {
       if (teaching[p] && this.secAny[base + p] === 0 && !this.lunchSet.has(p)) gaps++;
     }
     let idle = 0;
     const batches = this.sectionBatches[sec];
-    if (batches > 1) {
+    if (w.batchIdle > 0 && batches > 1) {
       for (let p = 0; p < P; p++) {
         if (!teaching[p]) continue;
         let inLab = 0;
@@ -253,18 +257,36 @@ export class Solver {
         if (inLab > 0 && this.secWhole[base + p] === 0) idle += batches - inLab;
       }
     }
-    return gaps * WEIGHTS.sectionGaps + idle * WEIGHTS.batchIdle;
+    const late = w.lateFinish > 0 ? this.lateFinish(this.secAny, base, last) : 0;
+    return gaps * w.sectionGaps + idle * w.batchIdle + late * w.lateFinish;
   }
 
   private teacherDayCost(t: number, d: number): number {
+    const { w } = this;
     const base = t * this.D * this.P + d * this.P;
     let run = 0;
     let over = 0;
+    let last = -1;
     for (let p = 0; p < this.P; p++) {
-      run = this.teaching[p] && this.tBusy[base + p] > 0 ? run + 1 : 0;
+      const busy = this.teaching[p] && this.tBusy[base + p] > 0;
+      run = busy ? run + 1 : 0;
       if (run > MAX_CONSECUTIVE) over++;
+      if (busy) last = p;
     }
-    return over * WEIGHTS.teacherOverload;
+    const late = w.lateFinish > 0 ? this.lateFinish(this.tBusy, base, last) : 0;
+    return over * w.teacherOverload + late * w.lateFinish;
+  }
+
+  /** S5 count for one day of `busy` from `base`: free teaching periods before `last`, one free lunch candidate excused. */
+  private lateFinish(busy: Int16Array, base: number, last: number): number {
+    let free = 0;
+    let lunchFree = false;
+    for (let p = 0; p < last; p++) {
+      if (!this.teaching[p] || busy[base + p] > 0) continue;
+      free++;
+      if (this.lunchSet.has(p)) lunchFree = true;
+    }
+    return lunchFree ? free - 1 : free;
   }
 
   /** Soft cost of the section-days, teacher-days and course-days touched by sessions `is` on days `ds`. */
@@ -277,7 +299,7 @@ export class Solver {
       const keys: [string, () => number][] = [
         [`s${this.sSection[i]}:${d}`, () => this.sectionDayCost(this.sSection[i], d)],
         [`t${this.sTeacher[i]}:${d}`, () => this.teacherDayCost(this.sTeacher[i], d)],
-        [`c${this.sCourse[i]}:${d}`, () => Math.max(0, this.courseDay[this.sCourse[i] * this.D + d] - 1) * WEIGHTS.subjectRepeat],
+        [`c${this.sCourse[i]}:${d}`, () => Math.max(0, this.courseDay[this.sCourse[i] * this.D + d] - 1) * this.w.subjectRepeat],
       ];
       for (const [key, fn] of keys) {
         if (seen.has(key)) continue;
@@ -292,7 +314,7 @@ export class Solver {
     let cost = 0;
     for (let s = 0; s < this.sectionNames.length; s++) for (let d = 0; d < this.D; d++) cost += this.sectionDayCost(s, d);
     for (let t = 0; t < this.teacherNames.length; t++) for (let d = 0; d < this.D; d++) cost += this.teacherDayCost(t, d);
-    for (const n of this.courseDay) cost += Math.max(0, n - 1) * WEIGHTS.subjectRepeat;
+    for (const n of this.courseDay) cost += Math.max(0, n - 1) * this.w.subjectRepeat;
     return cost;
   }
 
@@ -446,12 +468,10 @@ export class Solver {
     this.load(best.a);
     this.improve(deadline);
 
-    const placements: Placement[] = [...this.lockPlacements];
+    const placements = this.placements();
     const unplaced: SolveResult["unplaced"] = [];
     this.sessions.forEach((s, i) => {
-      if (this.locked[i]) return;
-      if (this.day[i] === UNPLACED) unplaced.push({ sessionId: s.id, ...this.whyUnplaced(i) });
-      else placements.push({ sessionId: s.id, day: this.day[i], period: this.start[i], roomId: this.input.rooms[this.room[i]].id });
+      if (!this.locked[i] && this.day[i] === UNPLACED) unplaced.push({ sessionId: s.id, ...this.whyUnplaced(i) });
     });
     return {
       engine: "heuristic",
@@ -462,6 +482,16 @@ export class Solver {
       timeMs: Math.round(performance.now() - t0),
       message: unplaced.length > 0 ? `${unplaced.length} session(s) could not be placed` : undefined,
     };
+  }
+
+  /** The locks as given, then every other placed session. */
+  private placements(): Placement[] {
+    const out: Placement[] = [...this.lockPlacements];
+    this.sessions.forEach((s, i) => {
+      if (this.locked[i] || this.day[i] === UNPLACED) return;
+      out.push({ sessionId: s.id, day: this.day[i], period: this.start[i], roomId: this.input.rooms[this.room[i]].id });
+    });
+    return out;
   }
 
   /** Explain why i has no feasible option: tally what blocks each (day, start) and report the most common. */

@@ -1,5 +1,5 @@
 # T53 — S5 and the switches in both engines
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** B · **Prereqs:** T52 · **Branch:** t53-soft-rules-engines
 
 ## Goal
