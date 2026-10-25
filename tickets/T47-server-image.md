@@ -1,5 +1,5 @@
 # T47 — Server container image
-**Status:** TODO
+**Status:** DONE
 **Lane:** B · **Prereqs:** — · **Branch:** t47-server-image
 
 ## Goal
@@ -35,8 +35,22 @@ changes before the first deploy*: [`docs/discussions/2026-10-25-deploy.md`](../d
 - Run it once and record the image size and the cold-start time to the first `/health` in PROGRESS.md.
 
 ## Done when
-- [ ] The image builds and passes `image_smoke.sh` locally
-- [ ] Build and run commands written down
-- [ ] Full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line with size and start time
-- [ ] Committed: `T47: server image`
+- [x] The image builds and passes `image_smoke.sh` locally
+- [x] Build and run commands written down
+- [x] Full suite and `npx tsc -b` green
+- [x] PROGRESS.md line with size and start time
+- [x] Committed: `T47: server image`
+
+## Notes (built 25 Oct 2026)
+- `Dockerfile` and `.dockerignore` sit at the repo root: the context needs `shared/` and `web/src/help`. The ignore
+  file is an allowlist (server `*.py`, `pyproject.toml`, `uv.lock`, `shared/`, `web/src/help/*.md`), with `.env*`
+  and `__pycache__` excluded on top.
+- Lambda Web Adapter **1.1.0** (latest release, 18 Sep), copied from `public.ecr.aws/awsguru/aws-lambda-adapter:1.1.0`.
+  Its README: port from `AWS_LWA_PORT`, else `PORT`, default 8080; readiness check over HTTP on
+  `AWS_LWA_READINESS_CHECK_PATH` (default `/`, set to `/health`); `AWS_LWA_INVOKE_MODE` stays `buffered`.
+- uv **0.12.6** (the local version; 0.13.5 is three days old) from `ghcr.io/astral-sh/uv`, only in the build stage.
+  Images are pinned by tag, not digest.
+- Runs as `nobody`, bytecode compiled at build time, `PYTHONDONTWRITEBYTECODE=1`; the smoke test runs it with
+  `--read-only --tmpfs /tmp` to catch writes.
+- Measured: 419 MB (the venv is 299 MB: ortools 81, pandas 72, numpy 70, anthropic 28); 5.0–5.4 s from
+  `podman run` to the first `/health` on the dev laptop, of which ~4.6 s is importing `main` (anthropic ~2.6 s).
