@@ -24,7 +24,8 @@ the first deploy*: [`docs/discussions/2026-10-25-deploy.md`](../docs/discussions
 - **Workers:** `SOLVER_WORKERS` read once; unset or invalid means 8, as now. The locks probe uses the same number.
 - **Contract version:** `GET /health` → `{ "ok": true, "contract": 1 }`, read from `shared/contract.json` at import.
   Bump the number when `SolveInput`, `SolveResult` or the `/agent` body changes in a way the other side must know;
-  say so in a comment in the file's neighbour, `server/models.py`, and in PLAN.md §3.
+  say so in a comment in the file's neighbour, `server/models.py`, and in PLAN.md §3. If T52 (soft-rule switches)
+  is already merged when this lands, start at 2, since T52 changed the contract.
 - **Request logs:** middleware writes one line per request to stdout (CloudWatch picks it up): method, path, status,
   duration in ms. Never the body, query string, headers or client address. Uvicorn's own access log is turned off
   where the server starts (it logs the client address); keep `uvicorn main:app --reload` working for development.

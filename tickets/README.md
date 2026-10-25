@@ -138,3 +138,6 @@ graph LR
 | [T49](T49-policy-v4.md) | v2: privacy policy and terms v4 | D | — | — |
 | [T50](T50-deploy-pipeline.md) | v2: deploy pipeline | main | T45, T47, T48 | — |
 | [T51](T51-go-live.md) | v2: go live on uselattice.app | main | T46, T49, T50 | — |
+| [T52](T52-soft-rules-scorers.md) | v2: soft-rule switches and S5 in the scorers | C | — | — |
+| [T53](T53-soft-rules-engines.md) | v2: S5 and the switches in both engines | B | T52 | — |
+| [T54](T54-aim-card.md) | v2: "What to aim for" card, no time-limit slider | A | T52 | — |

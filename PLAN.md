@@ -15,7 +15,7 @@ tickets in [`tickets/`](tickets/README.md).
 | Departments      | Rooms have an optional **owning department**. Owned rooms → only that department. No owner → **shared** (seminar halls, central labs).                                                                                 |
 | Batches          | Each section has `batches` (1 = no split). Split sections have **per-batch lab sessions**; batch labs can run in parallel. Lab teacher can be the same or differ per batch.                                            |
 | Rooms            | Type = `classroom` or `lab`. **No capacity** constraint. A lab course may require a specific lab room.                                                                                                                 |
-| Engines          | **Exact solver** (Python FastAPI + OR-Tools CP-SAT) is the only main engine; one *Generate timetable* button, no engine picker. **Quick draft** (TypeScript heuristic in a Web Worker) runs only (a) when the server is offline before the click: a banner says so and the button reads *Make a quick draft*; or (b) when the user picks it after the exact solver failed or proved the data impossible. Never a silent fallback. Time limit (default 20 s, max 120 s) sits under *Advanced*. See T15–T18. |
+| Engines          | **Exact solver** (Python FastAPI + OR-Tools CP-SAT) is the only main engine; one *Generate timetable* button, no engine picker. **Quick draft** (TypeScript heuristic in a Web Worker) runs only (a) when the server is offline before the click: a banner says so and the button reads *Make a quick draft*; or (b) when the user picks it after the exact solver failed or proved the data impossible. Never a silent fallback. Time limit 20 s; a run that times out offers a retry with double the time, up to 120 s (no slider from T54). See T15–T18. |
 | Infeasible input | Exact solver proves it impossible → step ③ shows a red *This timetable can't be built* card: ranked causes (proven ones first: no valid slot, bad lock, locks probe; then section/teacher/room load maths), each with a fix link into step ②/④; if nothing explains it, say so. *Make a partial timetable* (quick draft) is an opt-in secondary action; a partial result is amber, can go on to step ④ and lists unplaced sessions grouped by cause. |
 | Validator        | Independent TS validator re-checks **every** result. Complete result: green `✓ Timetable ready · 0 clashes (independently checked)`; partial: amber `Partial: N classes not placed`. |
 | Editing          | Click cell → details. **Lock** cells → **Regenerate** keeps locks. Drag-and-drop = stretch.                                                                                                                            |
@@ -49,9 +49,11 @@ tickets in [`tickets/`](tickets/README.md).
 | **S2** | Teacher overload: more than 3 consecutive teaching periods in a row                                                             | 5 per period beyond 3   |
 | **S3** | Section gaps: idle teaching periods between a section's first and last class of a day, **not counting lunch candidate periods** | 2 per gap period        |
 | **S4** | Batch idle: in a split section, a period where one batch is in a lab and another batch is idle                                  | 3 per idle batch-period |
+| **S5** | Late finish: free teaching periods before a section's or teacher's last class of a day, one free lunch candidate excused (T52–T54) | 1 per period            |
 
 "Consecutive" = adjacent teaching periods with no break period between them.
-`score.total = sum of penalties`. The **TS scorer is the source of truth** for the score shown in the UI, whichever engine ran.
+**v2 (T52–T54):** each soft rule has an on/off switch in the working copy (all on by default unless T53's measurement turns S5 off); a rule that's off adds nothing. See [`docs/discussions/2026-10-25-soft-rules.md`](docs/discussions/2026-10-25-soft-rules.md).
+`score.total = sum of penalties` of the rules that are on. The **TS scorer is the source of truth** for the score shown in the UI, whichever engine ran.
 
 ## 3. Data contract (shared by all agents — do not change without updating all tickets)
 

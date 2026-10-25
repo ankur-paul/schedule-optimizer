@@ -24,6 +24,7 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | built: T41–T44 | 5 |
 | 6 | [Access by coupon](#6-access-by-coupon) | built with #5: T36, T40 | 1, 5 |
 | 7 | [First-login walkthrough](#7-first-login-walkthrough) | skipped (25 Oct) | the rest of the UI |
+| 9 | [Soft-rule switches and an early finish](#9-soft-rule-switches-and-an-early-finish) | planned: T52–T54 | — |
 | 8 | [Deploy the solver and the web app](#8-deploy-the-solver-and-the-web-app) | planned: T45–T51 | everything above |
 
 Why this order:
@@ -248,3 +249,19 @@ Collected by the passes above (env vars, services, public URLs needed):
   isn't billed at the solver's memory size and chats don't use the solver's 10 concurrency slots. CORS allows the
   `Authorization` header from the web origin. The image includes `web/src/help/*.md` and `shared/agent-tools.json`.
 - Anthropic account: set a monthly spend limit; check its API data retention against what policy v3 says.
+
+## 9. Soft-rule switches and an early finish
+
+Raised on 25 Oct: finish classes as early as possible for sections and teachers, and let users choose the soft
+rules. Runs alongside the deploy (#8), before going live.
+
+Discussed 25 Oct: [`discussions/2026-10-25-soft-rules.md`](discussions/2026-10-25-soft-rules.md). Summary:
+- **S5 Late finish:** 1 per free teaching period before a section's or teacher's last class of the day, one lunch
+  candidate excused.
+- **On/off switch per soft rule,** in the working copy, on a "What to aim for" card in step ③. All on by default
+  unless a measurement shows S5 hurts the sample at 2 vCPUs. A switch re-scores and keeps the timetable.
+- **The time-limit slider goes;** the timeout card's longer retry stays, and a limit that worked is remembered until a
+  reload.
+- **The assistant** can switch rules on a change card.
+
+Tickets T52–T54.
