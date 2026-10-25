@@ -1,5 +1,5 @@
 # T55 — Trial coupon request dialog
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** A · **Prereqs:** — · **Branch:** t55-trial-request-dialog
 
 ## Goal
@@ -56,8 +56,15 @@ small dialog: open the email in Gmail or in the mail app, or copy the address, s
   email app* with and without a mail app; each *Copy* and its ✓; Esc and ✕; phone width (the panel is full screen
   there), with *Open email app* first; editors and viewers still see the ask-your-admin line, not the dialog.
 
+## Outcome
+- Gmail no longer honours `view=cm&fs=1`, and `authuser` isn't documented for compose. `/mail/u/<email>/` picks the
+  account but failed with "account temporarily unavailable" in the user's test, likely as that email isn't a Google account in the
+  browser, so the link is `/mail/u/0/?to=…&su=…&body=…&tf=cm`: full-page compose from the first Google account.
+  Gmail's full-page compose doesn't show which account; help and FEATURES say so.
+- Privacy wording changed in place; the user kept version 4.
+
 ## Done when
 - [x] Dialog, Gmail link and copy rows as above; "No email app?" line removed
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] Help paragraph, privacy wording (or the T49 note), FEATURES.md, PROGRESS.md
-- [ ] Committed: `T55: trial coupon request dialog`
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] Help paragraph, privacy wording (or the T49 note), FEATURES.md, PROGRESS.md
+- [x] Committed: `T55: trial coupon request dialog`

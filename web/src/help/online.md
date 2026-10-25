@@ -196,9 +196,9 @@ institute has access the panel says so:
 
 - **The admin** sees a coupon box. Type the trial coupon (`LTC-XXXX-XXXX-XXXX-XXXX`; case, spaces and dashes don't
   matter) and click **Unlock**. *Request a trial coupon* shows the email to send us, with your institute filled in;
-  say what you'll use it for. **Open in Gmail** opens it in a new tab, in the first Google account signed in to your
-  browser; with several, check the From line. **Open email app** hands it to your computer's or phone's mail app (on a
-  phone this button comes first). If neither works, copy the address, subject and message one by one with their
+  say what you'll use it for. **Open in Gmail** opens it in a new tab, from the first Google account signed in to your
+  browser (Gmail doesn't show which; the email lands in that account's Sent). **Open email app** hands it to your
+  computer's or phone's mail app (on a phone this button comes first). If neither works, copy the address, subject and message one by one with their
   **Copy** buttons, or select the text by hand, and paste them into any email. After 10 wrong coupons, wait an hour.
 - **Editors and viewers** see who the admin is, to ask them.
 
