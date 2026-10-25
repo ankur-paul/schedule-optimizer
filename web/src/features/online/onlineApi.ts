@@ -121,7 +121,7 @@ type ProfileRow = { user_id: string; name: string | null; email: string | null }
 export function toVersions(versions: Omit<VersionRow, "timetable_id">[], profiles: ProfileRow[]): VersionSummary[] {
   const people = new Map(profiles.map((p) => [p.user_id, personLabel(p)]));
   return versions
-    .map((v) => ({ version: v.version, savedBy: v.saved_by ? (people.get(v.saved_by) ?? null) : null, savedAt: v.saved_at }))
+    .map((v) => ({ version: v.version, savedBy: v.saved_by ? (people.get(v.saved_by) ?? null) : null, savedById: v.saved_by, savedAt: v.saved_at }))
     .sort((a, b) => b.version - a.version);
 }
 

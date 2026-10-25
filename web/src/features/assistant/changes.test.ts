@@ -375,7 +375,9 @@ describe("regenerate and load_sample", () => {
   });
 
   it("regenerate goes last", () => {
-    expect(failed(run([{ op: "regenerate" }, { op: "lock", sessionId: "cse-a-ds:L1" }]))).toBe("Change 2: regenerate runs after the other changes are made, so put it last.");
+    expect(failed(run([{ op: "regenerate" }, { op: "lock", sessionId: "cse-a-ds:L1" }]))).toBe(
+      "Change 2: regenerate runs after the other working-copy changes are made, so put it after them; only online changes may follow it.",
+    );
     expect(failed(run([{ op: "regenerate" }, { op: "regenerate" }]))).toMatch(/^Change 2: regenerate runs after/);
   });
 

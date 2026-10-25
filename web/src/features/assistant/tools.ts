@@ -1,4 +1,5 @@
 import definitions from "../../../../shared/agent-tools.json";
+import changeDefinitions from "../../../../shared/agent-change-tool.json";
 import { buildGrid, sessionLabel, type Cell, type PlacedSession } from "@/domain/grid";
 import { penalties, score } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
@@ -10,19 +11,25 @@ import { causeHelpHref, unplacedHelpHref } from "@/features/generate/causeHelp";
 import { explainInfeasible, GENERAL_SUGGESTIONS, topCauses } from "@/features/generate/causes";
 import { unplacedGroups, type RunOutcome } from "@/features/generate/generate";
 import { helpHref } from "@/help/helpLinks";
+import { canEdit } from "@/features/online/online";
 import type { AppData } from "@/store/useAppStore";
 import { maskTeachers, maskText, teacherCodes } from "./mask";
+import type { OnlineSnapshot } from "./onlineState";
 
 // The assistant's read-only tools (T37). The panel (T40) runs them when Claude asks, over the working copy, and sends
 // the result back. They never throw: a bad call gets `{ error }` the model can act on. Teachers appear only as codes
 // (mask.ts): each tool works on a copy of the data whose teacher ids and names are already codes.
 
-/** What the tools read: the working copy, plus the last run's outcome for *Can't be built* (not persisted). */
+/**
+ * What the tools read: the working copy, plus the last run's outcome for *Can't be built* (not persisted) and, for
+ * `online_status`, the online snapshot loaded before the tools run (T43).
+ */
 export type ToolData = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks"> & {
   outcome?: RunOutcome;
+  onlineSnapshot?: OnlineSnapshot;
 };
 
-export type ToolName = "overview" | "schedule" | "free_periods" | "problems" | "score_details" | "find";
+export type ToolName = "overview" | "schedule" | "free_periods" | "problems" | "score_details" | "find" | "online_status";
 export type EntityKind = "section" | "teacher" | "room";
 
 interface PropertySchema { type: "string"; enum?: string[]; description?: string }
@@ -35,6 +42,8 @@ export interface ToolDefinition {
 }
 // The JSON import types optional properties as `undefined`; the test checks the file has this shape.
 export const TOOL_DEFINITIONS = definitions as unknown as ToolDefinition[];
+/** Tools the panel runs that aren't sent to Claude yet: `online_status` joins `agent-tools.json` in T44. */
+const PENDING_DEFINITIONS = (changeDefinitions as unknown as ToolDefinition[]).filter((d) => d.name === "online_status");
 
 /** Results longer than this many characters are cut (with a note). */
 export const RESULT_LIMIT = 8000;
@@ -298,6 +307,56 @@ export function find(data: ToolData, input: { text: string }): Result {
   };
 }
 
+// --- online_status ------------------------------------------------------------------------------------------------
+
+/**
+ * Where the working copy stands online, from the snapshot: no member names, emails, member list or invites. Each
+ * version's saver is "you" or "another member".
+ */
+export function onlineStatus(data: ToolData): Result {
+  const snap = data.onlineSnapshot;
+  if (!snap) return { error: "The online state couldn't be read. Ask again in a moment." };
+  if (!snap.signedIn) {
+    return { signedIn: false, note: "The user is signed out: the working copy is on this device only, and nothing online can be read or changed until they sign in.", help: helpHref("online") };
+  }
+  const extra = {
+    saveAsNewIn: snap.saveAsInto?.name ?? null,
+    ...(snap.active && {
+      activeInstitute: {
+        name: snap.active.name,
+        role: snap.active.role,
+        timetables: snap.active.timetables.map((t) => ({ id: t.id, name: t.name, latestVersion: t.latestVersion, published: t.published })),
+      },
+    }),
+    ...(snap.problems.length > 0 && { problems: snap.problems }),
+  };
+  if (!snap.link) {
+    return { signedIn: true, linked: false, note: "Not saved online: the working copy is on this device only. save_as_new saves it.", ...extra, help: helpHref("online", "saving-online") };
+  }
+  const t = snap.timetable;
+  const live = t?.liveVersion ?? null;
+  return {
+    signedIn: true,
+    linked: true,
+    institute: snap.linkedInstitute?.name ?? snap.link.instituteName,
+    timetable: snap.link.name,
+    role: snap.role ?? "not a member any more",
+    canChangeOnline: canEdit(snap.role),
+    unsavedChanges: snap.dirty,
+    openedVersion: snap.link.version,
+    ...(t && {
+      latestVersion: t.latestVersion,
+      published: live !== null,
+      liveVersion: live,
+      linkNameSet: !!snap.linkedInstitute?.handle,
+      versions: t.versions.map((v) => ({ version: v.version, savedAt: v.savedAt, savedBy: v.savedBy, ...(v.version === live && { live: true }) })),
+      note: "The server keeps the newest 20 versions plus the live one; a save that would delete one is done by hand.",
+    }),
+    ...extra,
+    help: helpHref("online", "versions"),
+  };
+}
+
 // --- running a tool -------------------------------------------------------------------------------------------
 
 type Input = Record<string, string>;
@@ -309,6 +368,7 @@ const HANDLERS: Record<ToolName, (data: ToolData, input: Input) => Result> = {
   problems: (data) => problems(data),
   score_details: (data, input) => scoreDetails(data, input as { rule?: "S1" | "S2" | "S3" | "S4" }),
   find: (data, input) => find(data, input as { text: string }),
+  online_status: (data) => onlineStatus(data),
 };
 
 /** What to say when a result is cut, per tool. */
@@ -319,6 +379,7 @@ const NARROW: Record<ToolName, string> = {
   problems: "Fix the first problems and ask again, or look at one section with schedule.",
   score_details: "Ask for one rule (S1, S2, S3 or S4).",
   find: "Use longer text.",
+  online_status: "",
 };
 
 export interface ToolOutput {
@@ -351,7 +412,7 @@ export function inputProblem(schema: ToolDefinition["input_schema"], input: unkn
 
 /** Run one tool for the model. Never throws: an unknown tool, a bad input or an unknown id comes back as `{ error }`. */
 export function runTool(name: string, input: unknown, data: ToolData): ToolOutput {
-  const definition = TOOL_DEFINITIONS.find((d) => d.name === name);
+  const definition = [...TOOL_DEFINITIONS, ...PENDING_DEFINITIONS].find((d) => d.name === name);
   if (!definition || !isToolName(name)) {
     return output({ error: `No tool named ${name}. The tools are ${TOOL_DEFINITIONS.map((d) => d.name).join(", ")}.` }, null);
   }

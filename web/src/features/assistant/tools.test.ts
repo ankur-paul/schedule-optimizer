@@ -8,6 +8,7 @@ import type { SolveInput, SolveResult } from "@/domain/types";
 import type { RunOutcome } from "@/features/generate/generate";
 import { HELP_ANCHORS } from "@/help/anchors.gen";
 import { teacherCodes } from "./mask";
+import type { OnlineSnapshot } from "./onlineState";
 import { FIND_LIMIT, RESULT_LIMIT, runTool, TOOL_DEFINITIONS, type ToolData, type ToolName } from "./tools";
 
 const timetable = timetableJson as SolveResult;
@@ -335,7 +336,82 @@ describe("runTool", () => {
   });
 });
 
+describe("online_status", () => {
+  const institute = { instituteId: "i1", name: "GNDEC", handle: "gndec" };
+  const linked: OnlineSnapshot = {
+    signedIn: true,
+    link: { instituteId: "i1", instituteName: "GNDEC", timetableId: "t1", name: "CSE odd", version: 3, savedHash: "h" },
+    role: "viewer",
+    linkedInstitute: institute,
+    dirty: true,
+    timetable: {
+      latestVersion: 3,
+      liveVersion: 2,
+      versions: [
+        { version: 3, savedAt: "2026-10-24T10:00:00Z", savedBy: "another member" },
+        { version: 2, savedAt: "2026-10-23T10:00:00Z", savedBy: "you" },
+      ],
+    },
+    saveAsInto: null,
+    active: { ...institute, role: "viewer", timetables: [{ id: "t1", name: "CSE odd", latestVersion: 3, published: true }] },
+    problems: [],
+  };
+  const status = (onlineSnapshot?: OnlineSnapshot) => run("online_status", {}, { ...base, onlineSnapshot });
+
+  it("linked: the timetable, role, unsaved changes and versions, with the live one marked", () => {
+    expect(status(linked)).toEqual({
+      signedIn: true,
+      linked: true,
+      institute: "GNDEC",
+      timetable: "CSE odd",
+      role: "viewer",
+      canChangeOnline: false,
+      unsavedChanges: true,
+      openedVersion: 3,
+      latestVersion: 3,
+      published: true,
+      liveVersion: 2,
+      linkNameSet: true,
+      versions: [
+        { version: 3, savedAt: "2026-10-24T10:00:00Z", savedBy: "another member" },
+        { version: 2, savedAt: "2026-10-23T10:00:00Z", savedBy: "you", live: true },
+      ],
+      note: "The server keeps the newest 20 versions plus the live one; a save that would delete one is done by hand.",
+      saveAsNewIn: null,
+      activeInstitute: { name: "GNDEC", role: "viewer", timetables: [{ id: "t1", name: "CSE odd", latestVersion: 3, published: true }] },
+      help: "/help/online#versions",
+    });
+  });
+
+  it("signed out says so, and nothing more", () => {
+    expect(status({ ...linked, signedIn: false })).toEqual({
+      signedIn: false,
+      note: "The user is signed out: the working copy is on this device only, and nothing online can be read or changed until they sign in.",
+      help: "/help/online",
+    });
+  });
+
+  it("not linked says so, with where save_as_new would save", () => {
+    const out = status({ ...linked, link: null, role: null, linkedInstitute: null, timetable: null, saveAsInto: { ...institute, role: "editor" } });
+    expect(out).toMatchObject({ signedIn: true, linked: false, note: "Not saved online: the working copy is on this device only. save_as_new saves it.", saveAsNewIn: "GNDEC" });
+    expect(out).not.toHaveProperty("versions");
+  });
+
+  it("lists what couldn't be read, and says when the snapshot is missing", () => {
+    expect(status({ ...linked, timetable: null, problems: ["Couldn't read the linked timetable: no connection."] })).toMatchObject({
+      timetable: "CSE odd",
+      problems: ["Couldn't read the linked timetable: no connection."],
+    });
+    expect(runTool("online_status", {}, base)).toEqual({ content: JSON.stringify({ error: "The online state couldn't be read. Ask again in a moment." }), isError: true });
+  });
+
+  it("takes no input", () => {
+    expect(run("online_status", { verbose: "yes" }, { ...base, onlineSnapshot: linked }).error).toMatch(/unknown field|verbose/i);
+  });
+});
+
 describe("shared/agent-tools.json", () => {
+  // online_status is defined in agent-change-tool.json until T44 moves it here.
   const handled: ToolName[] = ["overview", "schedule", "free_periods", "problems", "score_details", "find"];
 
   it("has a handler for every tool and a definition for every handler", () => {
