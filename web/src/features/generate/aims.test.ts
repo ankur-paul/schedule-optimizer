@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SOFT_RULES } from "@/domain/score";
-import { AIMS, aimLabel, aimRows, aimsSummary, preferencesChanged, sameRules, scoreName } from "./aims";
+import { AIMS, aimLabel, aimRows, aimsButtonLabel, aimsSummary, preferencesChanged, sameRules, scoreName } from "./aims";
 
 const allOn = { ...DEFAULT_SOFT_RULES, s5: true };
 const s5Off = { ...allOn, s5: false };
@@ -47,20 +47,20 @@ describe("aimRows", () => {
   });
 });
 
+describe("aimsButtonLabel", () => {
+  it("counts the aims that are on", () => {
+    expect(aimsButtonLabel(allOn)).toBe("Aims: all 5");
+    expect(aimsButtonLabel(s5Off)).toBe("Aims: 4 of 5");
+    expect(aimsButtonLabel({})).toBe("Aims: 4 of 5"); // a missing switch is its default, and S5 starts off
+    expect(aimsButtonLabel({ s1: false, s2: false, s3: false, s4: false, s5: false })).toBe("Aims: none");
+  });
+});
+
 describe("aimsSummary", () => {
   it("says how many aims count", () => {
     expect(aimsSummary(allOn)).toMatch(/^All five count/);
     expect(aimsSummary(s5Off)).toMatch(/^4 of 5 count/);
     expect(aimsSummary({ s1: false, s2: false, s3: false, s4: false, s5: false })).toMatch(/^None count: Generate only follows the hard rules/);
-  });
-
-  it("names the aims that are off, in S1–S5 order", () => {
-    expect(aimsSummary(s5Off)).toMatch(/Off: Finish each day as early as possible\.$/);
-    expect(aimsSummary({ ...allOn, s4: false, s1: false })).toMatch(
-      /^3 of 5 count .* Off: Spread each subject across the week, Keep a section's batches busy at the same time\.$/,
-    );
-    expect(aimsSummary(allOn)).not.toMatch(/Off:/);
-    expect(aimsSummary({})).toMatch(/Off: Finish each day/); // a missing switch is its default, and S5 starts off
   });
 });
 

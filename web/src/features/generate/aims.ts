@@ -2,7 +2,7 @@ import { fillSoftRules, RULE_SWITCH } from "@/domain/score";
 import { SCORE_ROWS } from "@/domain/stats";
 import type { SoftRules } from "@/domain/types";
 
-// Step ③'s "What to aim for" card (T54): one switch per soft rule, phrased as an aim. The S-IDs stay out of the UI.
+// Step ③'s "What to aim for" switches (T54), in a popover by the Generate button: one switch per soft rule, phrased as an aim. The S-IDs stay out of the UI.
 
 export interface Aim {
   key: keyof SoftRules;
@@ -40,13 +40,20 @@ export function aimRows(softRules: Partial<SoftRules>): (Aim & { on: boolean })[
   return AIMS.map((a) => ({ ...a, on: on[a.key] }));
 }
 
-/** The card's description: how many aims are on, and which are off, since the switches start folded away. */
+/** The Aims button's text in step ③: how many aims are on. */
+export function aimsButtonLabel(softRules: Partial<SoftRules>): string {
+  const n = AIMS.filter((a) => fillSoftRules(softRules)[a.key]).length;
+  if (n === AIMS.length) return `Aims: all ${n}`;
+  if (n === 0) return "Aims: none";
+  return `Aims: ${n} of ${AIMS.length}`;
+}
+
+/** The aims popover's description: how many aims are on. */
 export function aimsSummary(softRules: Partial<SoftRules>): string {
-  const on = fillSoftRules(softRules);
-  const off = AIMS.filter((a) => !on[a.key]).map((a) => a.label);
-  if (off.length === 0) return "All five count towards the score, and Generate tries to keep them.";
-  if (off.length === AIMS.length) return "None count: Generate only follows the hard rules.";
-  return `${AIMS.length - off.length} of ${AIMS.length} count towards the score, and Generate tries to keep them. Off: ${off.join(", ")}.`;
+  const n = AIMS.filter((a) => fillSoftRules(softRules)[a.key]).length;
+  if (n === AIMS.length) return "All five count towards the score, and Generate tries to keep them.";
+  if (n === 0) return "None count: Generate only follows the hard rules.";
+  return `${n} of ${AIMS.length} count towards the score, and Generate tries to keep them.`;
 }
 
 export const sameRules = (a: Partial<SoftRules>, b: Partial<SoftRules>) => {

@@ -106,6 +106,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [T55] *Request a trial coupon* opens a dialog: *Open in Gmail* (compose in the browser's first Google account, `/mail/u/0/…&tf=cm`), *Open email app* (the mailto, first on touch screens), and To/Subject/Message rows with their own *Copy* and ✓; the "No email app?" line is gone; help and privacy wording updated (signed in as an institute admin without assistant access, open the assistant and click *Request a trial coupon*)
 - [chore] Help screenshots retaken after merging T53 and T54: `timetable-ready.png` scores 18 with Late finish *Off*, `aims-card.png` shows that switch off (the three dialog shots changed only in the page behind them); `/help/generate#aims` now says S5 starts off and why. T54's "flip it off and watch the score drop" above now reads: flip it on and watch it rise. (`cd web && npm run help:shots`; a second run changes nothing.)
 - [chore] Step ③'s *What to aim for* switches start folded away; the card names the aims that are off and **Show aims** opens the list (step ③)
+- [chore] The *What to aim for* switches moved from their own card into a popover on an *Aims: 4 of 5* button next to Generate, so step ③ opens on the Generate card; the earlier *Show aims* fold is gone. Help screenshot `aims-card.png` is now `aims-popover.png` (step ③, click *Aims*)
 
 ## Known issues / cuts
 

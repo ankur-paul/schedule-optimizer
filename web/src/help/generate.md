@@ -4,7 +4,7 @@ How Lattice builds the timetable in step ③, and what to do when it can't.
 
 ## What to aim for {#aims}
 
-The first card in step ③ holds five aims, one switch each. The switches are folded away to begin with: the card says how many aims count and names any that are off, and **Show aims** opens the list. They are the soft rules: things a timetable may do but shouldn't. Each aim that's on adds points to the [score](/help/timetable#score) when it's missed, and Generate looks for the timetable with the lowest score. The hard rules, such as no clashes and lunch for everyone, always apply and have no switch.
+The **Aims** button next to Generate in step ③ opens five aims, one switch each. The button says how many are on, such as *Aims: 4 of 5*. They are the soft rules: things a timetable may do but shouldn't. Each aim that's on adds points to the [score](/help/timetable#score) when it's missed, and Generate looks for the timetable with the lowest score. The hard rules, such as no clashes and lunch for everyone, always apply and have no switch.
 
 | Aim | In the score |
 |---|---|
@@ -14,7 +14,7 @@ The first card in step ③ holds five aims, one switch each. The switches are fo
 | Keep a section's batches busy at the same time | Batches waiting during labs |
 | Finish each day as early as possible | Late finish |
 
-![The What to aim for card opened: five switches, the first four on and Finish each day as early as possible off, each with an ⓘ](/help/aims-card.png)
+![The Aims: 4 of 5 button and its open list: five switches, the first four on and Finish each day as early as possible off, each with an ⓘ](/help/aims-popover.png)
 
 The first four are on to begin with, and *Finish each day as early as possible* is off. The ⓘ next to each says how many points it costs.
 

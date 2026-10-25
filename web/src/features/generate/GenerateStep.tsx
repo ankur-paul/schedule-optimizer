@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, ChevronDown, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ChevronDown, CircleCheck, CircleX, CloudOff, Info, Loader2, Lock, RefreshCw, SlidersHorizontal, Sparkles, Wand2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpLink } from "@/components/HelpLink";
 import { AskAboutButton } from "@/features/assistant/AssistantPanel";
 import { InfoTip } from "@/components/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { SCORE_ROWS, scoreCount, scoreTotalTip } from "@/domain/stats";
 import type { SolveResult } from "@/domain/types";
@@ -16,7 +17,7 @@ import { useDataView } from "@/features/data/dataView";
 import { helpHref } from "@/help/helpLinks";
 import { regenerateLabel } from "@/features/lock/locks";
 import { useAppStore } from "@/store/useAppStore";
-import { aimRows, aimsSummary, PREFERENCES_CHANGED, preferencesChanged } from "./aims";
+import { aimRows, aimsButtonLabel, aimsSummary, PREFERENCES_CHANGED, preferencesChanged } from "./aims";
 import { causeHelpHref, unplacedHelpHref } from "./causeHelp";
 import { explainInfeasible, GENERAL_SUGGESTIONS, preflightWarnings, topCauses, type Cause, type CauseLink } from "./causes";
 import {
@@ -63,7 +64,6 @@ export function GenerateStep() {
 
   return (
     <div className="grid gap-6">
-      <AimsCard running={view.state === "running"} />
       <GenerateCard view={view} server={server} contractMismatch={contractMismatch} onRecheck={recheck} actions={actions} elapsed={run.elapsed} />
       <div ref={outcomeRef} className="grid scroll-mt-4 gap-6">
         {view.state === "impossible" && <ImpossibleCard view={view} actions={actions} />}
@@ -80,54 +80,47 @@ interface Actions {
   cancel: () => void;
 }
 
-/**
- * The soft rules as aims, one switch each (T54). A flip keeps the timetable and re-scores it at once. The switches
- * start folded away; the description says which aims are off.
- */
-function AimsCard({ running }: { running: boolean }) {
+/** The soft rules as aims, one switch each (T54), in a popover. A flip keeps the timetable and re-scores it at once. */
+function AimsButton({ running }: { running: boolean }) {
   const softRules = useAppStore((s) => s.softRules);
   const setSoftRules = useAppStore((s) => s.setSoftRules);
-  const [open, setOpen] = useState(false);
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-1.5">
-          What to aim for
-          <InfoTip more={helpHref("generate", "aims")}>
-            The soft rules: things a timetable may do but shouldn't. Each one that's on adds points to the score, and Generate
-            looks for the lowest score. Hard rules, such as no clashes, always apply.
-          </InfoTip>
-        </CardTitle>
-        <CardDescription>{aimsSummary(softRules)}</CardDescription>
-        <CardAction>
-          <Button variant="ghost" size="sm" aria-expanded={open} aria-controls="aims-switches" onClick={() => setOpen(!open)}>
-            {open ? "Hide aims" : "Show aims"}
-            <ChevronDown className={cn("transition-transform", open && "rotate-180")} />
-          </Button>
-        </CardAction>
-      </CardHeader>
-      {open && (
-        <CardContent>
-          <ul id="aims-switches" className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
-            {aimRows(softRules).map((aim) => (
-              <li key={aim.key} className="flex items-center gap-2">
-                <label className={cn("flex items-center gap-2.5", running ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer")}>
-                  {/* The stock off track is near-white on a white card. */}
-                  <Switch
-                    className="data-unchecked:bg-muted-foreground/35"
-                    checked={aim.on}
-                    disabled={running}
-                    onCheckedChange={(on) => setSoftRules({ ...softRules, [aim.key]: on })}
-                  />
-                  {aim.label}
-                </label>
-                <InfoTip more={helpHref("timetable", "score")}>{aim.tip}</InfoTip>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      )}
-    </Card>
+    <Popover>
+      <PopoverTrigger render={<Button variant="outline" size="lg" />}>
+        <SlidersHorizontal />
+        {aimsButtonLabel(softRules)}
+        <ChevronDown className="text-muted-foreground" />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto max-w-[calc(100vw-2rem)] gap-3 p-4">
+        <PopoverHeader>
+          <PopoverTitle className="flex items-center gap-1.5">
+            What to aim for
+            <InfoTip more={helpHref("generate", "aims")}>
+              The soft rules: things a timetable may do but shouldn't. Each one that's on adds points to the score, and
+              Generate looks for the lowest score. Hard rules, such as no clashes, always apply.
+            </InfoTip>
+          </PopoverTitle>
+          <PopoverDescription>{aimsSummary(softRules)}</PopoverDescription>
+        </PopoverHeader>
+        <ul className="grid gap-3">
+          {aimRows(softRules).map((aim) => (
+            <li key={aim.key} className="flex items-center gap-2">
+              <label className={cn("flex items-center gap-2.5", running ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer")}>
+                {/* The stock off track is near-white on a white popover. */}
+                <Switch
+                  className="data-unchecked:bg-muted-foreground/35"
+                  checked={aim.on}
+                  disabled={running}
+                  onCheckedChange={(on) => setSoftRules({ ...softRules, [aim.key]: on })}
+                />
+                {aim.label}
+              </label>
+              <InfoTip more={helpHref("timetable", "score")}>{aim.tip}</InfoTip>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -219,6 +212,7 @@ function GenerateCard({ view, server, contractMismatch, onRecheck, actions, elap
             {running ? <Loader2 className="animate-spin" /> : draftMain ? <Wand2 /> : <Sparkles />}
             {running ? (view.draft ? "Making a quick draft…" : "Generating…") : label}
           </Button>
+          <AimsButton running={running} />
           {locks.length > 0 && !running && (
             <Button variant="ghost" size="sm" onClick={() => setLocks([])}>
               <Lock /> Clear all locks

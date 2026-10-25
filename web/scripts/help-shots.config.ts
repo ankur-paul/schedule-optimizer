@@ -62,12 +62,12 @@ export const SHOTS: Shot[] = [
     capture: { css: '[data-slot="card"]', hasText: "Busiest sections" },
   },
   {
-    name: "aims-card",
+    name: "aims-popover",
     start: "timetable",
     step: 2,
     solver: "online",
-    actions: [{ click: { role: "button", name: "Show aims" } }],
-    capture: { css: '[data-slot="card"]', hasText: "What to aim for" },
+    actions: [{ click: { role: "button", name: "Aims: 4 of 5" } }, { waitFor: { css: '[data-slot="popover-content"]' } }],
+    capture: [{ role: "button", name: "Aims: 4 of 5" }, { css: '[data-slot="popover-content"]' }],
   },
   {
     name: "generate-card",
