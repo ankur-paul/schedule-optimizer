@@ -1,0 +1,56 @@
+# Points both functions back at an earlier commit's image (T50). Actions → Rollback → Run workflow, on main.
+# The web app rolls back separately, in the Pages dashboard; keep the two on the same contract (docs/deploy.md).
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Full commit SHA of a deployed image (ECR keeps the last 10)
+        required: true
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  REPOSITORY: lattice-server
+  FUNCTIONS: lattice-solver lattice-agent
+
+jobs:
+  rollback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # The commit rolled back to, so the smoke check compares /health with that commit's contract.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Point both functions at the image
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          aws ecr describe-images --repository-name "$REPOSITORY" --image-ids "imageTag=$SHA" >/dev/null ||
+            { echo "::error::No image tagged $SHA in $REPOSITORY (ECR keeps the last 10)"; exit 1; }
+          image="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com/$REPOSITORY:$SHA"
+          for fn in $FUNCTIONS; do
+            aws lambda update-function-code --function-name "$fn" --image-uri "$image" --output text --query LastUpdateStatus
+          done
+          for fn in $FUNCTIONS; do aws lambda wait function-updated-v2 --function-name "$fn"; done
+
+      - name: Smoke check (server)
+        run: scripts/smoke.sh server

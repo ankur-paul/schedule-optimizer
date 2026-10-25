@@ -1,0 +1,25 @@
+# Every 3 days (T50): calls schema_version() so the free Supabase project never pauses (it does after 7 days
+# without activity), and runs the smoke check, so a failure email from GitHub doubles as the uptime alert.
+# GitHub turns schedules off after 60 days without a commit; re-enable it under Actions then.
+name: Keep-alive
+
+on:
+  schedule:
+    - cron: "17 6 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Supabase (schema_version)
+        run: scripts/smoke.sh migrations
+      - name: Smoke check
+        run: scripts/smoke.sh

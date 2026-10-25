@@ -6,6 +6,8 @@ __pycache__/
 .pytest_cache/
 .env*
 !.env.example
+# The production build's public settings, committed on purpose (T50)
+!web/.env.production
 .DS_Store
 
 # Personal learning workspace (/teach)

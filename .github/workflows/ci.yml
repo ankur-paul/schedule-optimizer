@@ -1,8 +1,10 @@
-# Every push and pull request runs the whole suite (T48). The deploy (T50) reuses it through workflow_call.
+# Every push and pull request runs the whole suite (T48). Pushes to main run it through deploy.yml (T50), which
+# calls it with workflow_call and deploys only if it passes; running it here as well would test main twice.
 name: CI
 
 on:
   push:
+    branches-ignore: [main]
   pull_request:
   workflow_call:
 

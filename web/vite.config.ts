@@ -6,12 +6,13 @@ import { defineConfig, loadEnv } from 'vite'
 import { helpInputs, helpPages } from './vite-plugin-help.ts'
 import { legalPages } from './vite-plugin-legal.ts'
 import { publishedPage } from './vite-plugin-published.ts'
+import { versionFile } from './vite-plugin-version.ts'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, import.meta.dirname, 'VITE_')
   return {
-    plugins: [react(), tailwindcss(), legalPages(env.VITE_CONTACT_EMAIL), helpPages(), publishedPage()],
+    plugins: [react(), tailwindcss(), legalPages(env.VITE_CONTACT_EMAIL), helpPages(), publishedPage(), versionFile()],
     resolve: {
       alias: { '@': path.resolve(import.meta.dirname, './src') },
     },
