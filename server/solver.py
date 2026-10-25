@@ -13,6 +13,7 @@ W_SUBJECT_REPEAT = 10
 W_TEACHER_OVERLOAD = 5
 W_SECTION_GAPS = 2
 W_BATCH_IDLE = 3
+W_LATE_FINISH = 1
 MAX_CONSECUTIVE = 3
 PROBE_TIME_LIMIT_SEC = 5.0  # locks probe, on top of the main time limit (the web client's SOLVE_GRACE_MS covers it)
 
@@ -395,7 +396,7 @@ def h8_lunch_periods(inp: SolveInput) -> list[int]:
 
 
 def score_placements(inp: SolveInput, sessions: dict[str, Session], placements: list[Placement]) -> Score:
-    """S1–S4 of a finished timetable, computed the way the web app does (web/src/domain/score.ts)."""
+    """S1–S5 of a finished timetable, computed the way the web app does (web/src/domain/score.ts)."""
     periods = inp.settings.periods
     teaching = [p.kind == "teaching" for p in periods]
     lunch = set(inp.settings.lunch_candidates)
@@ -423,9 +424,11 @@ def score_placements(inp: SolveInput, sessions: dict[str, Session], placements: 
 
     section_gaps = 0
     batch_idle = 0
+    late_finish = 0
     for sec in inp.sections:
         for d in range(days):
             busy = [teaching[t] and bool(section_cells.get((sec.id, d, t))) for t in range(len(periods))]
+            late_finish += late_finish_periods(busy, teaching, lunch)
             if any(busy):
                 first, last = busy.index(True), len(busy) - 1 - busy[::-1].index(True)
                 section_gaps += sum(1 for t in range(first + 1, last) if teaching[t] and not busy[t] and t not in lunch)
@@ -437,11 +440,26 @@ def score_placements(inp: SolveInput, sessions: dict[str, Session], placements: 
                             1 for b in range(1, sec.batches + 1) if not any(s.batch in (None, b) for s in cell)
                         )
 
+    for taught in teacher_busy.values():
+        late_finish += late_finish_periods([teaching[t] and t in taught for t in range(len(periods))], teaching, lunch)
+
+    on = inp.soft_rules
     breakdown = ScoreBreakdown(
-        subject_repeat=W_SUBJECT_REPEAT * subject_repeat,
-        teacher_overload=W_TEACHER_OVERLOAD * teacher_overload,
-        section_gaps=W_SECTION_GAPS * section_gaps,
-        batch_idle=W_BATCH_IDLE * batch_idle,
+        subject_repeat=W_SUBJECT_REPEAT * subject_repeat if on.s1 else None,
+        teacher_overload=W_TEACHER_OVERLOAD * teacher_overload if on.s2 else None,
+        section_gaps=W_SECTION_GAPS * section_gaps if on.s3 else None,
+        batch_idle=W_BATCH_IDLE * batch_idle if on.s4 else None,
+        late_finish=W_LATE_FINISH * late_finish if on.s5 else None,
     )
-    total = breakdown.subject_repeat + breakdown.teacher_overload + breakdown.section_gaps + breakdown.batch_idle
+    total = sum(v or 0 for v in breakdown.model_dump().values())
     return Score(total=total, breakdown=breakdown)
+
+
+def late_finish_periods(busy: list[bool], teaching: list[bool], lunch: set[int]) -> int:
+    """S5 for one section or teacher on one day: free teaching periods before the last class, one free lunch
+    candidate among them excused. `busy[t]`: they have a class in teaching period t."""
+    if True not in busy:
+        return 0
+    last = len(busy) - 1 - busy[::-1].index(True)
+    free = [t for t in range(last) if teaching[t] and not busy[t]]
+    return len(free) - (1 if any(t in lunch for t in free) else 0)

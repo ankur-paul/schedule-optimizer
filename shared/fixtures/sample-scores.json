@@ -1,0 +1,4181 @@
+[
+  {
+    "seed": 1,
+    "placements": [
+      {
+        "sessionId": "cse-a-ds:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-ds:L2",
+        "day": 4,
+        "period": 8,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-a-ds:L3",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-a-ds:P1:B1",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-ds:P1:B2",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-a-dbms:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-a-dbms:L2",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-a-dbms:L3",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-a-dbms:P1:B1",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-a-dbms:P1:B2",
+        "day": 1,
+        "period": 5,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-os:L1",
+        "day": 3,
+        "period": 1,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-os:L2",
+        "day": 2,
+        "period": 7,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-a-os:L3",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-a-dm:L1",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-a-dm:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-a-dm:L3",
+        "day": 0,
+        "period": 3,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-a-dm:L4",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-a-cn:L1",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-a-cn:L2",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-a-cn:L3",
+        "day": 4,
+        "period": 6,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-a-phy:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-a-phy:L2",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-a-phy:L3",
+        "day": 4,
+        "period": 5,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-a-phy:P1:B1",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-phy:P1:B2",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-ds:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-b-ds:L2",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-b-ds:L3",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-ds:P1:B1",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-b-ds:P1:B2",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-b-dbms:L1",
+        "day": 1,
+        "period": 1,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-b-dbms:L2",
+        "day": 2,
+        "period": 3,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-b-dbms:L3",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-b-dbms:P1:B1",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-b-dbms:P1:B2",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-b-os:L1",
+        "day": 3,
+        "period": 3,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-os:L2",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-b-os:L3",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-dm:L1",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-b-dm:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-b-dm:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-b-dm:L4",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-b-cn:L1",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-b-cn:L2",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-b-cn:L3",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-b-phy:L1",
+        "day": 1,
+        "period": 3,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-b-phy:L2",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-phy:L3",
+        "day": 0,
+        "period": 3,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-phy:P1:B1",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-b-phy:P1:B2",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-c-ds:L1",
+        "day": 1,
+        "period": 8,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-c-ds:L2",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-c-ds:L3",
+        "day": 1,
+        "period": 5,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-c-ds:P1",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-c-dbms:L1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-c-dbms:L2",
+        "day": 1,
+        "period": 4,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-c-dbms:L3",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-c-dbms:P1",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-c-os:L1",
+        "day": 2,
+        "period": 5,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-c-os:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-c-os:L3",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-c-dm:L1",
+        "day": 3,
+        "period": 3,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-c-dm:L2",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-c-dm:L3",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-c-dm:L4",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-c-cn:L1",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-c-cn:L2",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-c-cn:L3",
+        "day": 0,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-c-phy:L1",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-c-phy:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-c-phy:L3",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-c-phy:P1",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-a-ss:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-ss:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-a-ss:L3",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-ss:L4",
+        "day": 3,
+        "period": 6,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-a-ae:L1",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-ae:L2",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-a-ae:L3",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-a-ae:P1:B1",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-a-ae:P1:B2",
+        "day": 1,
+        "period": 0,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-a-de:L1",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-de:L2",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-a-de:L3",
+        "day": 1,
+        "period": 6,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-a-de:P1:B1",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-a-de:P1:B2",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-a-em:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-a-em:L2",
+        "day": 4,
+        "period": 7,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-em:L3",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-a-em:L4",
+        "day": 1,
+        "period": 1,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "ece-a-emt:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-a-emt:L2",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-a-emt:L3",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-a-pc:L1",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-a-pc:L2",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-a-pc:P1:B1",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-a-pc:P1:B2",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-b-ss:L1",
+        "day": 4,
+        "period": 5,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-b-ss:L2",
+        "day": 2,
+        "period": 5,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-b-ss:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-b-ss:L4",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-b-ae:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-b-ae:L2",
+        "day": 4,
+        "period": 5,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-b-ae:L3",
+        "day": 2,
+        "period": 0,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-b-ae:P1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-b-de:L1",
+        "day": 0,
+        "period": 7,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-b-de:L2",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-b-de:L3",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-b-de:P1",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-b-em:L1",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-b-em:L2",
+        "day": 3,
+        "period": 7,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-b-em:L3",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-b-em:L4",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "ece-b-emt:L1",
+        "day": 4,
+        "period": 5,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-b-emt:L2",
+        "day": 3,
+        "period": 5,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-b-emt:L3",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "ece-b-pc:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-b-pc:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-b-pc:P1",
+        "day": 3,
+        "period": 3,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-c-ss:L1",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-c-ss:L2",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-c-ss:L3",
+        "day": 4,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-c-ss:L4",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-ae:L1",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-c-ae:L2",
+        "day": 2,
+        "period": 3,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-c-ae:L3",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-c-ae:P1",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-c-de:L1",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-de:L2",
+        "day": 0,
+        "period": 7,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-c-de:L3",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-c-de:P1",
+        "day": 0,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-c-em:L1",
+        "day": 4,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-c-em:L2",
+        "day": 2,
+        "period": 4,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-em:L3",
+        "day": 0,
+        "period": 5,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-c-em:L4",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-c-emt:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-c-emt:L2",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-c-emt:L3",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-c-pc:L1",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-c-pc:L2",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-pc:P1",
+        "day": 3,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-td:L1",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-a-td:L2",
+        "day": 3,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-td:L3",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-td:L4",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-a-mp:L1",
+        "day": 4,
+        "period": 5,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-a-mp:L2",
+        "day": 4,
+        "period": 5,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-a-mp:L3",
+        "day": 1,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-mp:P1:B1",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-a-mp:P1:B2",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-a-emech:L1",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-a-emech:L2",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-a-emech:L3",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-a-em:L1",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-a-em:L2",
+        "day": 1,
+        "period": 0,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-a-em:L3",
+        "day": 3,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-em:L4",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-a-chem:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-a-chem:L2",
+        "day": 1,
+        "period": 1,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-chem:L3",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-a-chem:P1:B1",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-a-chem:P1:B2",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-md:L1",
+        "day": 2,
+        "period": 8,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-a-md:L2",
+        "day": 1,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-md:P1:B1",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-md:P1:B2",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-td:L1",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-td:L2",
+        "day": 4,
+        "period": 8,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-b-td:L3",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-b-td:L4",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-mp:L1",
+        "day": 0,
+        "period": 1,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-b-mp:L2",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-mp:L3",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-mp:P1",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-emech:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-b-emech:L2",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-b-emech:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-b-em:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-b-em:L2",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-em:L3",
+        "day": 4,
+        "period": 1,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-b-em:L4",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-b-chem:L1",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-chem:L2",
+        "day": 3,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-b-chem:L3",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-b-chem:P1",
+        "day": 0,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-b-md:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-b-md:L2",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-b-md:P1",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-c-td:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "me-c-td:L2",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "me-c-td:L3",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-c-td:L4",
+        "day": 0,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-c-mp:L1",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-c-mp:L2",
+        "day": 2,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-c-mp:L3",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-c-mp:P1",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-c-emech:L1",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-c-emech:L2",
+        "day": 3,
+        "period": 1,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-emech:L3",
+        "day": 3,
+        "period": 8,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-c-em:L1",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-c-em:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-c-em:L3",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-c-em:L4",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "me-c-chem:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-c-chem:L2",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-c-chem:L3",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-chem:P1",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-md:L1",
+        "day": 0,
+        "period": 1,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-c-md:L2",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-c-md:P1",
+        "day": 1,
+        "period": 5,
+        "roomId": "lab-cse2"
+      }
+    ],
+    "scores": [
+      {
+        "softRules": {},
+        "score": {
+          "total": 891,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": 15,
+            "sectionGaps": 60,
+            "batchIdle": 75,
+            "lateFinish": 371
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": true,
+          "s2": true,
+          "s3": true,
+          "s4": true,
+          "s5": true
+        },
+        "score": {
+          "total": 891,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": 15,
+            "sectionGaps": 60,
+            "batchIdle": 75,
+            "lateFinish": 371
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": false,
+          "s2": false,
+          "s3": false,
+          "s4": false,
+          "s5": false
+        },
+        "score": {
+          "total": 0,
+          "breakdown": {
+            "subjectRepeat": null,
+            "teacherOverload": null,
+            "sectionGaps": null,
+            "batchIdle": null,
+            "lateFinish": null
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": false
+        },
+        "score": {
+          "total": 521,
+          "breakdown": {
+            "subjectRepeat": null,
+            "teacherOverload": 15,
+            "sectionGaps": 60,
+            "batchIdle": 75,
+            "lateFinish": 371
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s2": false
+        },
+        "score": {
+          "total": 876,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": null,
+            "sectionGaps": 60,
+            "batchIdle": 75,
+            "lateFinish": 371
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s3": false
+        },
+        "score": {
+          "total": 831,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": 15,
+            "sectionGaps": null,
+            "batchIdle": 75,
+            "lateFinish": 371
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s4": false
+        },
+        "score": {
+          "total": 816,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": 15,
+            "sectionGaps": 60,
+            "batchIdle": null,
+            "lateFinish": 371
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s5": false
+        },
+        "score": {
+          "total": 520,
+          "breakdown": {
+            "subjectRepeat": 370,
+            "teacherOverload": 15,
+            "sectionGaps": 60,
+            "batchIdle": 75,
+            "lateFinish": null
+          }
+        }
+      }
+    ]
+  },
+  {
+    "seed": 2,
+    "placements": [
+      {
+        "sessionId": "cse-a-ds:L1",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-a-ds:L2",
+        "day": 2,
+        "period": 8,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-a-ds:L3",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-a-ds:P1:B1",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-a-ds:P1:B2",
+        "day": 2,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-a-dbms:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-a-dbms:L2",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-a-dbms:L3",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-a-dbms:P1:B1",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-dbms:P1:B2",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-a-os:L1",
+        "day": 2,
+        "period": 3,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-a-os:L2",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-a-os:L3",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-a-dm:L1",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-a-dm:L2",
+        "day": 2,
+        "period": 1,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-dm:L3",
+        "day": 0,
+        "period": 7,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-a-dm:L4",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-a-cn:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-a-cn:L2",
+        "day": 4,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-cn:L3",
+        "day": 0,
+        "period": 7,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-a-phy:L1",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-a-phy:L2",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-a-phy:L3",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-a-phy:P1:B1",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-a-phy:P1:B2",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-b-ds:L1",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-b-ds:L2",
+        "day": 4,
+        "period": 1,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-b-ds:L3",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-b-ds:P1:B1",
+        "day": 1,
+        "period": 6,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-b-ds:P1:B2",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-b-dbms:L1",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-b-dbms:L2",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-dbms:L3",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-b-dbms:P1:B1",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-b-dbms:P1:B2",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-os:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-os:L2",
+        "day": 3,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-b-os:L3",
+        "day": 4,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-b-dm:L1",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-b-dm:L2",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-dm:L3",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-b-dm:L4",
+        "day": 2,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-b-cn:L1",
+        "day": 2,
+        "period": 3,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-b-cn:L2",
+        "day": 4,
+        "period": 5,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-b-cn:L3",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-b-phy:L1",
+        "day": 4,
+        "period": 1,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-phy:L2",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-b-phy:L3",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-b-phy:P1:B1",
+        "day": 1,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-b-phy:P1:B2",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-c-ds:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-c-ds:L2",
+        "day": 4,
+        "period": 1,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-c-ds:L3",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-c-ds:P1",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-c-dbms:L1",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-c-dbms:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-c-dbms:L3",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-c-dbms:P1",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-c-os:L1",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-c-os:L2",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "cse-c-os:L3",
+        "day": 1,
+        "period": 8,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-c-dm:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-c-dm:L2",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-c-dm:L3",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-c-dm:L4",
+        "day": 0,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-c-cn:L1",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-c-cn:L2",
+        "day": 2,
+        "period": 8,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-c-cn:L3",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-c-phy:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-c-phy:L2",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-c-phy:L3",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-c-phy:P1",
+        "day": 2,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-ss:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-ss:L2",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-a-ss:L3",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-a-ss:L4",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-a-ae:L1",
+        "day": 0,
+        "period": 5,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-a-ae:L2",
+        "day": 1,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-a-ae:L3",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-a-ae:P1:B1",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-a-ae:P1:B2",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-a-de:L1",
+        "day": 4,
+        "period": 1,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-a-de:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-a-de:L3",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-a-de:P1:B1",
+        "day": 1,
+        "period": 5,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-a-de:P1:B2",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-em:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-a-em:L2",
+        "day": 1,
+        "period": 8,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-a-em:L3",
+        "day": 0,
+        "period": 8,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-a-em:L4",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-a-emt:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-a-emt:L2",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-a-emt:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-a-pc:L1",
+        "day": 1,
+        "period": 3,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-a-pc:L2",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-a-pc:P1:B1",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-a-pc:P1:B2",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-b-ss:L1",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-b-ss:L2",
+        "day": 4,
+        "period": 0,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-b-ss:L3",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-b-ss:L4",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-b-ae:L1",
+        "day": 2,
+        "period": 4,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-b-ae:L2",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-b-ae:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-b-ae:P1",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-b-de:L1",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-b-de:L2",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-b-de:L3",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-b-de:P1",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-b-em:L1",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-b-em:L2",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-b-em:L3",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-b-em:L4",
+        "day": 4,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-b-emt:L1",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-b-emt:L2",
+        "day": 3,
+        "period": 8,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-b-emt:L3",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-b-pc:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-b-pc:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-b-pc:P1",
+        "day": 3,
+        "period": 5,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-c-ss:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-c-ss:L2",
+        "day": 0,
+        "period": 4,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-c-ss:L3",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-c-ss:L4",
+        "day": 4,
+        "period": 6,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-c-ae:L1",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-c-ae:L2",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-ae:L3",
+        "day": 3,
+        "period": 8,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-c-ae:P1",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-c-de:L1",
+        "day": 1,
+        "period": 1,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-c-de:L2",
+        "day": 1,
+        "period": 8,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-de:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-de:P1",
+        "day": 2,
+        "period": 4,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-c-em:L1",
+        "day": 4,
+        "period": 7,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-c-em:L2",
+        "day": 3,
+        "period": 8,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-em:L3",
+        "day": 1,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-c-em:L4",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-c-emt:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-c-emt:L2",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-c-emt:L3",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-pc:L1",
+        "day": 3,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-c-pc:L2",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-pc:P1",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-a-td:L1",
+        "day": 2,
+        "period": 8,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-a-td:L2",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-a-td:L3",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-a-td:L4",
+        "day": 4,
+        "period": 5,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-mp:L1",
+        "day": 2,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-a-mp:L2",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-a-mp:L3",
+        "day": 0,
+        "period": 7,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-a-mp:P1:B1",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-a-mp:P1:B2",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-a-emech:L1",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-a-emech:L2",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-a-emech:L3",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-a-em:L1",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-a-em:L2",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-em:L3",
+        "day": 0,
+        "period": 8,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-a-em:L4",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-a-chem:L1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-a-chem:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-chem:L3",
+        "day": 2,
+        "period": 3,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-chem:P1:B1",
+        "day": 2,
+        "period": 3,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-a-chem:P1:B2",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-a-md:L1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-a-md:L2",
+        "day": 4,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-md:P1:B1",
+        "day": 4,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-md:P1:B2",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-td:L1",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-td:L2",
+        "day": 4,
+        "period": 5,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-b-td:L3",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-b-td:L4",
+        "day": 4,
+        "period": 1,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-mp:L1",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-b-mp:L2",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-b-mp:L3",
+        "day": 1,
+        "period": 4,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-b-mp:P1",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-b-emech:L1",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-emech:L2",
+        "day": 1,
+        "period": 7,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-b-emech:L3",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-em:L1",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-b-em:L2",
+        "day": 4,
+        "period": 8,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-b-em:L3",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-em:L4",
+        "day": 4,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-b-chem:L1",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-b-chem:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-b-chem:L3",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-b-chem:P1",
+        "day": 0,
+        "period": 4,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-b-md:L1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-b-md:L2",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-b-md:P1",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-c-td:L1",
+        "day": 1,
+        "period": 4,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-c-td:L2",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-c-td:L3",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-c-td:L4",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-c-mp:L1",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "me-c-mp:L2",
+        "day": 1,
+        "period": 7,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-c-mp:L3",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-c-mp:P1",
+        "day": 1,
+        "period": 5,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-c-emech:L1",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-c-emech:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-emech:L3",
+        "day": 0,
+        "period": 1,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-c-em:L1",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-c-em:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-em:L3",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-c-em:L4",
+        "day": 3,
+        "period": 8,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-c-chem:L1",
+        "day": 0,
+        "period": 1,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-c-chem:L2",
+        "day": 2,
+        "period": 1,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-chem:L3",
+        "day": 4,
+        "period": 1,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-c-chem:P1",
+        "day": 0,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-c-md:L1",
+        "day": 1,
+        "period": 5,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-c-md:L2",
+        "day": 0,
+        "period": 1,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-c-md:P1",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-ece-b"
+      }
+    ],
+    "scores": [
+      {
+        "softRules": {},
+        "score": {
+          "total": 893,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": 10,
+            "sectionGaps": 68,
+            "batchIdle": 69,
+            "lateFinish": 396
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": true,
+          "s2": true,
+          "s3": true,
+          "s4": true,
+          "s5": true
+        },
+        "score": {
+          "total": 893,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": 10,
+            "sectionGaps": 68,
+            "batchIdle": 69,
+            "lateFinish": 396
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": false,
+          "s2": false,
+          "s3": false,
+          "s4": false,
+          "s5": false
+        },
+        "score": {
+          "total": 0,
+          "breakdown": {
+            "subjectRepeat": null,
+            "teacherOverload": null,
+            "sectionGaps": null,
+            "batchIdle": null,
+            "lateFinish": null
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": false
+        },
+        "score": {
+          "total": 543,
+          "breakdown": {
+            "subjectRepeat": null,
+            "teacherOverload": 10,
+            "sectionGaps": 68,
+            "batchIdle": 69,
+            "lateFinish": 396
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s2": false
+        },
+        "score": {
+          "total": 883,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": null,
+            "sectionGaps": 68,
+            "batchIdle": 69,
+            "lateFinish": 396
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s3": false
+        },
+        "score": {
+          "total": 825,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": 10,
+            "sectionGaps": null,
+            "batchIdle": 69,
+            "lateFinish": 396
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s4": false
+        },
+        "score": {
+          "total": 824,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": 10,
+            "sectionGaps": 68,
+            "batchIdle": null,
+            "lateFinish": 396
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s5": false
+        },
+        "score": {
+          "total": 497,
+          "breakdown": {
+            "subjectRepeat": 350,
+            "teacherOverload": 10,
+            "sectionGaps": 68,
+            "batchIdle": 69,
+            "lateFinish": null
+          }
+        }
+      }
+    ]
+  },
+  {
+    "seed": 3,
+    "placements": [
+      {
+        "sessionId": "cse-a-ds:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-ds:L2",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-ds:L3",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-a-ds:P1:B1",
+        "day": 2,
+        "period": 3,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-a-ds:P1:B2",
+        "day": 3,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-a-dbms:L1",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-dbms:L2",
+        "day": 1,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-dbms:L3",
+        "day": 4,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-a-dbms:P1:B1",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-a-dbms:P1:B2",
+        "day": 3,
+        "period": 4,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-os:L1",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-a-os:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-os:L3",
+        "day": 4,
+        "period": 5,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-dm:L1",
+        "day": 3,
+        "period": 5,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-a-dm:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-dm:L3",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-dm:L4",
+        "day": 2,
+        "period": 5,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-a-cn:L1",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-a-cn:L2",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-a-cn:L3",
+        "day": 4,
+        "period": 8,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-a-phy:L1",
+        "day": 3,
+        "period": 8,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-a-phy:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-phy:L3",
+        "day": 4,
+        "period": 3,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-phy:P1:B1",
+        "day": 1,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-a-phy:P1:B2",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-b-ds:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-b-ds:L2",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-ds:L3",
+        "day": 2,
+        "period": 1,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "cse-b-ds:P1:B1",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-ds:P1:B2",
+        "day": 4,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-b-dbms:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-b-dbms:L2",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-b-dbms:L3",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-b-dbms:P1:B1",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-b-dbms:P1:B2",
+        "day": 4,
+        "period": 0,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "cse-b-os:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-b-os:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-os:L3",
+        "day": 1,
+        "period": 8,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-b-dm:L1",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-b-dm:L2",
+        "day": 3,
+        "period": 6,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-b-dm:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-b-dm:L4",
+        "day": 0,
+        "period": 1,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-b-cn:L1",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-b-cn:L2",
+        "day": 1,
+        "period": 8,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-b-cn:L3",
+        "day": 4,
+        "period": 1,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-b-phy:L1",
+        "day": 2,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-b-phy:L2",
+        "day": 1,
+        "period": 6,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "cse-b-phy:L3",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-b-phy:P1:B1",
+        "day": 2,
+        "period": 4,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-b-phy:P1:B2",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "cse-c-ds:L1",
+        "day": 0,
+        "period": 7,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-c-ds:L2",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "cse-c-ds:L3",
+        "day": 1,
+        "period": 3,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-c-ds:P1",
+        "day": 0,
+        "period": 4,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-c-dbms:L1",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-c-dbms:L2",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "cse-c-dbms:L3",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-c-dbms:P1",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "cse-c-os:L1",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "cse-c-os:L2",
+        "day": 4,
+        "period": 3,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-c-os:L3",
+        "day": 0,
+        "period": 5,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-c-dm:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "cse-c-dm:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "cse-c-dm:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "cse-c-dm:L4",
+        "day": 2,
+        "period": 7,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-c-cn:L1",
+        "day": 4,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "cse-c-cn:L2",
+        "day": 1,
+        "period": 5,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "cse-c-cn:L3",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "cse-c-phy:L1",
+        "day": 2,
+        "period": 1,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "cse-c-phy:L2",
+        "day": 4,
+        "period": 1,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "cse-c-phy:L3",
+        "day": 3,
+        "period": 3,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "cse-c-phy:P1",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-a-ss:L1",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-a-ss:L2",
+        "day": 2,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-a-ss:L3",
+        "day": 1,
+        "period": 6,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-a-ss:L4",
+        "day": 3,
+        "period": 4,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-a-ae:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-ae:L2",
+        "day": 1,
+        "period": 1,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-a-ae:L3",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-ae:P1:B1",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-a-ae:P1:B2",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-a-de:L1",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-de:L2",
+        "day": 3,
+        "period": 0,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-de:L3",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-de:P1:B1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-a-de:P1:B2",
+        "day": 0,
+        "period": 3,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-a-em:L1",
+        "day": 2,
+        "period": 5,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-a-em:L2",
+        "day": 0,
+        "period": 8,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "ece-a-em:L3",
+        "day": 3,
+        "period": 7,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "ece-a-em:L4",
+        "day": 4,
+        "period": 8,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-a-emt:L1",
+        "day": 0,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-a-emt:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-a-emt:L3",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-a-pc:L1",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-a-pc:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-a-pc:P1:B1",
+        "day": 1,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-a-pc:P1:B2",
+        "day": 2,
+        "period": 0,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-b-ss:L1",
+        "day": 1,
+        "period": 0,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-b-ss:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-b-ss:L3",
+        "day": 3,
+        "period": 4,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-b-ss:L4",
+        "day": 2,
+        "period": 8,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-b-ae:L1",
+        "day": 3,
+        "period": 7,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-b-ae:L2",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-b-ae:L3",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-b-ae:P1",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-b-de:L1",
+        "day": 3,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-b-de:L2",
+        "day": 1,
+        "period": 4,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-b-de:L3",
+        "day": 1,
+        "period": 4,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-b-de:P1",
+        "day": 3,
+        "period": 7,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-b-em:L1",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-b-em:L2",
+        "day": 2,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-b-em:L3",
+        "day": 2,
+        "period": 5,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-b-em:L4",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-b-emt:L1",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-b-emt:L2",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-b-emt:L3",
+        "day": 1,
+        "period": 5,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-b-pc:L1",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-b-pc:L2",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "ece-b-pc:P1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "ece-c-ss:L1",
+        "day": 1,
+        "period": 3,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-ss:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "ece-c-ss:L3",
+        "day": 1,
+        "period": 0,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-c-ss:L4",
+        "day": 1,
+        "period": 6,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "ece-c-ae:L1",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "ece-c-ae:L2",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "ece-c-ae:L3",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "ece-c-ae:P1",
+        "day": 3,
+        "period": 3,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-c-de:L1",
+        "day": 0,
+        "period": 0,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-c-de:L2",
+        "day": 1,
+        "period": 3,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-c-de:L3",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-c-de:P1",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-ece-a"
+      },
+      {
+        "sessionId": "ece-c-em:L1",
+        "day": 1,
+        "period": 8,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "ece-c-em:L2",
+        "day": 4,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-em:L3",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "ece-c-em:L4",
+        "day": 1,
+        "period": 8,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "ece-c-emt:L1",
+        "day": 0,
+        "period": 0,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "ece-c-emt:L2",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "ece-c-emt:L3",
+        "day": 3,
+        "period": 1,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "ece-c-pc:L1",
+        "day": 2,
+        "period": 0,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "ece-c-pc:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "ece-c-pc:P1",
+        "day": 2,
+        "period": 4,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-a-td:L1",
+        "day": 4,
+        "period": 4,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-a-td:L2",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-a-td:L3",
+        "day": 2,
+        "period": 0,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-td:L4",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-a-mp:L1",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-a-mp:L2",
+        "day": 2,
+        "period": 6,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-a-mp:L3",
+        "day": 0,
+        "period": 1,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-a-mp:P1:B1",
+        "day": 2,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-mp:P1:B2",
+        "day": 2,
+        "period": 5,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-a-emech:L1",
+        "day": 0,
+        "period": 7,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-emech:L2",
+        "day": 0,
+        "period": 8,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-a-emech:L3",
+        "day": 3,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-a-em:L1",
+        "day": 1,
+        "period": 3,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-a-em:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-a-em:L3",
+        "day": 4,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-a-em:L4",
+        "day": 3,
+        "period": 4,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-a-chem:L1",
+        "day": 0,
+        "period": 5,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-a-chem:L2",
+        "day": 2,
+        "period": 4,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-a-chem:L3",
+        "day": 4,
+        "period": 6,
+        "roomId": "lab-phy"
+      },
+      {
+        "sessionId": "me-a-chem:P1:B1",
+        "day": 1,
+        "period": 4,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-chem:P1:B2",
+        "day": 4,
+        "period": 0,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-a-md:L1",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "me-a-md:L2",
+        "day": 3,
+        "period": 5,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-a-md:P1:B1",
+        "day": 4,
+        "period": 3,
+        "roomId": "lab-chem"
+      },
+      {
+        "sessionId": "me-a-md:P1:B2",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-b-td:L1",
+        "day": 2,
+        "period": 1,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-td:L2",
+        "day": 0,
+        "period": 3,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-td:L3",
+        "day": 1,
+        "period": 6,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-b-td:L4",
+        "day": 1,
+        "period": 4,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-b-mp:L1",
+        "day": 0,
+        "period": 8,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-b-mp:L2",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-mp:L3",
+        "day": 4,
+        "period": 6,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-b-mp:P1",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-emech:L1",
+        "day": 3,
+        "period": 5,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-b-emech:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-b-emech:L3",
+        "day": 3,
+        "period": 0,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-b-em:L1",
+        "day": 1,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-b-em:L2",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-b-em:L3",
+        "day": 2,
+        "period": 4,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-b-em:L4",
+        "day": 4,
+        "period": 3,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-b-chem:L1",
+        "day": 3,
+        "period": 1,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-b-chem:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "me-b-chem:L3",
+        "day": 2,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-chem:P1",
+        "day": 3,
+        "period": 7,
+        "roomId": "cr-ece-c"
+      },
+      {
+        "sessionId": "me-b-md:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-b-md:L2",
+        "day": 1,
+        "period": 7,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-b-md:P1",
+        "day": 4,
+        "period": 4,
+        "roomId": "lab-cc"
+      },
+      {
+        "sessionId": "me-c-td:L1",
+        "day": 1,
+        "period": 1,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-c-td:L2",
+        "day": 4,
+        "period": 6,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-c-td:L3",
+        "day": 3,
+        "period": 3,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-c-td:L4",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-cse-b"
+      },
+      {
+        "sessionId": "me-c-mp:L1",
+        "day": 2,
+        "period": 6,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-c-mp:L2",
+        "day": 0,
+        "period": 1,
+        "roomId": "cr-me-b"
+      },
+      {
+        "sessionId": "me-c-mp:L3",
+        "day": 1,
+        "period": 7,
+        "roomId": "cr-cse-a"
+      },
+      {
+        "sessionId": "me-c-mp:P1",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-c-emech:L1",
+        "day": 4,
+        "period": 8,
+        "roomId": "sh-2"
+      },
+      {
+        "sessionId": "me-c-emech:L2",
+        "day": 0,
+        "period": 5,
+        "roomId": "cr-ece-b"
+      },
+      {
+        "sessionId": "me-c-emech:L3",
+        "day": 2,
+        "period": 5,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-c-em:L1",
+        "day": 4,
+        "period": 5,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-c-em:L2",
+        "day": 3,
+        "period": 7,
+        "roomId": "lab-cse2"
+      },
+      {
+        "sessionId": "me-c-em:L3",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-cse-c"
+      },
+      {
+        "sessionId": "me-c-em:L4",
+        "day": 1,
+        "period": 0,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-c-chem:L1",
+        "day": 3,
+        "period": 4,
+        "roomId": "sh-1"
+      },
+      {
+        "sessionId": "me-c-chem:L2",
+        "day": 3,
+        "period": 6,
+        "roomId": "cr-me-a"
+      },
+      {
+        "sessionId": "me-c-chem:L3",
+        "day": 3,
+        "period": 3,
+        "roomId": "lab-cse1"
+      },
+      {
+        "sessionId": "me-c-chem:P1",
+        "day": 2,
+        "period": 5,
+        "roomId": "lab-ws"
+      },
+      {
+        "sessionId": "me-c-md:L1",
+        "day": 0,
+        "period": 6,
+        "roomId": "cr-me-c"
+      },
+      {
+        "sessionId": "me-c-md:L2",
+        "day": 1,
+        "period": 0,
+        "roomId": "lab-elec"
+      },
+      {
+        "sessionId": "me-c-md:P1",
+        "day": 0,
+        "period": 7,
+        "roomId": "cr-me-a"
+      }
+    ],
+    "scores": [
+      {
+        "softRules": {},
+        "score": {
+          "total": 832,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": 15,
+            "sectionGaps": 72,
+            "batchIdle": 60,
+            "lateFinish": 415
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": true,
+          "s2": true,
+          "s3": true,
+          "s4": true,
+          "s5": true
+        },
+        "score": {
+          "total": 832,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": 15,
+            "sectionGaps": 72,
+            "batchIdle": 60,
+            "lateFinish": 415
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": false,
+          "s2": false,
+          "s3": false,
+          "s4": false,
+          "s5": false
+        },
+        "score": {
+          "total": 0,
+          "breakdown": {
+            "subjectRepeat": null,
+            "teacherOverload": null,
+            "sectionGaps": null,
+            "batchIdle": null,
+            "lateFinish": null
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s1": false
+        },
+        "score": {
+          "total": 562,
+          "breakdown": {
+            "subjectRepeat": null,
+            "teacherOverload": 15,
+            "sectionGaps": 72,
+            "batchIdle": 60,
+            "lateFinish": 415
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s2": false
+        },
+        "score": {
+          "total": 817,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": null,
+            "sectionGaps": 72,
+            "batchIdle": 60,
+            "lateFinish": 415
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s3": false
+        },
+        "score": {
+          "total": 760,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": 15,
+            "sectionGaps": null,
+            "batchIdle": 60,
+            "lateFinish": 415
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s4": false
+        },
+        "score": {
+          "total": 772,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": 15,
+            "sectionGaps": 72,
+            "batchIdle": null,
+            "lateFinish": 415
+          }
+        }
+      },
+      {
+        "softRules": {
+          "s5": false
+        },
+        "score": {
+          "total": 417,
+          "breakdown": {
+            "subjectRepeat": 270,
+            "teacherOverload": 15,
+            "sectionGaps": 72,
+            "batchIdle": 60,
+            "lateFinish": null
+          }
+        }
+      }
+    ]
+  }
+]

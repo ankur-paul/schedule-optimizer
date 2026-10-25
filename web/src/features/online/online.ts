@@ -1,3 +1,4 @@
+import { fillSoftRules } from "@/domain/score";
 import type { OnlineLink, WorkingCopy } from "@/store/useAppStore";
 import type { Membership, Role } from "@/features/account/institutes";
 
@@ -19,6 +20,7 @@ export function toDoc(state: WorkingCopy): OnlineDoc {
     locks: state.locks,
     result: state.result,
     printHeading: state.printHeading,
+    softRules: state.softRules,
   };
 }
 
@@ -27,7 +29,8 @@ const arrayOr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /**
  * A downloaded version as store fields. Throws when it isn't a timetable at all (no settings); missing tables,
- * locks, result or heading become empty, so a document from an older app still opens.
+ * locks, result or heading become empty and missing soft-rule switches the defaults, so a document from an older
+ * app still opens.
  */
 export function fromDoc(doc: unknown): WorkingCopy {
   const settings = isObject(doc) ? doc.settings : undefined;
@@ -44,6 +47,7 @@ export function fromDoc(doc: unknown): WorkingCopy {
     locks: arrayOr(doc.locks) as WorkingCopy["locks"],
     result: (isObject(doc.result) ? doc.result : null) as WorkingCopy["result"],
     printHeading: typeof doc.printHeading === "string" ? doc.printHeading : "",
+    softRules: fillSoftRules(isObject(doc.softRules) ? doc.softRules : undefined),
   };
 }
 

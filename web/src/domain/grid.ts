@@ -8,8 +8,8 @@ export type Cell = PlacedSession[];
 /** `timeline[day][periodId]` */
 export type Timeline = Cell[][];
 
-/** The parts of a SolveInput that describe the college (no locks/options). */
-export type CollegeData = Pick<SolveInput, "settings" | "teachers" | "sections" | "rooms" | "courses">;
+/** The parts of a SolveInput that describe the college (no locks/options), plus the soft-rule switches. */
+export type CollegeData = Pick<SolveInput, "settings" | "teachers" | "sections" | "rooms" | "courses" | "softRules">;
 
 export interface Grid {
   sessions: Map<Id, Session>;

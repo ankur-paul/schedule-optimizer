@@ -28,16 +28,18 @@ const data: AppData = {
   step: 2,
   timeLimitSec: 20,
   printHeading: "",
+  softRules: { s1: true, s2: false, s3: true, s4: true, s5: true },
 };
 
 describe("buildSolveInput", () => {
-  it("passes the college data, locks and options through, and nothing else", () => {
+  it("passes the college data, locks, options and soft-rule switches through, and nothing else", () => {
     const input = buildSolveInput(data, { timeLimitSec: 15, seed: 3 });
     expect(input.locks).toEqual([lock]);
+    expect(input.softRules).toEqual(data.softRules);
     expect(input.options).toEqual({ timeLimitSec: 15, seed: 3 });
     expect(input.courses).toBe(data.courses);
     expect(Object.keys(input).sort()).toEqual(
-      ["courses", "departments", "locks", "options", "rooms", "sections", "settings", "teachers"].sort(),
+      ["courses", "departments", "locks", "options", "rooms", "sections", "settings", "softRules", "teachers"].sort(),
     );
   });
 });
@@ -218,7 +220,7 @@ describe("unplacedGroups", () => {
 });
 
 describe("regenerateSummary", () => {
-  const score = { total: 18, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 18 } };
+  const score = { total: 18, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 18, lateFinish: 0 } };
   it("counts placed sessions and the score", () => {
     expect(regenerateSummary({ placements: [lock, lock], unplaced: [], score })).toBe("New timetable: 2 sessions placed · score 18");
   });
@@ -236,7 +238,7 @@ describe("generateFooterNote", () => {
   });
 
   it("says nothing once there is a result", () => {
-    const result = { engine: "heuristic" as const, status: "feasible" as const, placements: [lock], unplaced: [], score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } }, timeMs: 1 };
+    const result = { engine: "heuristic" as const, status: "feasible" as const, placements: [lock], unplaced: [], score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0, lateFinish: 0 } }, timeMs: 1 };
     expect(generateFooterNote(result)).toBeNull();
   });
 });

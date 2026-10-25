@@ -45,12 +45,12 @@ export function ScoreStrip({ data, placements }: Props) {
             key={row.key}
             className={cn(
               "flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs",
-              points === 0 ? "text-muted-foreground" : "border-amber-300 bg-amber-50 text-amber-900",
+              !points ? "text-muted-foreground" : "border-amber-300 bg-amber-50 text-amber-900",
             )}
           >
             {row.label}
             <span className="font-medium tabular-nums">
-              {points > 0 ? `${scoreCount(row.key, points)} · ${points} pts` : "0"}
+              {points == null ? "Off" : points > 0 ? `${scoreCount(row.key, points)} · ${points} pts` : "0"}
             </span>
             <InfoTip more={helpHref("timetable", "score")}>{row.tip}</InfoTip>
           </span>

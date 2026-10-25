@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleCollege } from "@/domain/sampleCollege";
+import { DEFAULT_SOFT_RULES } from "@/domain/score";
 import type { Membership } from "@/features/account/institutes";
 import { initialData, type OnlineLink, type WorkingCopy } from "@/store/useAppStore";
 import {
@@ -26,7 +27,7 @@ import {
 
 const sample = (): WorkingCopy => {
   const { settings, departments, teachers, rooms, sections, courses } = structuredClone(sampleCollege);
-  return { settings, departments, teachers, rooms, sections, courses, locks: [], result: null, printHeading: "GNDEC · Semester 5" };
+  return { settings, departments, teachers, rooms, sections, courses, locks: [], result: null, printHeading: "GNDEC · Semester 5", softRules: { ...DEFAULT_SOFT_RULES, s5: false } };
 };
 
 const link: OnlineLink = {
@@ -61,7 +62,7 @@ describe("toDoc / fromDoc", () => {
     expect(doc).not.toHaveProperty("timeLimitSec");
   });
 
-  it("fills in missing tables, locks, result and heading", () => {
+  it("fills in missing tables, locks, result, heading and soft-rule switches", () => {
     const settings = { days: ["Mon"], periods: [] };
     expect(fromDoc({ settings })).toEqual({
       settings: { ...settings, lunchCandidates: [] },
@@ -73,7 +74,20 @@ describe("toDoc / fromDoc", () => {
       locks: [],
       result: null,
       printHeading: "",
+      softRules: DEFAULT_SOFT_RULES,
     });
+  });
+
+  it("fills the soft-rule switches a document leaves out, and ignores ones that aren't switches", () => {
+    const settings = { days: ["Mon"], periods: [] };
+    expect(fromDoc({ settings, softRules: { s2: false } }).softRules).toEqual({ ...DEFAULT_SOFT_RULES, s2: false });
+    expect(fromDoc({ settings, softRules: { s2: "off", s9: false } }).softRules).toEqual(DEFAULT_SOFT_RULES);
+    expect(fromDoc({ settings, softRules: [false] }).softRules).toEqual(DEFAULT_SOFT_RULES);
+  });
+
+  it("a switch change is an unsaved change", () => {
+    const state = sample();
+    expect(docHash({ ...state, softRules: { ...state.softRules, s1: false } })).not.toBe(docHash(state));
   });
 
   it("refuses something that isn't a timetable", () => {

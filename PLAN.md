@@ -51,7 +51,8 @@ tickets in [`tickets/`](tickets/README.md).
 | **S4** | Batch idle: in a split section, a period where one batch is in a lab and another batch is idle                                  | 3 per idle batch-period |
 | **S5** | Late finish: free teaching periods before a section's or teacher's last class of a day, one free lunch candidate excused (T52–T54) | 1 per period            |
 
-"Consecutive" = adjacent teaching periods with no break period between them.
+"Consecutive" = adjacent teaching periods with no break period between them. For S5 a section is busy in a period
+when it or any of its batches is (as in H8), and only the first free lunch candidate before the last class is excused.
 **v2 (T52–T54):** each soft rule has an on/off switch in the working copy (all on by default unless T53's measurement turns S5 off); a rule that's off adds nothing. See [`docs/discussions/2026-10-25-soft-rules.md`](docs/discussions/2026-10-25-soft-rules.md).
 `score.total = sum of penalties` of the rules that are on. The **TS scorer is the source of truth** for the score shown in the UI, whichever engine ran.
 
@@ -127,13 +128,25 @@ export interface SolveInput {
   courses: Course[];
   locks: Placement[]; // must appear unchanged in the output
   options: { timeLimitSec: number; seed?: number };
+  softRules?: Partial<SoftRules>; // missing, or a missing key: the default (DEFAULT_SOFT_RULES, all on)
 }
 
+/** On/off per soft rule (T52); a rule that's off adds nothing to the score. */
+export interface SoftRules {
+  s1: boolean;
+  s2: boolean;
+  s3: boolean;
+  s4: boolean;
+  s5: boolean;
+}
+
+/** Points per rule; null = the rule is off, so "off" never reads as 0 (/solve sends null, never drops the key). */
 export interface ScoreBreakdown {
-  subjectRepeat: number;
-  teacherOverload: number;
-  sectionGaps: number;
-  batchIdle: number;
+  subjectRepeat: number | null;
+  teacherOverload: number | null;
+  sectionGaps: number | null;
+  batchIdle: number | null;
+  lateFinish: number | null;
 }
 export interface Score {
   total: number;

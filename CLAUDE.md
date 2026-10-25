@@ -46,9 +46,12 @@ Hard rules, which a valid timetable never breaks:
 
 Soft rules, which add to the score (lower is better):
 
-| ID  | Rule                                                           | Penalty                 |
-| --- | -------------------------------------------------------------- | ----------------------- |
-| S1  | The same subject lectured more than once a day                 | 10 per extra lecture    |
-| S2  | A teacher teaching more than 3 periods in a row                | 5 per period beyond 3   |
-| S3  | Idle periods in a section's day, not counting lunch candidates | 2 per period            |
-| S4  | One batch idle while another batch of the section is in a lab  | 3 per idle batch-period |
+| ID  | Rule                                                                                               | Penalty                 |
+| --- | -------------------------------------------------------------------------------------------------- | ----------------------- |
+| S1  | The same subject lectured more than once a day                                                     | 10 per extra lecture    |
+| S2  | A teacher teaching more than 3 periods in a row                                                    | 5 per period beyond 3   |
+| S3  | Idle periods in a section's day, not counting lunch candidates                                     | 2 per period            |
+| S4  | One batch idle while another batch of the section is in a lab                                      | 3 per idle batch-period |
+| S5  | Free periods before a section's or teacher's last class of a day, one free lunch candidate excused | 1 per period            |
+
+Each soft rule has an on/off switch (`softRules` in the working copy and `SolveInput`); a rule that's off adds nothing.

@@ -5,7 +5,7 @@ import type { Id, Placement, ScoreBreakdown, SolveInput } from "./types";
 export type StatsData = CollegeData & Pick<SolveInput, "departments">;
 
 /**
- * Plain-English rows for the score (steps ③ and ④ both use these), in PLAN.md §2 order (S1–S4).
+ * Plain-English rows for the score (steps ③ and ④ both use these), in PLAN.md §2 order (S1–S5).
  * `unit` names what one penalty counts, singular and plural.
  */
 export const SCORE_ROWS: { key: keyof ScoreBreakdown; rule: string; label: string; tip: string; unit: [string, string] }[] = [
@@ -36,6 +36,13 @@ export const SCORE_ROWS: { key: keyof ScoreBreakdown; rule: string; label: strin
     unit: ["batch-period", "batch-periods"],
     label: "Batches waiting during labs",
     tip: `${WEIGHTS.batchIdle} points per period where one batch of a split section is in a lab and another batch has nothing.`,
+  },
+  {
+    key: "lateFinish",
+    rule: "S5",
+    unit: ["free period", "free periods"],
+    label: "Late finish",
+    tip: `${WEIGHTS.lateFinish} point per free period before a section's or a teacher's last class of the day. One free lunch period is excused.`,
   },
 ];
 

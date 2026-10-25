@@ -3,7 +3,7 @@ import { buildGrid, sessionLabel, type Cell, type PlacedSession } from "@/domain
 import { penalties, score } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
 import { SCORE_ROWS } from "@/domain/stats";
-import type { Id, Placement, Session, SolveInput } from "@/domain/types";
+import type { Id, Placement, Session, SoftRules, SolveInput } from "@/domain/types";
 import { validate } from "@/domain/validator";
 import { checkData } from "@/features/data/dataChecks";
 import { causeHelpHref, unplacedHelpHref } from "@/features/generate/causeHelp";
@@ -24,6 +24,8 @@ import type { OnlineSnapshot } from "./onlineState";
  * `online_status`, the online snapshot loaded before the tools run (T43).
  */
 export type ToolData = Pick<AppData, "settings" | "departments" | "teachers" | "rooms" | "sections" | "courses" | "result" | "locks"> & {
+  /** The store always has them; missing means the defaults. Scores and penalties count only the rules that are on. */
+  softRules?: Partial<SoftRules>;
   outcome?: RunOutcome;
   onlineSnapshot?: OnlineSnapshot;
 };
@@ -46,6 +48,8 @@ export const TOOL_DEFINITIONS = definitions as unknown as ToolDefinition[];
 export const RESULT_LIMIT = 8000;
 /** `find` returns at most this many matches. */
 export const FIND_LIMIT = 20;
+/** `score_details` lists at most this many penalties, the biggest; S5 alone can give hundreds of 1-point ones. */
+export const PENALTY_LIMIT = 30;
 
 type Result = Record<string, unknown>;
 type ErrorResult = { error: string };
@@ -268,7 +272,7 @@ export function scoreDetails(data: ToolData, input: { rule?: "S1" | "S2" | "S3" 
   return {
     total: s.total,
     rules: SCORE_ROWS.filter((r) => !input.rule || r.rule === input.rule).map((r) => ({ rule: r.rule, label: r.label, points: s.breakdown[r.key], how: r.tip })),
-    penalties: list.map((p) => ({
+    penalties: list.slice(0, PENALTY_LIMIT).map((p) => ({
       rule: p.rule,
       points: p.points,
       day: settings.days[p.day],
@@ -278,6 +282,7 @@ export function scoreDetails(data: ToolData, input: { rule?: "S1" | "S2" | "S3" 
       ...(p.courseId && { course: ctx.clean.courses.find((x) => x.id === p.courseId)?.subject ?? p.courseId }),
       ...(p.teacherId && { teacher: p.teacherId }),
     })),
+    ...(list.length > PENALTY_LIMIT && { morePenalties: list.length - PENALTY_LIMIT }),
     help: helpHref("timetable", "score"),
   };
 }

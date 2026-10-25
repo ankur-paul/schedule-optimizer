@@ -187,7 +187,7 @@ describe("store", () => {
     status: "feasible" as const,
     placements: [placement],
     unplaced: [],
-    score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0 } },
+    score: { total: 0, breakdown: { subjectRepeat: 0, teacherOverload: 0, sectionGaps: 0, batchIdle: 0, lateFinish: 0 } },
     timeMs: 1,
   };
 

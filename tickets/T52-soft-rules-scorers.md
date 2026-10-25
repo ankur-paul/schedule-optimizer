@@ -1,5 +1,5 @@
 # T52 — Soft-rule switches and S5 in the scorers
-**Status:** TODO
+**Status:** DONE
 **Lane:** C · **Prereqs:** — · **Branch:** t52-soft-rules-scorers
 
 ## Goal
@@ -31,6 +31,10 @@ This ticket may change the data contract.
   rules, or a separate `rulesOn` list next to the numbers. Pick one, apply it in both languages and in PLAN.md §3, and
   note the reason in the ticket.
 - **`total`** sums the rules that are on.
+- **Decided: `null` for an off rule**, not a `rulesOn` list. With a list, every reader of the old four numbers would
+  still compile and show an off rule as 0, the mistake the plan rules out; `number | null` makes TypeScript stop at
+  each one (the score panel, the chips, `scoreCount`) until it handles "Off". `/solve` drops `None` fields
+  (`response_model_exclude_none`), so `ScoreBreakdown` has a serializer that always sends every key, `null` included.
 - **Not here:** the CP-SAT objective, the heuristic (T53), any UI beyond what keeps compiling (T54). Until T54, the
   UI keeps showing the four old numbers; the score panel may show `lateFinish` plainly if that's simpler than hiding
   it.
@@ -46,8 +50,16 @@ This ticket may change the data contract.
 - Golden files regenerated; the store round-trips `softRules`; an online document without it opens with defaults.
 
 ## Done when
-- [ ] Contract, both scorers, defaults and golden files as above
-- [ ] PLAN.md §2 and §3, CLAUDE.md's table updated; contract version bumped if T45 is merged
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] PROGRESS.md line
-- [ ] Committed: `T52: soft-rule switches and S5 in the scorers`
+- [x] Contract, both scorers, defaults and golden files as above
+- [x] PLAN.md §2 and §3, CLAUDE.md's table updated; contract version bumped if T45 is merged (it isn't: T45 does it)
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] PROGRESS.md line
+- [x] Committed: `T52: soft-rule switches and S5 in the scorers`
+
+## Notes for T53
+
+- The solver tests' `tiny()` defaults to `softRules={"s5": False}` and the brute-force colleges set `"s5": False`,
+  because the objective has no S5; the heuristic's cost check in `heuristic.test.ts` also turns S5 off. Remove all
+  three once the engines have S5, and give the brute-force colleges random switches.
+- `sample-timetable.json` kept its placements; only its score was recomputed. Regenerate it (and the help
+  screenshots) once the objective changes.

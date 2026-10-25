@@ -83,6 +83,8 @@ def random_college(seed: int) -> SolveInput:
         "departments": [{"id": "d1", "name": "D1"}, {"id": "d2", "name": "D2"}],
         "teachers": teachers, "rooms": rooms, "sections": sections, "courses": courses,
         "locks": [], "options": {"timeLimitSec": 10, "seed": seed},
+        # The CP-SAT objective ignores the switches and has no S5 yet: T53 adds S5 and random switches here.
+        "softRules": {"s5": False},
     })
 
     # Sometimes lock one session at a random slot (valid or not), to exercise lock handling.

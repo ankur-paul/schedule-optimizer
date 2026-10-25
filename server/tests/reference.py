@@ -10,11 +10,12 @@ from dataclasses import dataclass
 from models import Placement, SolveInput
 from sessions import expand_sessions
 
-WEIGHTS = {"subject_repeat": 10, "teacher_overload": 5, "section_gaps": 2, "batch_idle": 3}
+WEIGHTS = {"subject_repeat": 10, "teacher_overload": 5, "section_gaps": 2, "batch_idle": 3, "late_finish": 1}
+SWITCH = {"subject_repeat": "s1", "teacher_overload": "s2", "section_gaps": "s3", "batch_idle": "s4", "late_finish": "s5"}
 
 
-def reference_score(inp: SolveInput, placements: list[Placement]) -> dict[str, int]:
-    """Weighted S1–S4 breakdown plus "total", computed the way score.ts does."""
+def reference_score(inp: SolveInput, placements: list[Placement]) -> dict[str, int | None]:
+    """Weighted S1–S5 breakdown (None for a rule that's off) plus "total", computed the way score.ts does."""
     sessions = {s.id: s for s in expand_sessions(inp)}
     periods = inp.settings.periods
     teaching = [p.kind == "teaching" for p in periods]
@@ -70,13 +71,32 @@ def reference_score(inp: SolveInput, placements: list[Placement]) -> dict[str, i
                     if not any(s.batch is None or s.batch == b for s in cell):
                         batch_idle += 1
 
-    out = {
-        "subject_repeat": subject_repeat * WEIGHTS["subject_repeat"],
-        "teacher_overload": teacher_overload * WEIGHTS["teacher_overload"],
-        "section_gaps": section_gaps * WEIGHTS["section_gaps"],
-        "batch_idle": batch_idle * WEIGHTS["batch_idle"],
+    # S5: per section-day and teacher-day, free teaching periods before the last class; a free lunch candidate among
+    # them is excused (only one, however many there are).
+    def late(busy_at) -> int:
+        taught = [p for p in range(len(periods)) if teaching[p] and busy_at(p)]
+        if not taught:
+            return 0
+        free = [p for p in range(taught[-1]) if teaching[p] and not busy_at(p)]
+        return len(free) - min(1, len([p for p in free if p in lunch]))
+
+    late_finish = 0
+    for d in range(days):
+        for sec in inp.sections:
+            late_finish += late(lambda p: bool(section_cells.get((sec.id, d, p))))
+        for tid in {s.teacher_id for s in sessions.values()}:
+            late_finish += late(lambda p: p in teacher_busy.get((tid, d), set()))
+
+    counts = {
+        "subject_repeat": subject_repeat,
+        "teacher_overload": teacher_overload,
+        "section_gaps": section_gaps,
+        "batch_idle": batch_idle,
+        "late_finish": late_finish,
     }
-    out["total"] = sum(out.values())
+    on = inp.soft_rules.model_dump(by_alias=False)
+    out = {k: n * WEIGHTS[k] if on[SWITCH[k]] else None for k, n in counts.items()}
+    out["total"] = sum(v or 0 for v in out.values())
     return out
 
 

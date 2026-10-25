@@ -1,7 +1,9 @@
+import json
+
 import pytest
 from pydantic import ValidationError
 
-from models import Diagnosis, Options, SolveResult, Unplaced
+from models import DEFAULT_SOFT_RULES, Diagnosis, Options, Score, ScoreBreakdown, SolveInput, SolveResult, SoftRules, Unplaced
 
 
 def test_diagnosis_and_unplaced_cause_round_trip_as_camelcase():
@@ -56,3 +58,24 @@ def test_time_limit_outside_the_cap_is_refused(limit):
 
 def test_time_limit_defaults_to_30():
     assert Options().time_limit_sec == 30
+
+
+EMPTY = {"settings": {"days": [], "periods": [], "lunchCandidates": []},
+         "departments": [], "teachers": [], "rooms": [], "sections": [], "courses": []}
+
+
+def test_soft_rules_default_when_missing_or_partial():
+    assert SolveInput.model_validate(EMPTY).soft_rules == DEFAULT_SOFT_RULES == SoftRules(s1=True, s2=True, s3=True, s4=True, s5=True)
+    partial = SolveInput.model_validate({**EMPTY, "softRules": {"s2": False}}).soft_rules
+    assert partial == SoftRules(s1=True, s2=False, s3=True, s4=True, s5=True)
+
+
+def test_an_off_rule_serialises_as_null_even_when_nones_are_dropped():
+    # /solve uses response_model_exclude_none; an off rule must still reach the client, as null, not missing.
+    res = SolveResult(status="optimal", score=Score(total=6, breakdown=ScoreBreakdown(subject_repeat=None, batch_idle=6)))
+    data = json.loads(res.model_dump_json(exclude_none=True))
+    assert data["score"]["breakdown"] == {
+        "subjectRepeat": None, "teacherOverload": 0, "sectionGaps": 0, "batchIdle": 6, "lateFinish": 0}
+    assert "message" not in data
+    assert ScoreBreakdown(subject_repeat=None).model_dump(by_alias=False)["subject_repeat"] is None
+    assert SolveResult.model_validate(data) == res

@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import timetableJson from "../../../../shared/fixtures/sample-timetable.json";
 import { buildGrid } from "@/domain/grid";
 import { sampleCollege } from "@/domain/sampleCollege";
-import { score } from "@/domain/score";
+import { DEFAULT_SOFT_RULES, penalties, score } from "@/domain/score";
 import { expandSessions } from "@/domain/sessions";
 import type { SolveInput, SolveResult } from "@/domain/types";
 import type { RunOutcome } from "@/features/generate/generate";
 import { HELP_ANCHORS } from "@/help/anchors.gen";
 import { teacherCodes } from "./mask";
 import type { OnlineSnapshot } from "./onlineState";
-import { FIND_LIMIT, RESULT_LIMIT, runTool, TOOL_DEFINITIONS, type ToolData, type ToolName } from "./tools";
+import { FIND_LIMIT, PENALTY_LIMIT, RESULT_LIMIT, runTool, TOOL_DEFINITIONS, type ToolData, type ToolName } from "./tools";
 
 const timetable = timetableJson as SolveResult;
 const college = (): SolveInput => structuredClone(sampleCollege);
@@ -64,7 +64,7 @@ describe("overview", () => {
     expect(run("overview")).toMatchObject({
       counts: { sections: 9, teachers: 25, rooms: 18, courses: sampleCollege.courses.length, classes: expandSessions(sampleCollege).length },
       status: "built",
-      score: { total: s.total, S1: s.breakdown.subjectRepeat, S2: s.breakdown.teacherOverload, S3: s.breakdown.sectionGaps, S4: s.breakdown.batchIdle },
+      score: { total: s.total, S1: s.breakdown.subjectRepeat, S2: s.breakdown.teacherOverload, S3: s.breakdown.sectionGaps, S4: s.breakdown.batchIdle, S5: s.breakdown.lateFinish },
       placed: timetable.placements.length,
       locks: 0,
       week: { days: ["Mon", "Tue", "Wed", "Thu", "Fri"], teachingPeriods: 8, lunchCandidates: ["P4", "P5", "P6"] },
@@ -230,15 +230,25 @@ describe("problems", () => {
 describe("score_details", () => {
   it("sums to the score, in total and per rule", () => {
     const s = score(sampleCollege, timetable.placements);
-    const out = run("score_details");
-    expect(out.total).toBe(s.total);
-    expect(out.penalties.reduce((n: number, p: { points: number }) => n + p.points, 0)).toBe(s.total);
+    const out = run("score_details", {}, { ...base, softRules: { ...DEFAULT_SOFT_RULES, s5: false } });
+    expect(out.total).toBe(s.total - s.breakdown.lateFinish!);
+    expect(out.penalties.reduce((n: number, p: { points: number }) => n + p.points, 0)).toBe(out.total);
     for (const rule of ["S1", "S2", "S3", "S4"]) {
       const one = run("score_details", { rule });
       expect(one.rules).toHaveLength(1);
       expect(one.penalties.every((p: { rule: string }) => p.rule === rule)).toBe(true);
       expect(one.penalties.reduce((n: number, p: { points: number }) => n + p.points, 0)).toBe(one.rules[0].points);
     }
+  });
+
+  it("lists the biggest PENALTY_LIMIT penalties and counts the rest", () => {
+    const all = penalties(sampleCollege, timetable.placements);
+    expect(all.length).toBeGreaterThan(PENALTY_LIMIT);
+    const out = run("score_details");
+    expect(out.penalties).toHaveLength(PENALTY_LIMIT);
+    expect(out.morePenalties).toBe(all.length - PENALTY_LIMIT);
+    expect(out.penalties[0].points).toBe(Math.max(...all.map((p) => p.points)));
+    expect(run("score_details", { rule: "S4" })).not.toHaveProperty("morePenalties");
   });
 
   it("names where each penalty is, biggest first", () => {

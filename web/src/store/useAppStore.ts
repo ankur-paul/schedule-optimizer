@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { sampleCollege } from "@/domain/sampleCollege";
-import type { Course, Department, Placement, Room, Section, Settings, SolveResult, Teacher } from "@/domain/types";
+import { DEFAULT_SOFT_RULES, fillSoftRules } from "@/domain/score";
+import type { Course, Department, Placement, Room, Section, Settings, SoftRules, SolveResult, Teacher } from "@/domain/types";
 import { emptyStacks, pushEntry, redoEntry, takeSnapshot, undoEntry, type UndoEntry, type UndoStacks } from "./undo";
 
 /** 0 = Setup week, 1 = Add data, 2 = Generate, 3 = View & export. */
@@ -21,9 +22,11 @@ export interface AppData {
   timeLimitSec: number;
   /** Second line on printed timetables, e.g. "GNDEC Ludhiana · Semester 5, 2026". */
   printHeading: string;
+  /** Which soft rules count, saved with the data so a version regenerates the same way for every editor (T52). */
+  softRules: SoftRules;
 }
 
-/** What an online version holds (T28): the data, locks, result and print heading. Step and time limit stay on the device. */
+/** What an online version holds (T28): the data, locks, result, print heading and soft-rule switches. Step and time limit stay on the device. */
 export type WorkingCopy = Omit<AppData, "step" | "timeLimitSec">;
 
 /** The online timetable the working copy is linked to (T28). */
@@ -54,6 +57,8 @@ export interface AppState extends AppData {
   setStep: (step: Step) => void;
   setTimeLimitSec: (timeLimitSec: number) => void;
   setPrintHeading: (printHeading: string) => void;
+  /** Keeps the timetable and locks: a preference can't make a timetable invalid. */
+  setSoftRules: (softRules: SoftRules) => void;
   /** Replace all five data tables at once (import); drops the result and locks. */
   setData: (data: Pick<AppData, "departments" | "teachers" | "rooms" | "sections" | "courses">) => void;
   /** Replace all data with the demo college (keeps the current step). */
@@ -84,6 +89,7 @@ export const initialData = (): AppData => ({
   step: 0,
   timeLimitSec: 20,
   printHeading: "",
+  softRules: { ...DEFAULT_SOFT_RULES },
 });
 
 /** localStorage that never throws (private mode, quota, or no window in tests). */
@@ -111,14 +117,15 @@ const safeStorage: StateStorage = {
   },
 };
 
-/** 1: `engineMode` removed (T18, exact solver only). 2: `online` link added (T28). */
-export const PERSIST_VERSION = 2;
+/** 1: `engineMode` removed (T18, exact solver only). 2: `online` link added (T28). 3: `softRules` added (T52). */
+export const PERSIST_VERSION = 3;
 
 /** Upgrade state saved by an older version of the app. */
 export function migrateState(persisted: unknown, version: number): AppState {
   const state = { ...(persisted as Record<string, unknown>) };
   if (version < 1) delete state.engineMode;
   if (version < 2) state.online = null;
+  if (version < 3) state.softRules = fillSoftRules(state.softRules as Partial<SoftRules> | undefined);
   return state as unknown as AppState;
 }
 
@@ -138,6 +145,7 @@ export const useAppStore = create<AppState>()(
       setStep: (step) => set({ step }),
       setTimeLimitSec: (timeLimitSec) => set({ timeLimitSec }),
       setPrintHeading: (printHeading) => set({ printHeading }),
+      setSoftRules: (softRules) => set({ softRules }),
       setData: ({ departments, teachers, rooms, sections, courses }) =>
         set({ departments, teachers, rooms, sections, courses, result: null, locks: [] }),
       loadSample: () => {
