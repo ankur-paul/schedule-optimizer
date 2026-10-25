@@ -11,7 +11,7 @@ client = TestClient(app)
 
 def test_solve_sample_returns_camelcase_result():
     body = json.loads((FIXTURES / "sample-college.json").read_text())
-    body["options"]["timeLimitSec"] = 5
+    body["options"]["timeLimitSec"] = 20  # 5 s ran out under load and on 4-vCPU CI runners (T48)
     res = client.post("/solve", json=body)
     assert res.status_code == 200
     data = res.json()

@@ -1,5 +1,5 @@
 # T48 — CI on GitHub Actions
-**Status:** TODO
+**Status:** IN PROGRESS
 **Lane:** C · **Prereqs:** — · **Branch:** t48-ci
 
 ## Goal
