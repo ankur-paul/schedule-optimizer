@@ -323,7 +323,7 @@ rev-parse HEAD`; `vite-plugin-version.ts`).
 
 **Server:** Actions → Rollback → Run workflow (on `main`), with the full SHA of a commit deployed in the last 10.
 It checks ECR has that image, points both functions at it, waits, and runs `scripts/smoke.sh server` against that
-commit's contract version.
+commit's contract version. The smoke script itself comes from `main`, so a fix to it applies to every rollback.
 
 **Web app:** in the Pages dashboard, Deployments → the deployment to go back to → Rollback to this deployment.
 
