@@ -20,9 +20,9 @@ Tick an idea's status here when its pass moves on. Keep the open questions short
 | 2 | [Privacy policy and consent](#2-privacy-policy-and-consent) | built: T22–T24 | 1 |
 | 3 | [Store institute data online](#3-store-institute-data-online) | built: T27–T31 | 1, 2 |
 | 4 | [Help page](#4-help-page) | built: T32–T35 | — |
-| 5 | [AI agent](#5-ai-agent) | planned: T36–T40 | 1, 3, 4 |
-| 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | idea | 5 |
-| 6 | [Access by coupon](#6-access-by-coupon) | planned with #5: T36, T40 | 1, 5 |
+| 5 | [AI agent](#5-ai-agent) | built: T36–T40 | 1, 3, 4 |
+| 5b | [AI agent: write actions](#5b-ai-agent-write-actions) | planned: T41–T44 | 5 |
+| 6 | [Access by coupon](#6-access-by-coupon) | built with #5: T36, T40 | 1, 5 |
 | 7 | [First-login walkthrough](#7-first-login-walkthrough) | idea | the rest of the UI |
 | 8 | [Deploy the solver and the web app](#8-deploy-the-solver-and-the-web-app) | discussed, not planned | everything above |
 
@@ -149,10 +149,21 @@ Tickets T36–T40.
 
 Split from #5 on 24 Oct. The assistant changes data and timetables (add a teacher, move a class, lock, regenerate).
 
-Open questions:
-- Undo: the store has no undo today, only the toast after a drag. A snapshot before each change?
-- Does every change need the user to confirm it first?
-- Which roles may make changes through it? Viewers may edit their own working copy today.
+Discussed 25 Oct: [`discussions/2026-10-25-agent-write-actions.md`](discussions/2026-10-25-agent-write-actions.md).
+Summary:
+- **Propose, then Apply:** the assistant shows a change card; nothing changes until the user clicks *Apply*, which
+  takes the whole card (at most 100 changes).
+- **Scope:** working-copy data, settings, locks, moves, regenerate, and online save, rename, publish and *Make
+  live*. Anything Undo or *Make live* can't take back, or that changes who can reach the institute (deletes,
+  unpublish, handle, invites, members, overwrite, a save that would delete the oldest kept version), stays manual: the
+  assistant gives the steps.
+- **Undo:** header Undo/Redo over in-memory snapshots (at most 20) taken before each applied card and each drag
+  move; online steps aren't undone.
+- **Who and cost:** every role, since changes land in the user's own working copy; RLS still guards online writes.
+  One question per question; *Apply* is free.
+- **Privacy:** a new `online_status` tool says "you / another member" instead of names, so no policy bump.
+
+Tickets T41–T44.
 
 ## 6. Access by coupon
 

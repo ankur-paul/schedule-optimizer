@@ -127,3 +127,7 @@ graph LR
 | [T38](T38-agent-endpoint.md) | v2: assistant endpoint | B | T36 | — |
 | [T39](T39-policy-v3.md) | v2: privacy policy and terms v3 | D | T36 | — |
 | [T40](T40-assistant-panel.md) | v2: assistant panel | main | T37, T38, T39 | — |
+| [T41](T41-undo-stack.md) | v2: undo stack | A | — | — |
+| [T42](T42-change-operations.md) | v2: assistant working-copy change operations | C | T40 | — |
+| [T43](T43-online-operations.md) | v2: assistant online operations and online_status | B | T42 | — |
+| [T44](T44-change-card.md) | v2: assistant change card in the panel | main | T41, T42, T43 | — |
