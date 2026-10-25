@@ -1,168 +1,96 @@
 # <picture><source media="(prefers-color-scheme: dark)" srcset="web/public/logo-light.svg"><img src="web/public/logo.svg" width="36" alt="" align="top"></picture> Lattice
 
-A college timetable generator. Builds a clash-free weekly class timetable for a whole college in seconds.
+Lattice builds a weekly class timetable for a whole college, with no teacher, section, or room booked twice.
 
-Most colleges still build the timetable by hand in a spreadsheet. It takes the coordinator days, and a single
-change (a teacher leaves, a lab moves) can cause clashes across a dozen sections. This app takes the college's
-bell schedule, rooms, teachers, sections and courses, and generates a timetable where no teacher, section or
-room is ever double-booked. Every result is re-checked by an independent validator before the coordinator
-sees it.
+Most colleges still make the timetable by hand in a spreadsheet. It takes days, and one change, like a teacher
+leaving, can cause clashes across a dozen sections. In Lattice you enter the week, rooms, teachers, sections, and
+courses, then click **Generate timetable**. A solver finds the best timetable it can, and a separate checker
+confirms it has no clashes before you see it.
 
-![Section timetable with two locked cells](docs/screenshots/timetable.png)
+![A section's timetable with two locked classes](docs/screenshots/timetable.png)
 
-## Features
+## What it does
 
-- **Any college's week.** Pick the working days, the periods with their times, breaks and lunch periods.
-- **Excel in, Excel out.** Download a template, fill it in, upload it. Problems are listed by row
-  (`Courses row 7: teacher "Sharma" not found in Teachers sheet`) and nothing is imported until the file is clean. Or start from
-  the built-in sample college (3 departments, 9 sections, 25 teachers, 18 rooms, 54 courses).
-- **Real-college rules.** Department-owned and shared rooms, labs that run for 2–3 consecutive periods, sections
-  split into lab batches that run different labs at the same time, a guaranteed lunch period for everyone.
-- **Exact solver first.** An exact optimiser (OR-Tools CP-SAT) in a small Python server finds the best
-  timetable or proves none exists. If it can't be built, step ③ says why (an over-booked teacher, a lab
-  with no room, a lock in the way…) with a fix link for each cause. A quick draft (a fast heuristic in the
-  browser) runs only when you ask for one: when the server is offline, or as a partial timetable.
-- **Verified results.** `✓ Timetable ready · 0 clashes (independently checked)`, re-checked in the browser
-  whichever engine ran. A partial timetable lists the classes it couldn't place, grouped by cause.
-- **Section, teacher and room views** of the same timetable, colour-coded by subject.
-- **Quality stats.** Score breakdown, teacher load per day, room utilisation.
-- **Lock and regenerate.** Lock the cells you want to keep, re-solve everything else.
-- **Drag and drop.** Drag a class to another slot: free slots go green with the score change, the rest red with
-  the reason. Every drop is re-validated and locked, with Undo.
-- **Print / PDF.** One timetable, or every section on its own A4 page. CSV export of every placement.
+The app has four steps:
 
-Everything is saved in the browser (localStorage). There are no accounts and no database.
+1. **Setup week.** Pick the working days, the periods and their times, the breaks, and the periods where lunch
+   can fall.
+2. **Add data.** Fill in an Excel template and upload it, edit the tables in the app, or load the sample college
+   (3 departments, 9 sections, 25 teachers). A file with any error imports nothing and lists each problem by
+   row.
+3. **Generate.** The exact solver (OR-Tools CP-SAT, on the Python server) finds the best timetable or proves that
+   none exists. If none exists, the app names the cause, such as an over-booked teacher or a lab with no room.
+   If the server is offline, **Make a quick draft** builds a timetable in the browser instead.
+4. **View and export.** See the timetable by section, teacher, or room. Lock the classes you want to keep and
+   generate again, or drag a class to a free slot. Print every section on its own A4 page, or download a CSV.
 
-| Add data | Generate |
-|---|---|
-| ![Data step with the sample college loaded](docs/screenshots/data.png) | ![Generate step with a verified exact-solver result](docs/screenshots/generate.png) |
-| **Teacher view** | **Stats** |
-| ![A teacher's week](docs/screenshots/teacher.png) | ![Quality score, room utilisation and teacher load](docs/screenshots/stats.png) |
+The app saves your work in the browser. Signing in is optional. Signed in, you can:
 
-<details>
-<summary>Printed timetable (A4 landscape)</summary>
+- Create an institute and invite members as admin, editor, or viewer.
+- Save timetables online, keep versions, and publish one at a public link.
+- Ask the assistant about your data, or have it propose changes that you accept or reject. The assistant needs a
+  coupon.
 
-![Printed section timetable](docs/screenshots/print.png)
+[`FEATURES.md`](FEATURES.md) describes every feature and its known limits. The app's own help is at `/help`.
 
-</details>
+## The rules a timetable follows
 
-## Run it
+Hard rules are never broken. For example, a teacher is in one class at a time, a lab fills consecutive periods,
+and every section and teacher gets a free lunch period each day.
 
-You need Node 20.19+ (Vite 8) and [uv](https://docs.astral.sh/uv/), which installs Python 3.12+ if it's missing.
-Tested with Node 24 and Python 3.12.
+Soft rules add points to a score. Lower is better and 0 is perfect. For example, the same subject twice in one
+day adds 10 points. You can switch each soft rule off.
 
-```bash
-# 1. Web app → http://localhost:5173
-cd web && npm install && npm run dev
+The full list is in [`FEATURES.md`](FEATURES.md#scheduling-rules).
 
-# 2. Solver server → http://localhost:8000 (without it, step ③ offers a quick draft in the browser)
-cd server && uv sync && uv run uvicorn main:app --port 8000
-```
+## Run it on your computer
 
-Then open the app, go to step **2 Add data → Load sample**, step **3 Generate → Generate timetable**, and
-step **4** to browse it.
+You need Node 20.19 or later and [uv](https://docs.astral.sh/uv/). uv installs Python 3.12 if you don't have it.
 
-The web app looks for the server at `http://localhost:8000`; set `VITE_SOLVER_URL` to point it elsewhere. The
-server also runs as a container image, the one production uses: see [`docs/deploy.md`](docs/deploy.md).
+1. Start the web app at `http://localhost:5173`:
 
-**Optional sign-in.** Without `web/.env.local` the app runs signed out, exactly as above. To turn on *Sign in*
-(Google or an email link, through Supabase), run `scripts/setup-auth.sh` once. It walks you through the Supabase
-and Google Cloud dashboards and writes `web/.env.local` (see `web/.env.example`). Restart `npm run dev` afterwards.
+   ```bash
+   cd web && npm install && npm run dev
+   ```
 
-## How it works
+2. In a second terminal, start the solver server at `http://localhost:8000`:
 
-```
- Browser                                                    Python server (optional)
- ┌────────────────────────────────────────────────┐        ┌──────────────────────────┐
- │ 1 Setup → 2 Data → 3 Generate → 4 View/export  │        │ FastAPI  POST /solve     │
- │                        │                       │  JSON  │   └ OR-Tools CP-SAT      │
- │                   solveClient ─────────────────┼───────►│     (exact, optimal)     │
- │                        │ quick draft, only when │        └──────────────────────────┘
- │                        │ you click for one      │
- │                        ▼                        │
- │             heuristic engine (Web Worker)       │
- │                        │                        │
- │      every result ─► validator (H1–H8) + scorer (S1–S4) ─► badge + timetable
- └────────────────────────────────────────────────┘
-```
+   ```bash
+   cd server && uv sync && uv run uvicorn main:app --port 8000
+   ```
 
-- **CP-SAT** models every hard rule as a constraint and minimises the soft-rule penalties. On the sample
-  college it places all 210 sessions and proves the result optimal in about 10 s. When no timetable exists
-  it says which sessions have no slot or which locks are to blame; the browser adds section, teacher and room
-  load maths and ranks the causes.
-- **The heuristic** places the most constrained sessions first, restarts with different random seeds, then
-  improves the timetable by moving and swapping sessions. It never creates a clash. On the sample it reaches
-  the same score in about 5 s with no server. It runs only when you ask for a quick draft or a partial timetable.
-- **The validator and scorer** are plain TypeScript, separate from both engines. They are the source of truth
-  for the badge and the score, so the two engines are judged by the same code.
+3. Open the app. In step 2, click **Load sample**. In step 3, click **Generate timetable**.
 
-Both engines read and return the same JSON (`SolveInput` / `SolveResult`, defined in
-[`web/src/domain/types.ts`](web/src/domain/types.ts) and mirrored in [`server/models.py`](server/models.py)).
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full flow and code layout, and [PLAN.md](PLAN.md) for the design
-decisions.
+The web app looks for the server at `http://localhost:8000`. To use another address, set `VITE_SOLVER_URL`.
 
-### Rules
+Sign-in is off until `web/.env.local` exists. To turn it on, run `scripts/setup-auth.sh` once. It walks you
+through the Supabase and Google Cloud dashboards and writes the file. Then restart `npm run dev`.
 
-Hard rules are never broken. Soft rules add penalty points; lower is better and 0 is perfect.
-
-| | Rule |
-|---|---|
-| **H1** | A teacher teaches at most one session at a time. |
-| **H2** | A section attends at most one session at a time. A whole-section class clashes with every batch; two batch labs clash only if they are the same batch. |
-| **H3** | A room hosts at most one session at a time. |
-| **H4** | The room fits the session: classroom or lab, shared or owned by the section's department, and the course's required lab if it has one. |
-| **H5** | Every session is placed exactly once, or listed as unplaced with a reason. |
-| **H6** | A lab takes consecutive teaching periods on one day and never runs across a break. |
-| **H7** | Nothing is placed in a break. |
-| **H8** | Every section and teacher has at least one lunch-candidate period free every day. |
-
-| | Soft rule | Penalty |
-|---|---|---|
-| **S1** | The same subject's lecture twice in one day | 10 per extra lecture |
-| **S2** | A teacher teaching more than 3 periods in a row | 5 per period beyond 3 |
-| **S3** | Free periods between a section's first and last class (lunch periods don't count) | 2 per period |
-| **S4** | One batch idle while another batch of the section is in a lab | 3 per idle batch-period |
-
-The sample college scores 18, all from S4: its lab lengths and batch counts make some idle batch periods
-unavoidable, and CP-SAT proves nothing better exists.
-
-## Tests
+## Run the tests
 
 ```bash
-cd web && npm test && npx tsc -b     # Vitest: domain, engines, import, stats, locks…
-cd server && uv run pytest           # Pytest: API, session parity with the web app, CP-SAT model
+cd web && npm test && npx tsc -b
+cd server && uv run pytest
 ```
 
-The RLS tests for accounts and institutes (`server/tests/test_rls.py`, marker `supabase`) run against the Supabase
-dev project and are skipped until `server/.env` has its keys. Run [`scripts/setup-supabase-cli.sh`](scripts/setup-supabase-cli.sh)
-once: it links the CLI to the project, writes the keys and applies `supabase/migrations/` with `npx supabase db push`.
+The tests marked `supabase` run against the Supabase dev project. Without keys in `server/.env`, they are
+skipped. To add the keys, run `scripts/setup-supabase-cli.sh` once.
 
-The web and server sides both expand the sample college into sessions and compare against the same golden
-file, [`shared/fixtures/sample-sessions.json`](shared/fixtures/sample-sessions.json), so the two solvers can't
-drift apart.
+## How it fits together
 
-## Demo script (90 s)
+- **`web/`** is the React app. It also holds the quick-draft engine, which runs in a Web Worker, and the checker
+  that tests every result against the hard rules.
+- **`server/`** is a FastAPI server. `POST /solve` runs CP-SAT, and `POST /agent` runs the assistant.
+- **`supabase/`** holds the database migrations for institutes, members, saved timetables, and assistant usage.
 
-1. **Setup (5 s).** Step 1 shows the bell schedule: 8 periods, a break, three lunch candidates. *Next.*
-2. **Data (10 s).** *Load sample.* "3 departments, 9 sections, 54 courses; every section fits in the week."
-3. **Generate (20 s).** Server dot is green. *Generate timetable.* While it runs: "the exact solver is proving
-   the best possible timetable." Point at *Timetable ready · best possible*, the
-   `✓ Timetable ready · 0 clashes (independently checked)` badge and the score breakdown.
-4. **Views (20 s).** *View timetable.* CSE A: labs span two periods, batches B1/B2 run labs side by side.
-   Switch to **Teacher**, search "Anita": her whole week. Switch to **Room** and pick Seminar Hall 1:
-   one shared hall used by all three departments.
-5. **Stats (10 s).** Scroll down: score explained rule by rule, shared room utilisation, teacher load bars.
-6. **Lock + regenerate (15 s).** Click a cell → *Lock here*; lock a second one. *Regenerate (keep 2 locked)*.
-   The two 🔒 cells stay put, everything else moves, still 0 clashes. Then drag a class: green slots show the
-   score change, hover a red one for the reason, drop on green → moved, locked, still `✓ Timetable ready · 0 clashes`.
-7. **Print (10 s).** *Print all sections* → one A4 page per section, colours kept.
+The web app and the server share one data format: `SolveInput` and `SolveResult` in
+[`web/src/domain/types.ts`](web/src/domain/types.ts), mirrored in [`server/models.py`](server/models.py).
 
-Backup: stop the server. Within 5 s step ③ shows an amber "Exact solver is offline" banner and the button reads
-*Make a quick draft*; the draft still reads 0 clashes. To show *can't be built*, give one course 30 lectures
-in step ②: step ③ names the over-booked section and teacher with fix links.
+## More docs
 
-## Project docs
-
-- [PLAN.md](PLAN.md): product decisions, rules, data contract
-- [ARCHITECTURE.md](ARCHITECTURE.md): how the pieces fit, code layout, feature list
-- [tickets/](tickets/README.md): the work breakdown; [PROGRESS.md](PROGRESS.md): what was built, known issues
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) explains how a timetable is generated and how the code is laid out.
+- [`PLAN.md`](PLAN.md) records the design decisions and the data format.
+- [`docs/deploy.md`](docs/deploy.md) explains how to deploy to AWS Lambda and Cloudflare Pages.
+- [`docs/v2-roadmap.md`](docs/v2-roadmap.md) lists what version 2 adds.
+- [`tickets/`](tickets/README.md) holds the work, one ticket per task. [`PROGRESS.md`](PROGRESS.md) logs what
+  was built and lists the known issues.
