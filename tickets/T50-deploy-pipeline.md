@@ -57,7 +57,9 @@ accounts and runs them. Plan, *How a change reaches production* and *Secrets*:
   this file. Check Pages serves `privacy.html`, `terms.html`, `help.html` and `help/<page>.html` without `.html` by
   default, and that `npm run preview` behaves the same.
 - **Pages deploy hook with automatic deploys off:** read Cloudflare's docs and note what they say; T51 confirms it
-  live. Fallback in the plan: `wrangler pages deploy` with a token scoped to the project.
+  live. **If the hook option is gone:** no `wrangler`, no Cloudflare token. Pages deploys `main` automatically, its
+  build command runs the web tests first, and step 4 skips the `curl` and only waits for the new build. Write step 4
+  so this is one switch (e.g. the step runs only when the `PAGES_DEPLOY_HOOK` secret is set).
 
 ## Tests
 - Pytest for `schema_version()` (dev).

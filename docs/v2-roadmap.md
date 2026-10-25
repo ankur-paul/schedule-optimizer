@@ -199,7 +199,8 @@ solve times, Lambda costs, hosts turned down); settled 25 Oct
 ([`discussions/2026-10-25-deploy.md`](discussions/2026-10-25-deploy.md)). Summary:
 - **A public demo built properly, on free tiers plus the domain** `uselattice.app` (Name.com; nameservers move to
   Cloudflare).
-- **Web:** Cloudflare Pages, built from `main` by a deploy hook once CI passes; no previews. Public settings
+- **Web:** Cloudflare Pages, built from `main` by a deploy hook once CI passes (if Pages no longer offers hooks,
+  automatic deploys with the web tests in the build command); no previews. Public settings
   committed in `web/.env.production`.
 - **Server:** one x86_64 image in ECR, two Lambda functions in Mumbai on raw Function URLs: the solver at 3,008 MB
   with 2 workers (raised when AWS approves more) and the agent at 512 MB. Deployed by GitHub Actions through OIDC;

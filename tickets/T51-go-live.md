@@ -35,7 +35,9 @@ Most steps need the operator's accounts, so set `BLOCKED (needs human: …)` at 
    workers.
 6. **Cloudflare Pages:** connect the repo, build `web/` (`npm ci && npm run build`, output `dist`), production
    branch `main`, automatic production deploys **off**, previews off; create the deploy hook. Add the custom domain.
-   Confirm a hook call builds `main` with automatic deploys off; if not, switch to the fallback and record it.
+   Confirm a hook call builds `main` with automatic deploys off. **If the hook option is gone:** turn automatic
+   production deploys on, set the build command to `npm ci && npm test && npx tsc -b && npm run build`, leave
+   `PAGES_DEPLOY_HOOK` unset, and record it in `docs/deploy.md`.
 7. **GitHub:** repository secrets (dev Supabase keys from T48, `PAGES_DEPLOY_HOOK`), variable `AWS_ROLE_ARN`.
 8. **First deploy:** fill `web/.env.production`, merge to `main`, watch `deploy.yml` go green. Trigger
    `keepalive.yml` by hand once.
