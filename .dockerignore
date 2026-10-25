@@ -1,0 +1,9 @@
+# The image's build context is the whole repo (see Dockerfile); only these paths go in.
+*
+!server/*.py
+!server/pyproject.toml
+!server/uv.lock
+!shared/
+!web/src/help/*.md
+**/.env*
+**/__pycache__

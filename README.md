@@ -62,7 +62,8 @@ cd server && uv sync && uv run uvicorn main:app --port 8000
 Then open the app, go to step **2 Add data → Load sample**, step **3 Generate → Generate timetable**, and
 step **4** to browse it.
 
-The web app looks for the server at `http://localhost:8000`; set `VITE_SOLVER_URL` to point it elsewhere.
+The web app looks for the server at `http://localhost:8000`; set `VITE_SOLVER_URL` to point it elsewhere. The
+server also runs as a container image, the one production uses: see [`docs/deploy.md`](docs/deploy.md).
 
 **Optional sign-in.** Without `web/.env.local` the app runs signed out, exactly as above. To turn on *Sign in*
 (Google or an email link, through Supabase), run `scripts/setup-auth.sh` once. It walks you through the Supabase
