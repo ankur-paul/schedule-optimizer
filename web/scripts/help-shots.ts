@@ -14,7 +14,7 @@ import type { SolveResult } from "../src/domain/types";
 import { toDoc } from "../src/features/online/online";
 import { SHOTS, type Action, type Shot, type Target } from "./help-shots.config";
 import { captureTargets, DEFAULT_PADDING, MAX_PNG_BYTES, persistedState, shotData, shotProblems, unionClip } from "./help-shots.lib";
-import { answer, SESSION_KEY, storedSession, SUPABASE_ANON_KEY, SUPABASE_URL } from "./help-shots.supabase";
+import { agentReply, answer, SESSION_KEY, storedSession, SUPABASE_ANON_KEY, SUPABASE_URL } from "./help-shots.supabase";
 
 const web = resolve(import.meta.dirname, "..");
 const outDir = resolve(web, "public/help");
@@ -83,6 +83,10 @@ async function take(context: BrowserContext, origin: string, shot: Shot): Promis
     if (url.startsWith(SITE)) return route.fulfill({ response: await route.fetch({ url: origin + url.slice(SITE.length) }) });
     if (url === `${SOLVER_URL}/health`) {
       return shot.solver === "online" ? route.fulfill({ json: { ok: true } }) : route.abort("connectionrefused");
+    }
+    if (url === `${SOLVER_URL}/agent`) {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
+      return route.fulfill({ json: agentReply(route.request().postDataJSON()), headers: CORS });
     }
     if (url.startsWith(SUPABASE_URL)) {
       const request = route.request();

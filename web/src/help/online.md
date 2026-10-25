@@ -181,6 +181,8 @@ It looks at your working copy as it is now, unsaved changes included, and lists 
 ("Looked at CSE-3A's week"). Its answers link to the help sections they rely on. It declines questions that aren't
 about Lattice or your timetables.
 
+![The assistant panel: "143 questions left · until 23 Nov", the question "Where does the score of 18 come from?", "Looked at the score", and an answer naming the batches waiting during labs in ECE A and ME A](/help/assistant-panel.png)
+
 **It only reads.** The assistant can't change your data, move classes, lock anything or generate a timetable; it
 tells you what to do and where. **Its answers can be wrong**, so check them against the timetable before acting.
 

@@ -3,6 +3,7 @@
 import type { Id } from "../src/domain/types";
 import type { Role } from "../src/features/account/institutes";
 import type { Step } from "../src/store/useAppStore";
+import { AGENT_QUESTION } from "./help-shots.supabase";
 
 /**
  * What the app holds when the page opens: the sample college with no timetable (`sample`), or with the fixed
@@ -144,5 +145,22 @@ export const SHOTS: Shot[] = [
     signedIn: { as: "editor", online: "behind" },
     actions: [{ click: { css: '[aria-label^="Online:"]' } }, { click: { role: "menuitem", name: "Save online" } }, { waitFor: { text: "Overwrite" } }],
     capture: { css: '[role="dialog"]', hasText: "changed online" },
+  },
+  {
+    name: "assistant-panel",
+    start: "timetable",
+    step: 3,
+    solver: "online",
+    signedIn: { as: "editor" },
+    actions: [
+      { click: { role: "button", name: "Assistant" } },
+      { fill: { css: 'textarea[aria-label="Your question"]' }, value: AGENT_QUESTION },
+      { click: { role: "button", name: "Send" } },
+      { waitFor: { text: "The other three rules score 0. The exact solver proved 18 is the best possible with this data." } },
+    ],
+    capture: { css: 'aside[aria-label="Assistant"]' },
+    padding: 0,
+    // The panel is as tall as the window; the chat is at its top.
+    maxHeight: 400,
   },
 ];
