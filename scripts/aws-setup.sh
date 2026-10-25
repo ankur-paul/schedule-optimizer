@@ -77,10 +77,15 @@ aws iam attach-role-policy --role-name "$EXEC_ROLE" \
 did "may write its logs (AWSLambdaBasicExecutionRole)"
 
 echo "== the deploy role $DEPLOY_ROLE (GitHub Actions, main only)"
+# Newer repositories sign the token's subject with immutable ids (repo:owner@123/name@456:…); GitHub reports which
+# prefix it uses. Both forms are trusted, so the role keeps working if the repository switches.
+SUB_PREFIX=$(gh api "repos/$GITHUB_REPO/actions/oidc/customization/sub" -q .sub_claim_prefix 2>/dev/null || true)
+[[ $SUB_PREFIX == repo:* ]] || SUB_PREFIX="repo:$GITHUB_REPO"
 create_role "$DEPLOY_ROLE" "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",
   \"Principal\":{\"Federated\":\"$OIDC_ARN\"},\"Action\":\"sts:AssumeRoleWithWebIdentity\",
   \"Condition\":{\"StringEquals\":{\"token.actions.githubusercontent.com:aud\":\"sts.amazonaws.com\",
-  \"token.actions.githubusercontent.com:sub\":\"repo:$GITHUB_REPO:ref:refs/heads/main\"}}}]}"
+  \"token.actions.githubusercontent.com:sub\":[\"repo:$GITHUB_REPO:ref:refs/heads/main\",
+  \"$SUB_PREFIX:ref:refs/heads/main\"]}}}]}"
 fn_arns=""
 for f in "${FUNCTIONS[@]}"; do fn_arns+="\"arn:aws:lambda:$REGION:$ACCOUNT:function:${f%%:*}\","; done
 aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy --policy-document "{

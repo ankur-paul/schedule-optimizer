@@ -109,6 +109,7 @@ Ticket status is in `tickets/`; this file records what actually works.
 - [chore] The *What to aim for* switches moved from their own card into a popover on an *Aims: 4 of 5* button next to Generate, so step ③ opens on the Generate card; the earlier *Show aims* fold is gone. Help screenshot `aims-card.png` is now `aims-popover.png` (step ③, click *Aims*)
 - [chore] README rewritten: shorter and current (sign-in, institutes, assistant, soft-rule switches), with how to run and test (open `README.md`)
 - [T51] Go-live wizard `scripts/go-live-wizard.sh`: 21 stages from the Cloudflare zone to GitHub's deploy settings, with `dig`/`curl` checks, `migrate-prod.sh`, `aws-setup.sh` and `smoke.sh` run in place, resumable from any stage (`scripts/go-live-wizard.sh 14`); `docs/deploy.md` gains where things run, the setup stages, settings per place, key rotation and what expires; help screenshots now show `https://uselattice.app` (`npm run help:shots`, see `online-versions.png`)
+- [T51] `aws-setup.sh` trusts GitHub's immutable OIDC subject too (`repo:owner@id/name@id:…`, which this repository uses); the first deploy failed at the AWS login without it (`aws iam get-role --role-name lattice-deploy`)
 
 ## Known issues / cuts
 
