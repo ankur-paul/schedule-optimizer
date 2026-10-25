@@ -1,0 +1,77 @@
+# Every push to main (T50): the whole CI suite, then production. Plan: docs/deploy.md.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+# One deploy at a time. A newer push waits rather than cancelling one half done; GitHub keeps only the newest
+# waiting run, which is the one that matters.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  REPOSITORY: lattice-server
+  FUNCTIONS: lattice-solver lattice-agent
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # the OIDC token the AWS role trusts
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Production has every migration
+        run: scripts/smoke.sh migrations
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build and push the image
+        id: image
+        run: |
+          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com"
+          image="$registry/$REPOSITORY:$GITHUB_SHA"
+          aws ecr get-login-password | docker login --username AWS --password-stdin "$registry"
+          # No provenance attestation: Lambda refuses an image index.
+          docker build --platform linux/amd64 --provenance=false -t "$image" .
+          docker push "$image"
+          echo "uri=$image" >> "$GITHUB_OUTPUT"
+
+      # Code only. Never update-function-configuration: the env vars are set by hand in the console.
+      - name: Update both functions
+        env:
+          IMAGE: ${{ steps.image.outputs.uri }}
+        run: |
+          for fn in $FUNCTIONS; do
+            aws lambda update-function-code --function-name "$fn" --image-uri "$IMAGE" --output text --query LastUpdateStatus
+          done
+          for fn in $FUNCTIONS; do aws lambda wait function-updated-v2 --function-name "$fn"; done
+
+      # With no PAGES_DEPLOY_HOOK secret, Pages deploys main by itself (automatic deploys on) and this only waits.
+      - name: Build the web app on Cloudflare Pages
+        env:
+          PAGES_DEPLOY_HOOK: ${{ secrets.PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$PAGES_DEPLOY_HOOK" ]; then curl -sf -X POST "$PAGES_DEPLOY_HOOK" >/dev/null; fi
+          scripts/smoke.sh wait-web "$GITHUB_SHA"
+
+      - name: Smoke check
+        run: scripts/smoke.sh

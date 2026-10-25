@@ -1,5 +1,5 @@
 # T50 — Deploy pipeline
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** main · **Prereqs:** T45, T47, T48 · **Branch:** t50-deploy-pipeline
 
 ## Goal
@@ -71,8 +71,8 @@ accounts and runs them. Plan, *How a change reaches production* and *Secrets*:
 - `aws-setup.sh` is not run here (no production account yet); T51 runs it.
 
 ## Done when
-- [ ] Workflows, scripts, migration, `_redirects` and `web/.env.production` committed
-- [ ] Tests above pass; full suite and `npx tsc -b` green
-- [ ] `docs/deploy.md` covers the scripts, the workflows and rollback
-- [ ] PROGRESS.md line
-- [ ] Committed: `T50: deploy pipeline`
+- [x] Workflows, scripts, migration, `_redirects` and `web/.env.production` committed
+- [x] Tests above pass; full suite and `npx tsc -b` green
+- [x] `docs/deploy.md` covers the scripts, the workflows and rollback
+- [x] PROGRESS.md line
+- [x] Committed: `T50: deploy pipeline`

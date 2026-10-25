@@ -1,0 +1,8 @@
+# Cloudflare Pages (T50). Pages applies these top to bottom, the first match only, even where a real file sits at
+# the path, so the build's own two-segment paths are passed through as themselves before the public link rule.
+# Same paths as isPublishedRewrite in src/published/path.ts; redirects.test.ts checks the two agree.
+/assets/*     /assets/:splat  200
+/help/*       /help/:splat    200
+
+# A public timetable, /<handle>/<id> (T30). /published serves published.html.
+/:handle/:id  /published      200
