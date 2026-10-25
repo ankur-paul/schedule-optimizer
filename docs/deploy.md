@@ -302,7 +302,8 @@ scripts/smoke.sh migrations       # production's schema_version() against supaba
 scripts/smoke.sh wait-web <sha>   # until /version.txt is <sha> (WAIT_WEB_SEC, default 900)
 ```
 
-- **server:** each Function URL's `/health` answers within 10 s (one retry, for a cold start) with the contract
+- **server:** each Function URL's `/health` answers within 30 s (one retry). The first start on a new image
+  takes about 15 s: it outruns Lambda's 10 s init limit, and Lambda starts it again inside the request with the contract
   version in `shared/contract.json`.
 - **web:** `/privacy` answers 200 and shows `Version <POLICY_VERSION>` from `web/src/legal/policy.ts`.
 
