@@ -1,5 +1,5 @@
 # T48 — CI on GitHub Actions
-**Status:** IN PROGRESS
+**Status:** DONE
 **Lane:** C · **Prereqs:** — · **Branch:** t48-ci
 
 ## Goal
@@ -34,7 +34,7 @@ this workflow). Plan, *How a change reaches production*:
 - A pull request shows both jobs as checks.
 
 ## Done when
-- [ ] `ci.yml` runs both jobs green on GitHub, Supabase tests included
-- [ ] Actions pinned to SHAs; secrets documented
-- [ ] PROGRESS.md line (run time of each job)
-- [ ] Committed: `T48: CI`
+- [x] `ci.yml` runs both jobs green on GitHub, Supabase tests included
+- [x] Actions pinned to SHAs; secrets documented
+- [x] PROGRESS.md line (run time of each job)
+- [x] Committed: `T48: CI`
