@@ -336,7 +336,7 @@ s_supabase_project() {
 stage "Supabase: production project"
 say "Production gets its own free project in Mumbai, apart from dev."
 open_url "https://supabase.com/dashboard/new"
-step "Same organisation as dev. Name: lattice. Region: South Asia (Mumbai). Free plan."
+step "Same organisation as dev. Name: lattice-prod (not dev's name). Region: South Asia (Mumbai). Free plan."
 step "Database password: Generate one and keep it in your password manager (stage 8 asks for it)."
 step "Leave the security options at their defaults, as dev has them. Create new project."
 step "When it's ready, click Connect at the top and copy the project URL."

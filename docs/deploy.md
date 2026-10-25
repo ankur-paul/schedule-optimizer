@@ -10,7 +10,7 @@ reasons: [`discussions/2026-10-25-deploy.md`](discussions/2026-10-25-deploy.md).
 | Web app (static Vite build) | Cloudflare Pages, project `lattice` | `https://uselattice.app`; `www` redirects there |
 | Solver (`/health`, `/solve`) | AWS Lambda `lattice-solver`, Mumbai, 3,008 MB, 150 s | its Function URL (`VITE_SOLVER_URL`) |
 | Assistant (`/agent`) | AWS Lambda `lattice-agent`, Mumbai, 512 MB, 300 s, same image | its Function URL (`VITE_AGENT_URL`) |
-| Accounts, institutes, timetables | Supabase project `lattice`, Mumbai, Free | `VITE_SUPABASE_URL` |
+| Accounts, institutes, timetables | Supabase project `lattice-prod`, Mumbai, Free (dev is a separate project) | `VITE_SUPABASE_URL` |
 | Sign-in emails | Resend, through Supabase's custom SMTP | `Lattice <no-reply@uselattice.app>` |
 | `privacy@uselattice.app` | Cloudflare Email Routing | forwards to the operator's inbox |
 | DNS | Cloudflare (Free) | nameservers set at Name.com |
@@ -41,7 +41,7 @@ Needs `dig`, `curl`, `aws` (2.32 or newer, for `aws login`), `gh` logged in, `np
 | 3 | `www` | a proxied `AAAA www 100::` placeholder and a 301 redirect rule `www` → apex, keeping path and query |
 | 4 | `privacy@` | Email Routing: `privacy@` → the operator's inbox (verified); Cloudflare's MX and SPF on the apex; catch-all off |
 | 5 | Resend | the domain verified: its MX and SPF on `send.uselattice.app`, DKIM on `resend._domainkey`; `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:privacy@uselattice.app` |
-| 6–7 | Supabase project | `lattice`, Mumbai, Free, default security options; URL and publishable key into `web/.env.production` |
+| 6–7 | Supabase project | `lattice-prod`, Mumbai, Free, default security options; URL and publishable key into `web/.env.production` |
 | 8 | Migrations | `scripts/migrate-prod.sh`, then `scripts/smoke.sh migrations` |
 | 9 | Auth URLs | Site URL `https://uselattice.app`; redirect URL `https://uselattice.app/**` |
 | 10 | SMTP | a Resend key (sending access, this domain only); Supabase SMTP: `smtp.resend.com`, port 465, user `resend`, sender `Lattice <no-reply@uselattice.app>`; default email templates |
